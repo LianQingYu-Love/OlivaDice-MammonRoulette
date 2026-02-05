@@ -9,7 +9,7 @@ from ..core.cmop import PropComp
 prop_list = [prop for prop in PropComp.list() if prop != "金币"]
 
 
-@helpdoc.update_cmd("购买(道具名) #使用金币兑换道具")
+helpdoc.update_cmd("购买(道具名) #使用金币兑换道具")
 @commands.route("play", f"^(:?购买|購買) *({'|'.join(prop_list)})$")
 def purchase(game, user_id, group_id, msg_groups):
     if game["shooter"] != user_id:
