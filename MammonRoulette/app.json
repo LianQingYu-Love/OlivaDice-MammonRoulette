@@ -1,0 +1,28 @@
+{
+    "name": "恶魔轮盘",
+    "author": "星瑚",
+    "namespace": "MammonRoulette",
+    "info": "權衡風險與收益：是孤注一擲，還是步步爲營? 生死之間唯有膽識與策略並存的惡鬼得以幸存.",
+    "priority": 60000,
+    "svn": 1,
+    "version": "2.0",
+    "compatible_svn": 201,
+    "message_mode": "olivos_string",
+    "support": [
+        {
+            "sdk": "all",
+            "platform": "qq",
+            "model": "all"
+        }
+    ],
+    "menu_config": [
+        {
+            "title": "[总开关]",
+            "event": "MammonRoulette_Menu_main_enabled"
+        },
+        {
+            "title": "[清除缓存]",
+            "event": "MammonRoulette_Menu_clear_cache"
+        }
+    ]
+}
