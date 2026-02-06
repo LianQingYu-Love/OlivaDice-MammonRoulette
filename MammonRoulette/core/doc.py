@@ -8,6 +8,6 @@ class helpdoc:
     }
 
     @classmethod
-    def update_cmd(cls, content):
+    def append_cmd(cls, content):
         cls.doc["helpdoc"]["恶赌命令"] += f"\n{content}"
         return

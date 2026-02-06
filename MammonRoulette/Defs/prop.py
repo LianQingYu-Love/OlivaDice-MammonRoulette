@@ -1,8 +1,8 @@
 import random
 import string
 
-from ..core.cmop import PropComp
-from ..core.work import GameWork
+from ..Core.cmop import PropComp
+from ..Core.work import GameWork
 
 
 class BaseProp:
@@ -10,8 +10,16 @@ class BaseProp:
     brief = ""
 
     @classmethod
-    def apply(cls, game, target) -> bool | None:
+    def _init(cls):
         pass
+
+    @classmethod
+    def _init_after(cls):
+        pass
+
+    @classmethod
+    def apply(cls, game, target) -> bool | None:
+        return False
 
     @classmethod
     def callback(cls, game, event) -> bool | None:

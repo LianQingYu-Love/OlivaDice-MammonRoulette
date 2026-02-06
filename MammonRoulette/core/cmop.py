@@ -1,23 +1,23 @@
 class Registerable:
-    register = {}
+    _register = {}
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         name = getattr(cls, "name", None)
         if name:
-            cls.register[name] = cls
+            cls._register[name] = cls
 
     @classmethod
     def get(cls, name):
-        return cls.register[name]
+        return cls._register[name]
 
     @classmethod
     def list(cls):
-        return list(cls.register.keys())
+        return list(cls._register.keys())
 
 
 class ModeComp(Registerable):
-    register = {}
+    _register = {}
 
     @classmethod
     def trigger(cls, game, mode, event, **kwargs):
@@ -25,7 +25,7 @@ class ModeComp(Registerable):
 
 
 class PropComp(Registerable):
-    register = {}
+    _register = {}
 
     @classmethod
     def use(cls, game, prop, target):
@@ -34,3 +34,9 @@ class PropComp(Registerable):
     @classmethod
     def trigger(cls, game, event, prop):
         return cls.get(prop).callback(game, event)
+
+    @classmethod
+    def init_after(cls):
+        for prop in cls._register.values():
+            prop._init_after()
+        return

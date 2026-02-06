@@ -1,7 +1,7 @@
 import random
 
-from ..core.cmop import ModeComp
-from ..core.work import GameWork
+from ..Core.cmop import ModeComp
+from ..Core.work import GameWork
 
 
 class BaseMode:

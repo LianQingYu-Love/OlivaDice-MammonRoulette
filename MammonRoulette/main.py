@@ -4,9 +4,9 @@ import os
 from AmorLib import DataBase
 
 from . import DB_PATH
-from .cmd import commands
-from .doc import helpdoc
-from .core.cmop import ModeComp, PropComp
+from .Core.cmd import commands
+from .Core.cmop import ModeComp, PropComp
+from .Core.doc import helpdoc
 
 GAME_PATH = "plugin/data/MammonRoulette/game.json"
 
@@ -97,6 +97,7 @@ class MammonRoulette:
     def load(cls):
         with open(GAME_PATH, "w", encoding="utf-8") as f:
             json.dump({}, f)
+        PropComp.init_after()
         # region 数据库
         with DataBase(DB_PATH) as db:
             # 玩家表
