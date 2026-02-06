@@ -116,6 +116,7 @@ class MammonRoulette:
             )
         # endregion
         # region helpdoc
+        helpdoc.update_cmd()
         help = helpdoc.doc
         for mode_name in ModeComp.list():
             mode_cfg = ModeComp.get(mode_name)

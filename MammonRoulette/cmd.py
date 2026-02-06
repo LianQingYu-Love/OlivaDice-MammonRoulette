@@ -5,16 +5,14 @@ from collections import Counter
 from AmorLib import DataBase, is_master, get_group_role
 
 from . import DB_PATH
+from .Core.cmd import commands, get_target, COMMON_CMD
 from .Core.doc import helpdoc
 from .Core.cmop import ModeComp, PropComp
 from .Core.work import GameWork
-from .Core.cmd import commands, COMMON_CMD
 
 
 # region 设置
-helpdoc.append_cmd("恶赌(on,off) #游戏开关, 要求管理权限")
-
-
+@helpdoc.append_cmd("设置", "恶赌(on,off) #游戏开关(群管理).")
 @commands.route("setting", "^[惡恶]赌 *(on|off|ON|OFF|)$")
 def enabled(plugin_event, Proc, group_id, msg_groups):
     if is_master(plugin_event) or get_group_role(plugin_event) != "member":
@@ -66,9 +64,7 @@ def enabled(plugin_event, Proc, group_id, msg_groups):
 
 
 # region 资料
-helpdoc.append_cmd("(名称)签署[生死状,契约] #注册或修改名称")
-
-
+@helpdoc.append_cmd("资料", "(名称)签署[生死状,契约] #注册或修改名称.")
 @commands.route(COMMON_CMD, "^(.+)(?:签署|簽署)(?:生死状|契约|生死狀|契約)$")
 def signed(game, user_id, group_id, msg_groups):
     name = msg_groups[0]
@@ -92,9 +88,7 @@ def signed(game, user_id, group_id, msg_groups):
     return f"{name}在生死狀簽下姓名。", False
 
 
-helpdoc.append_cmd("恶魔名片(数值,留空) #查看自己或他人的资料")
-
-
+@helpdoc.append_cmd("资料", "恶魔名片(数值,留空) #查看自己或他人的资料.")
 @commands.route(COMMON_CMD, "^[惡恶]魔名片(\\d*)$")
 def card(game, user_id, group_id, msg_groups):
     target = msg_groups[0] if msg_groups[0] != "" else user_id
@@ -121,9 +115,9 @@ def card(game, user_id, group_id, msg_groups):
     ), False
 
 
-helpdoc.append_cmd("恶魔(赏金,杀戮,自杀,留空)[排行,榜] #查询排行, 留空默认查询赏金榜单")
-
-
+@helpdoc.append_cmd(
+    "资料", "恶魔(赏金,杀戮,自杀,留空)[排行,榜] #查询排行, 留空默认查询赏金榜单."
+)
 @commands.route(COMMON_CMD, "^[恶惡]魔(赏金|杀戮|自杀|)(?:排行|榜)(\\d*)$")
 def leaderboard(game, user_id, group_id, msg_groups):
     ranking_page = int(msg_groups[1] or 1) * 10 - 10
@@ -168,24 +162,10 @@ poker = {
 }
 
 
-def get_target(game, target):
-    order = game["order"]
-    if not target:
-        target = order[(order.index(game["shooter"]) + 1) % len(order)]
-    elif target not in order:
-        target = int(target)
-        if target > len(order):
-            return
-        target = order[target - 1]
-    return target
-
-
-helpdoc.append_cmd(
-    "(模式名)匹配 #以默认人数匹配对局, 满人自动开启"
-    "\n(模式名)匹配(数值)p #以自定义人数匹配对局"
+@helpdoc.append_cmd(
+    "对局操作",
+    "(模式名)匹配 #以默认人数匹配对局, 满人自动开启\n(模式名)匹配(数值)p #以自定义人数匹配对局.",
 )
-
-
 @commands.route("ob", f"^({'|'.join(ModeComp.list())})匹配(?:(\\d+)p)?$")
 def match(game, user_id, group_id, msg_groups):
     # 自动注册
@@ -284,9 +264,7 @@ def match(game, user_id, group_id, msg_groups):
     return reply, True
 
 
-helpdoc.append_cmd("退出 #退出匹配")
-
-
+@helpdoc.append_cmd("对局操作", "退出 #退出匹配")
 @commands.route("prep", "^退出$")
 def exit(game, user_id, group_id, msg_groups):
     game["order"].remove(user_id)
@@ -299,11 +277,10 @@ def exit(game, user_id, group_id, msg_groups):
     return reply, True
 
 
-helpdoc.append_cmd(
-    "(吞或开)枪(目标) #对目标射击, 可用qq号或序号指定目标, 留空默认下一顺位"
+@helpdoc.append_cmd(
+    "对局操作",
+    "(吞或开)枪(目标) #对目标射击, 可用qq号或序号指定目标, 留空默认下一顺位.",
 )
-
-
 @commands.route("play", "^(吞|开|開)[槍|枪] *(\\d*)$")
 def shoot(game, user_id, group_id, msg_groups):
     if game["shooter"] != user_id:
@@ -318,12 +295,11 @@ def shoot(game, user_id, group_id, msg_groups):
     return GameWork.reply(game), True
 
 
-helpdoc.append_cmd("[使用,留空](道具名) (目标) #对目标使用道具, 可用qq号或序号指定目标")
-
-prop_list = PropComp.list()
-
-
-@commands.route("play", f"^(?:使用|) *({'|'.join(prop_list)}) *(\\d*)$")
+@helpdoc.append_cmd(
+    "对局操作",
+    "[使用,留空](道具名) (目标) #对目标使用道具, 可用qq号或序号指定目标",
+)
+@commands.route("play", f"^(?:使用|) *({'|'.join(PropComp.list())}) *(\\d*)$")
 def use_prop(game, user_id, group_id, msg_groups):
     if game["shooter"] != user_id:
         return f"現在是{GameWork.get_name(game)}的回合."
@@ -337,12 +313,10 @@ def use_prop(game, user_id, group_id, msg_groups):
         return
     if PropComp.use(game, prop, target):
         GameWork.prop_remove(game, user_id, prop)
-    return GameWork.reply(game), True
+        return GameWork.reply(game), True
 
 
-helpdoc.append_cmd("局势 #查询当前游戏局势信息")
-
-
+@helpdoc.append_cmd("对局操作", "局势 #查询当前游戏局势信息.")
 @commands.route(("ob", "prep", "play", "dead"), "^(?:局势|局勢)$")
 def situation(game, user_id, group_id, msg_groups):
     order = game["order"]
@@ -384,9 +358,7 @@ def situation(game, user_id, group_id, msg_groups):
     ), False
 
 
-helpdoc.append_cmd("投降 #以自杀的形式结束")
-
-
+@helpdoc.append_cmd("对局操作", "投降 #以自杀的形式结束.")
 @commands.route("play", "^投降$")
 def surrender(game, user_id, group_id, msg_groups):
     game["reply"]["info"].append(f"{GameWork.get_name(game,user_id)}被清除。")

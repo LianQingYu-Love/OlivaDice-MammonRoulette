@@ -15,8 +15,8 @@ class Gold(PropComp, BaseProp):
     @classmethod
     def _init_after(cls):
         prop_list = (prop for prop in PropComp.list() if prop != "金币")
-        helpdoc.append_cmd("购买(道具名) #使用金币兑换道具")
 
+        @helpdoc.append_cmd("对局操作", "购买(道具名) #使用金币兑换道具")
         @commands.route("play", f"^(:?购买|購買) *({'|'.join(prop_list)})$")
         def purchase(game, user_id, group_id, msg_groups):
             if game["shooter"] != user_id:
