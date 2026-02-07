@@ -106,7 +106,7 @@ def card(game, user_id, group_id, msg_groups):
     return (
         f"『惡魔資料卡』"
         f"\n真名: {gambler_info['name']}"
-        f"\n排行: {gambler_rank}"
+        f"\n排名: {gambler_rank+1}"
         f"\n賞金: {gambler_info['points']}"
         f"\n槍下亡魂: {gambler_info['kills']}"
         f"\n自取滅亡: {gambler_info['suicide']}"

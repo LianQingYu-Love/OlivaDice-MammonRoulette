@@ -140,7 +140,7 @@ class 金币(ModeComp, BaseMode):
     name = "金币"
     brief = (
         "〈赏金〉60"
-        "\n〈血量〉每名玩家4hp."
+        "\n〈血量〉每名玩家5hp."
         "\n〈道具池(上限12)〉{金币}"
         "\n〔机制〕"
         "\n1. 回合开始时获得 1 枚金币;"
@@ -159,7 +159,7 @@ class 金币(ModeComp, BaseMode):
 
     @classmethod
     def join(cls, game, user_id):
-        game["players"][user_id]["hp"] = 4
+        game["players"][user_id]["hp"] = 5
 
     # 换人
     @classmethod
