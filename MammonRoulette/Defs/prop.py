@@ -72,7 +72,7 @@ class 锯子(PropComp, BaseProp):
             game["reply"]["info"].append("槍管被鋸斷了.")
             modify["dmg"] = modify.get("dmg", 0) + 1
             modify["锯子"] = {"ban": True, "shoot": False}
-            GameWork.event(game, "锯子", "shoot")
+            GameWork.event(game, "锯子", ("shoot", "end_round"))
             return True
         game["reply"]["info"].append("槍管早已被鋸斷.")
         return False
@@ -81,11 +81,11 @@ class 锯子(PropComp, BaseProp):
     def callback(cls, game, event):
         modify = game["modify"]
         comp = modify["锯子"]
-        if comp["shoot"]:
-            modify["dmg"] = modify.get("dmg", 1) - 1
-            comp["ban"] = False
-        else:
+        if event == "shoot":
             comp["shoot"] = True
+        elif comp["shoot"] and event == "end_round":
+            modify["dmg"] = modify.get("dmg", 1) - 1
+        comp["ban"] = False
         return True
 
 
@@ -337,8 +337,10 @@ class 转盘(PropComp, BaseProp):
         )
         ammo = random.randint(1, 6)
         ammo_blank = ammo - random.randint(1, ammo)
-        game["ammo_live"] = ammo - ammo_blank
+        ammo_live = ammo - ammo_blank
+        game["ammo_live"] = ammo_live
         game["ammo_blank"] = ammo_blank
+        game["reply"]["ammo"] = f"彈仓: {ammo_live} / {ammo}"
         return True
 
 
