@@ -151,7 +151,9 @@ class GameWork:
         pl = game["players"][target]
         kills = pl["kills"]
         suicide = pl["suicide"]
-        mult = -1 if suicide else (kills if survived else kills - 0.5)
+        mult = kills if survived else kills - 0.5
+        if suicide:
+            mult -= 0.5
         wl = "wins" if survived else "losses"
         with DataBase(DB_PATH) as db:
             db.update(

@@ -172,7 +172,10 @@ class 金币(ModeComp, BaseMode):
         target, dmg = kwargs["target"], kwargs["dmg"]
         comp = game["modify"].setdefault("金币", [])
         if target not in comp and game["players"][target]["hp"] - dmg <= 2:
-            GameWork.prop_draw(game, target, 1)
+            if GameWork.prop_get(game, target, "金币"):
+                game["reply"]["info"].append(
+                    f"金光乍現！一枚金幣落入{GameWork.get_name(target)}手中."
+                )
             comp.append(target)
 
 
@@ -211,7 +214,7 @@ class 勇者(ModeComp, BaseMode):
 
     @classmethod
     def start(cls, game):
-        for pl in game["order"][2:]:
+        for pl in game["order"][1:]:
             GameWork.prop_draw(game, pl, 2)
         GameWork.prop_draw(game, game["shooter"], 1)
 
@@ -224,7 +227,7 @@ class 勇者(ModeComp, BaseMode):
     def shoot(cls, game, **kwargs):
         bullet = game["bullet"]
         if bullet and random.randint(1, 3) == 1:
-            game["reply"]["brief"].append(f"伴隨七彩光芒，魔彈發射.")
+            game["reply"]["info"].append(f"伴隨七彩光芒，魔彈發射.")
             modify = game["modify"]
             modify["dmg"] = modify.get("dmg", 0) + 1
             modify["魔弹"] = True
@@ -293,13 +296,13 @@ class 赌徒(ModeComp, BaseMode):
     @classmethod
     def shoot(cls, game, **kwargs):
         if random.randint(1, 3) == 1:
-            game["reply"]["brief"].append(f"子彈擊穿突然出現的{cls.reply()}.")
+            game["reply"]["info"].append(f"子彈擊穿突然出現的{cls.reply()}.")
             bullet = not game["bullet"]
             game["bullet"] = bullet
             game["ammo_blank"] += -1 if bullet else 1
             game["ammo_live"] += 1 if bullet else -1
         if game["bullet"] and random.randint(1, 3) == 1:
-            game["reply"]["brief"].append(f"伴隨七彩光芒，魔彈發射.")
+            game["reply"]["info"].append(f"伴隨七彩光芒，魔彈發射.")
             modify = game["modify"]
             modify["dmg"] = modify.get("dmg", 0) + 1
             modify["魔弹"] = True

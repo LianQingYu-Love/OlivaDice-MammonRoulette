@@ -310,7 +310,14 @@ class 扑克(PropComp, BaseProp):
         callback = game["callback"]
         if "扑克" not in callback["shoot"] + callback["reload"]:
             GameWork.event(game, "扑克", ("shoot", "reload"))
-        game["bullet"] = not game["bullet"]
+        bullet = not game["bullet"]
+        game["bullet"] = bullet
+        if bullet:
+            game["ammo_blank"] -= 1
+            game["ammo_live"] += 1
+        else:
+            game["ammo_blank"] += 1
+            game["ammo_live"] -= 1
         return True
 
     @classmethod
@@ -342,6 +349,7 @@ class 转盘(PropComp, BaseProp):
         ammo_live = ammo - ammo_blank
         game["ammo_live"] = ammo_live
         game["ammo_blank"] = ammo_blank
+        GameWork.bullet(game)
         game["reply"]["ammo"] = f"彈仓: {ammo_live} / {ammo}"
         return True
 
