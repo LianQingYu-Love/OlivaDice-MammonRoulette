@@ -2,8 +2,8 @@ import random
 
 from AmorLib import DataBase, STRING_ROW
 
-from .. import DB_PATH
 from .cmop import ModeComp, PropComp
+from .. import DB_PATH
 
 
 class GameWork:
@@ -174,12 +174,12 @@ class GameWork:
 
     # 抽取道具
     @classmethod
-    def prop_draw(cls, game, target, count, pool=None):
+    def draw_prop(cls, game, target, count, pool=None):
         pool = pool or game["props"]["pool"]
         prop_list = []
         for _ in range(count):
             prop = random.choice(pool)
-            if not cls.prop_get(game, target, prop):
+            if not cls.get_prop(game, target, prop):
                 break
             prop_list.append(prop)
         if prop_list:
@@ -190,7 +190,7 @@ class GameWork:
 
     # 删除道具
     @staticmethod
-    def prop_remove(game, target, prop):
+    def remove_prop(game, target, prop):
         pl_props = game["players"][target]["props"]
         if prop in pl_props:
             pl_props.remove(prop)
@@ -199,7 +199,7 @@ class GameWork:
 
     # 获取道具
     @staticmethod
-    def prop_get(game, target, prop):
+    def get_prop(game, target, prop):
         pl_props = game["players"][target]["props"]
         if len(pl_props) >= game["props"]["limit"]:
             return False

@@ -3,8 +3,8 @@ import string
 
 from ..Core.cmd import commands
 from ..Core.cmop import PropComp
-from ..Core.doc import helpdoc
 from ..Core.work import GameWork
+from ..msgCustom import dictHelpDocTemp
 
 
 class BaseProp:
@@ -105,7 +105,7 @@ class 邀请函(PropComp, BaseProp):
             game["reply"]["info"].append(
                 f"{name}邀請{GameWork.get_name(game, target)}參加宴會."
             )
-        GameWork.prop_draw(game, target, 2, cls.pool)
+        GameWork.draw_prop(game, target, 2, cls.pool)
         GameWork.end_round(game)
         return True
 
@@ -283,8 +283,8 @@ class 口红(PropComp, BaseProp):
             game["reply"]["info"].append(
                 f"{name}給{target_name}{cls.reply()}的口紅, {target_name}以{prop}回贈."
             )
-            GameWork.prop_remove(game, target, prop)
-        GameWork.prop_get(game, game["shooter"], prop)
+            GameWork.remove_prop(game, target, prop)
+        GameWork.get_prop(game, game["shooter"], prop)
         return True
 
 
@@ -401,10 +401,10 @@ class 牛奶(PropComp, BaseProp):
             game["reply"]["info"].append(
                 f"{name}讓{GameWork.get_name(game, target)}飲下{cls.reply()}"
             )
-        GameWork.prop_draw(game, target, 2, cls.pool)
+        GameWork.draw_prop(game, target, 2, cls.pool)
         for pl in game["order"]:
             if pl != target:
-                GameWork.prop_draw(game, pl, 1, cls.pool)
+                GameWork.draw_prop(game, pl, 1, cls.pool)
         return True
 
 
@@ -415,8 +415,8 @@ class Gold(PropComp, BaseProp):
     @classmethod
     def _init_after(cls):
         prop_list = (prop for prop in PropComp.list() if prop != "金币")
+        dictHelpDocTemp["恶赌命令"] += "\n购买(道具名) #使用金币兑换道具."
 
-        @helpdoc.append_cmd("对局操作", "购买(道具名) #使用金币兑换道具")
         @commands.route("play", f"^(?:购买|購買) *({'|'.join(prop_list)})$")
         def purchase(game, user_id, group_id, msg_groups):
             if game["shooter"] != user_id:

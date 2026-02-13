@@ -78,8 +78,8 @@ class 经典(ModeComp, BaseMode):
     @classmethod
     def start(cls, game):
         for pl in game["order"][2:]:
-            GameWork.prop_draw(game, pl, 1)
-        GameWork.prop_draw(game, game["shooter"], 2)
+            GameWork.draw_prop(game, pl, 1)
+        GameWork.draw_prop(game, game["shooter"], 2)
 
     @classmethod
     def join(cls, game, user_id):
@@ -88,7 +88,7 @@ class 经典(ModeComp, BaseMode):
     # 换人
     @classmethod
     def switch(cls, game, **kwargs):
-        GameWork.prop_draw(game, game["shooter"], 2)
+        GameWork.draw_prop(game, game["shooter"], 2)
 
 
 class 道具(ModeComp, BaseMode):
@@ -133,7 +133,7 @@ class 道具(ModeComp, BaseMode):
     @classmethod
     def reload(cls, game, **kwargs):
         for pl in game["order"]:
-            GameWork.prop_draw(game, pl, 4)
+            GameWork.draw_prop(game, pl, 4)
 
 
 class 金币(ModeComp, BaseMode):
@@ -155,7 +155,7 @@ class 金币(ModeComp, BaseMode):
 
     @classmethod
     def start(cls, game):
-        GameWork.prop_get(game, game["shooter"], "金币")
+        GameWork.get_prop(game, game["shooter"], "金币")
 
     @classmethod
     def join(cls, game, user_id):
@@ -164,7 +164,7 @@ class 金币(ModeComp, BaseMode):
     # 换人
     @classmethod
     def switch(cls, game, **kwargs):
-        GameWork.prop_draw(game, game["shooter"], 1)
+        GameWork.draw_prop(game, game["shooter"], 1)
 
     # 受伤
     @classmethod
@@ -172,7 +172,7 @@ class 金币(ModeComp, BaseMode):
         target, dmg = kwargs["target"], kwargs["dmg"]
         comp = game["modify"].setdefault("金币", [])
         if target not in comp and game["players"][target]["hp"] - dmg <= 2:
-            if GameWork.prop_get(game, target, "金币"):
+            if GameWork.get_prop(game, target, "金币"):
                 game["reply"]["info"].append(
                     f"金光乍現！一枚金幣落入{GameWork.get_name(target)}手中."
                 )
@@ -215,8 +215,8 @@ class 勇者(ModeComp, BaseMode):
     @classmethod
     def start(cls, game):
         for pl in game["order"][1:]:
-            GameWork.prop_draw(game, pl, 2)
-        GameWork.prop_draw(game, game["shooter"], 1)
+            GameWork.draw_prop(game, pl, 2)
+        GameWork.draw_prop(game, game["shooter"], 1)
 
     @classmethod
     def join(cls, game, user_id):
@@ -233,7 +233,7 @@ class 勇者(ModeComp, BaseMode):
             modify["魔弹"] = True
         target = kwargs["target"]
         if target == game["shooter"] and not bullet:
-            GameWork.prop_draw(game, target, 2)
+            GameWork.draw_prop(game, target, 2)
 
     # 回合结束
     @classmethod
@@ -286,7 +286,7 @@ class 赌徒(ModeComp, BaseMode):
     def start(cls, game):
         game["modify"]["ammo_hide"] = True
         for pl in game["order"]:
-            GameWork.prop_draw(game, pl, 2)
+            GameWork.draw_prop(game, pl, 2)
 
     @classmethod
     def join(cls, game, user_id):
@@ -308,7 +308,7 @@ class 赌徒(ModeComp, BaseMode):
             modify["魔弹"] = True
         target = kwargs["target"]
         if target == game["shooter"] and not game["bullet"]:
-            GameWork.prop_draw(game, target, 3)
+            GameWork.draw_prop(game, target, 3)
 
     # 回合结束
     @classmethod

@@ -5,14 +5,30 @@ from collections import Counter
 from AmorLib import DataBase, is_master, get_group_role
 
 from . import DB_PATH
+from .msgCustom import dictHelpDocTemp
 from .Core.cmd import commands, get_target, COMMON_CMD
-from .Core.doc import helpdoc
 from .Core.cmop import ModeComp, PropComp
 from .Core.work import GameWork
 
+dictHelpDocTemp["恶赌命令"] = (
+    "〔设置〕\n"
+    "恶赌(on,off) #游戏开关(需管理权限).\n"
+    "〔资料〕\n"
+    "(名称)签署[生死状,契约] #注册角色或修改名称.\n"
+    "恶魔名片(数值,留空) #查看自己或他人的资料.\n"
+    "恶魔(赏金,杀戮,自杀,留空)[排行,榜] #查询排行, 留空默认查询赏金榜单.\n"
+    "〔对局操作〕\n"
+    "(模式名)匹配 #以默认人数匹配对局, 满人自动开启\n(模式名)匹配(数值)p #以自定义人数匹配对局.\n"
+    "退出 #退出匹配\n"
+    "(吞或开)枪(目标) #对目标射击, 可用qq号或序号指定目标, 留空默认下一顺位.\n"
+    "[使用,留空](道具名) (目标) #对目标使用道具, 可用qq号或序号指定目标.\n"
+    "局势 #查询当前游戏局势信息.\n"
+    "投降 #以自杀的形式结束."
+)
+# --------
+
 
 # region 设置
-@helpdoc.append_cmd("设置", "恶赌(on,off) #游戏开关(群管理).")
 @commands.route("setting", "^[惡恶]赌 *(on|off|ON|OFF|)$")
 def enabled(plugin_event, Proc, group_id, msg_groups):
     if is_master(plugin_event) or get_group_role(plugin_event) != "member":
@@ -64,7 +80,6 @@ def enabled(plugin_event, Proc, group_id, msg_groups):
 
 
 # region 资料
-@helpdoc.append_cmd("资料", "(名称)签署[生死状,契约] #注册或修改名称.")
 @commands.route(COMMON_CMD, "^(.+)(?:签署|簽署)(?:生死状|契约|生死狀|契約)$")
 def signed(game, user_id, group_id, msg_groups):
     name = msg_groups[0]
@@ -85,17 +100,16 @@ def signed(game, user_id, group_id, msg_groups):
                     "losses": 0,
                 },
             )
-    return f"{name}在生死狀簽下姓名。", False
+    return "strMrSigned", {"gamblerName": name}
 
 
-@helpdoc.append_cmd("资料", "恶魔名片(数值,留空) #查看自己或他人的资料.")
 @commands.route(COMMON_CMD, "^[惡恶]魔名片(\\d*)$")
 def card(game, user_id, group_id, msg_groups):
     target = msg_groups[0] if msg_groups[0] != "" else user_id
     with DataBase(DB_PATH) as db:
         gambler_info = db.select("gambler", "*", "user_id = ?", target)
         if not gambler_info:
-            return "只是个没有战绩的观众。"
+            return "strMrCardNone"
         gambler_info = gambler_info[0]
         gambler_rank = db.select(
             "gambler", "COUNT(*)", "points > ?", gambler_info["points"]
@@ -103,21 +117,18 @@ def card(game, user_id, group_id, msg_groups):
     wins, losses = int(gambler_info["wins"]), int(gambler_info["losses"])
     total = wins + losses
     win_rate = f"{ round(wins/total*100 ,2) } %" if total > 0 else "未參與過輪盤"
-    return (
-        f"『惡魔資料卡』"
-        f"\n真名: {gambler_info['name']}"
-        f"\n排名: {gambler_rank+1}"
-        f"\n賞金: {gambler_info['points']}"
-        f"\n槍下亡魂: {gambler_info['kills']}"
-        f"\n自取滅亡: {gambler_info['suicide']}"
-        f"\n取勝: {wins} | 戰敗: {losses}"
-        f"\n奪標率: {win_rate}"
-    ), False
+    return "strMrCardHas", {
+        "gamblerName": gambler_info["name"],
+        "gamblerRank": gambler_rank + 1,
+        "gamblerPoints": gambler_info["points"],
+        "gamblerKills": gambler_info["kills"],
+        "gamblerSuicide": gambler_info["suicide"],
+        "gamblerWins": wins,
+        "gamblerLosses": losses,
+        "gamblerWinRate": win_rate,
+    }
 
 
-@helpdoc.append_cmd(
-    "资料", "恶魔(赏金,杀戮,自杀,留空)[排行,榜] #查询排行, 留空默认查询赏金榜单."
-)
 @commands.route(COMMON_CMD, "^[恶惡]魔(赏金|杀戮|自杀|)(?:排行|榜)(\\d*)$")
 def leaderboard(game, user_id, group_id, msg_groups):
     ranking_page = int(msg_groups[1] or 1) * 10 - 10
@@ -143,12 +154,13 @@ def leaderboard(game, user_id, group_id, msg_groups):
         f"[{idx+1}] {gambler_info['name']}| {gambler_info[ranking]}"
         for idx, gambler_info in enumerate(gambler_list)
     )
-    return (
-        f"『惡魔{ranking_type}榜』\n"
-        f"{top_list}\n"
-        "▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁\n"
-        f"排名 {ranking_page+1}-{ranking_page+10} | 总计上榜恶魔 {gambler_total[0][0]}"
-    ), False
+    return "strMrLeaderboardList", {
+        "rankingType": ranking_type,
+        "gamblerLeaderboard": top_list,
+        "rankingPageHome": ranking_page + 1,
+        "rankingPageEnd": ranking_page + 10,
+        "gamblerTotal": gambler_total[0][0],
+    }
 
 
 # endregion
@@ -160,12 +172,9 @@ poker = {
     "suits": ("方片♦️", "梅花♣️", "红桃♥️", "黑桃♠️"),
     "ranks": ("A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"),
 }
+# --------
 
 
-@helpdoc.append_cmd(
-    "对局操作",
-    "(模式名)匹配 #以默认人数匹配对局, 满人自动开启\n(模式名)匹配(数值)p #以自定义人数匹配对局.",
-)
 @commands.route("ob", f"^({'|'.join(ModeComp.list())})匹配(?:(\\d+)p)?$")
 def match(game, user_id, group_id, msg_groups):
     # 自动注册
@@ -184,7 +193,12 @@ def match(game, user_id, group_id, msg_groups):
     )
     seats = int(seats) if seats else seats_def
     if not (seats_min <= seats <= seats_max):
-        return f"非法人数, {mode_name}模式限定人数为[{seats_min},{seats_max}] Defaults to {seats_def}."
+        return "strMrMatchSeatsError", {
+            "gameMode": mode_name,
+            "seatsMin": seats_min,
+            "seatsMax": seats_max,
+            "seatsDef": seats_def,
+        }
     # 清除过期对局
     expireTime = int(time.time())
     if expireTime > game.get("expireTime", 0) and not game.get("start", False):
@@ -227,9 +241,9 @@ def match(game, user_id, group_id, msg_groups):
             }
         )
     elif game["start"]:
-        return "对局进行中，无法加入。"
+        return "strMrMatchStartError"
     elif mode_name != game["mode"]:
-        return f"已经开设{game['mode']}对局。"
+        return "strMrMatchModeError", {"gameMode": game["mode"]}
 
     # 添加玩家
     if user_id not in game["order"]:
@@ -247,8 +261,8 @@ def match(game, user_id, group_id, msg_groups):
         mode_cfg.join(game, user_id)
 
     # 检查人数
-    pl_num = game["seats"]
-    if len(game["order"]) >= pl_num:
+    seats = game["seats"]
+    if len(game["order"]) >= seats:
         game["start"] = True
         game["expireTime"] = 0
         GameWork.bullet(game)
@@ -258,33 +272,30 @@ def match(game, user_id, group_id, msg_groups):
         game["players"][shooter]["actions"] = 1
         mode_cfg.start(game)
         game["reply"].update({"info": [], "ammo": "", "shooter": ""})
-        reply, _ = situation(game, None, None, None)
+        return situation(game, None, None, None)
     else:
-        reply = f"{game['mode']}對局靜候惡魔[{len(game['order'])}/{pl_num}]."
-    return reply, True
+        return "strMrMatchPrep", {
+            "gameMode": game["mode"],
+            "seatsHas": len(game["order"]),
+            "seatsMax": seats,
+        }
 
 
-@helpdoc.append_cmd("对局操作", "退出 #退出匹配")
 @commands.route("prep", "^退出$")
 def exit(game, user_id, group_id, msg_groups):
     game["order"].remove(user_id)
     del game["players"][user_id]
     if not game["order"]:
         game.clear()
-        reply = "你已退出，游戏解散"
+        return "strMrExitDismiss"
     else:
-        reply = f"你已退出，剩余：{len(game['order'])}人"
-    return reply, True
+        return "strMrExitRemain", {"seatsHas": len(game["order"])}
 
 
-@helpdoc.append_cmd(
-    "对局操作",
-    "(吞或开)枪(目标) #对目标射击, 可用qq号或序号指定目标, 留空默认下一顺位.",
-)
 @commands.route("play", "^(吞|开|開)[槍|枪] *(\\d*)$")
 def shoot(game, user_id, group_id, msg_groups):
     if game["shooter"] != user_id:
-        return f"現在是{GameWork.get_name(game)}的回合."
+        return "strMrActionsError", {"gamblerName": GameWork.get_name(game)}
     # 确定目标
     target = msg_groups[1]
     if msg_groups[0] == "吞":
@@ -292,31 +303,26 @@ def shoot(game, user_id, group_id, msg_groups):
     elif not (target := get_target(game, target)):
         return
     GameWork.shoot(game, target)
-    return GameWork.reply(game), True
+    return GameWork.reply(game)
 
 
-@helpdoc.append_cmd(
-    "对局操作",
-    "[使用,留空](道具名) (目标) #对目标使用道具, 可用qq号或序号指定目标",
-)
 @commands.route("play", f"^(?:使用|) *({'|'.join(PropComp.list())}) *(\\d*)$")
 def use_prop(game, user_id, group_id, msg_groups):
     if game["shooter"] != user_id:
-        return f"現在是{GameWork.get_name(game)}的回合."
+        return "strMrActionsError", {"gamblerName": GameWork.get_name(game)}
     prop, target = msg_groups[0], msg_groups[1]
     pl = game["players"][user_id]
     if prop not in pl["props"]:
-        return "未擁有該道具."
+        return "strMrPropError", {"propName": prop}
     if not target:
         target = user_id
     elif not (target := get_target(game, target)):
         return
     if PropComp.use(game, prop, target):
-        GameWork.prop_remove(game, user_id, prop)
-        return GameWork.reply(game), True
+        GameWork.remove_prop(game, user_id, prop)
+        return GameWork.reply(game)
 
 
-@helpdoc.append_cmd("对局操作", "局势 #查询当前游戏局势信息.")
 @commands.route(("ob", "prep", "play", "dead"), "^(?:局势|局勢)$")
 def situation(game, user_id, group_id, msg_groups):
     order = game["order"]
@@ -355,17 +361,16 @@ def situation(game, user_id, group_id, msg_groups):
         + ammo
         + bullet
         + dead
-    ), False
+    )
 
 
-@helpdoc.append_cmd("对局操作", "投降 #以自杀的形式结束.")
 @commands.route("play", "^投降$")
 def surrender(game, user_id, group_id, msg_groups):
     game["reply"]["info"].append(f"{GameWork.get_name(game,user_id)}被清除。")
     GameWork.dead(game, user_id, True)
     if len(game["order"]) <= 1:
         GameWork.end_round(game)
-    return GameWork.reply(game), True
+    return GameWork.reply(game)
 
 
 # endregion
