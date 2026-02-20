@@ -1,10 +1,10 @@
 import random
 import string
 
-from ..Core.cmd import commands
+from ..main import commands
+from ..msgCustom import dictHelpDocTemp
 from ..Core.cmop import PropComp
 from ..Core.work import GameWork
-from ..msgCustom import dictHelpDocTemp
 
 
 class BaseProp:

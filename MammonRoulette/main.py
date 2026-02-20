@@ -3,13 +3,13 @@ import MammonRoulette
 import json
 import os
 
-from AmorLib import DataBase, init_msgCustom, format_reply
+from AmorLib import DataBase, FsmRouter, MsgManager, init_msgCustom
 
 from . import DB_PATH
-from .Core.cmd import commands
 from .Core.cmop import ModeComp, PropComp
 
 GAME_PATH = "plugin/data/MammonRoulette/game.json"
+COMMON_CMD = ("priv", "ob", "prep", "play")
 
 
 class Event(object):
@@ -39,32 +39,47 @@ class Event(object):
         init_msgCustom(MammonRoulette, Proc)
 
     def menu(plugin_event, Proc):  # type: ignore
-        # 总开关
-        if plugin_event.data.event == "MammonRoulette_Menu_main_enabled":  # type: ignore
-            main_enabled = not Proc.database.get_basic_config(
-                "MammonRoulette",
-                "main_enabled",
-                default_value=1,
-                pkl=False,
-            )
-            Proc.database.set_basic_config(
-                "MammonRoulette", "main_enabled", int(main_enabled), pkl=False
-            )
-            Proc.log(2, "恶魔轮盘 -〈总开关〉-> " + str(main_enabled))
-        # 数据重加载
-        if plugin_event.data.event == "MammonRoulette_Menu_clear_cache":  # type: ignore
-            with open(GAME_PATH, "w", encoding="utf-8") as f:
-                json.dump({}, f)
-            Proc.log(2, "[恶魔轮盘] -「数据」-> 清除缓存.")
+        if plugin_event.data.namespace == "MammonRoulette":  # type: ignore
+            # 总开关
+            if plugin_event.data.event == "MammonRoulette_Menu_main_enabled":  # type: ignore
+                main_enabled = not Proc.database.get_basic_config(
+                    "MammonRoulette",
+                    "main_enabled",
+                    default_value=1,
+                    pkl=False,
+                )
+                Proc.database.set_basic_config(
+                    "MammonRoulette", "main_enabled", int(main_enabled), pkl=False
+                )
+                Proc.log(2, "恶魔轮盘 -〈总开关〉-> " + str(main_enabled))
+            # 数据重加载
+            elif plugin_event.data.event == "MammonRoulette_Menu_clear_cache":  # type: ignore
+                with open(GAME_PATH, "w", encoding="utf-8") as f:
+                    json.dump({}, f)
+                Proc.log(2, "[恶魔轮盘] -「数据」-> 清除缓存.")
 
     def group_message(plugin_event, Proc):  # type: ignore
-        unity_reply(plugin_event, Proc, plugin_event.data.group_id)  # type: ignore
+        unity_reply(plugin_event, Proc)
 
     def private_message(plugin_event, Proc):  # type: ignore
-        unity_reply(plugin_event, Proc, None)
+        unity_reply(plugin_event, Proc)
 
 
-def unity_reply(plugin_event, Proc, group_id):
+commands = FsmRouter(COMMON_CMD)
+ANY = commands.SearchMode.ANY
+
+
+def unity_reply(plugin_event, Proc):
+    if not Proc.database.get_basic_config(
+        "MammonRoulette",
+        "main_enabled",
+        default_value=1,
+        pkl=False,
+    ):
+        return
+    msgManager = MsgManager(plugin_event)
+    if not msgManager.allow_reply:
+        return
     # region 数据
     if os.path.exists(GAME_PATH):
         with open(GAME_PATH, "r", encoding="utf-8") as f:
@@ -80,65 +95,22 @@ def unity_reply(plugin_event, Proc, group_id):
             Proc.log(4, f"[恶魔轮盘] -「数据」-> 无法修复! 错误原因: \n{str(e)}")
             return
     # endregion
-    msg = plugin_event.data.message
-    user_id = plugin_event.data.user_id
     # region 状态
     game = {}
-    if not (
-        Proc.database.get_basic_config(
-            "MammonRoulette",
-            "main_enabled",
-            default_value=1,
-            pkl=False,
-        )
-        and Proc.database.get_group_config(
-            "MammonRoulette",
-            "game_enabled",
-            "qq",
-            group_id,
-            None,
-            default_value=1,
-            pkl=False,
-        )
-    ):
-        state = ""
-    elif group_id:
-        game = game_data.setdefault(group_id, {})
-        if user_id in game.get("order", []):
-            state = "play" if game_data[group_id]["start"] else "prep"
+    if msgManager.flags["is_group"]:
+        game = game_data.setdefault(msgManager.group_id, {})
+        if msgManager.user_id in game.get("order", []):
+            state = "play" if game["start"] else "prep"
         else:
             state = "ob"
     else:
         state = "priv"
+    msgManager.val["game"] = game
     # endregion
-    # region 命令
-    tValue = {
-        "tUserName": plugin_event.data.sender["name"],
-        "tName": plugin_event.data.sender["name"],
-    }
-    custom = ""
-    handle, msg_groups = commands.search(state, msg)
-    if handle:
-        result = handle(game, user_id, group_id, msg_groups)
-        if type(result) == tuple:
-            custom, tValue_tmp = result
-            tValue.update(tValue_tmp)
-        else:
-            custom = result
-    else:
-        handle = None
-        handle, msg_groups = commands.search("setting", msg)
-        if handle:
-            custom = handle(plugin_event, Proc, group_id, msg_groups)
-    if custom:
-        reply = format_reply(
-            plugin_event,
-            custom,
-            tValue,
-        )
-        plugin_event.reply(str(reply))
-    if state in ("ob", "prep", "play"):
-        with open(GAME_PATH, "w", encoding="utf-8") as f:
-            json.dump(game_data, f, indent=4, ensure_ascii=False)
-    # endregion
-    return
+    forward = commands.search(state, msgManager.msg, ANY)
+    if forward:
+        handler, groups = forward[0]
+        result = handler(plugin_event, Proc, msgManager, groups)
+        if result:
+            with open(GAME_PATH, "w", encoding="utf-8") as f:
+                json.dump(game_data, f, ensure_ascii=False, indent=4)
