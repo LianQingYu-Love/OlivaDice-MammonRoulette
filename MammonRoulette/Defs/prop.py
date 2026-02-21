@@ -12,11 +12,7 @@ class BaseProp:
     brief = ""
 
     @classmethod
-    def _init(cls):
-        pass
-
-    @classmethod
-    def _init_after(cls):
+    def init(cls):
         pass
 
     @classmethod
@@ -413,18 +409,27 @@ class Gold(PropComp, BaseProp):
     brief = "兑换任意 1 个未被ban的道具.\n#增加指令\n购买(道具名) //使用金币兑换道具."
 
     @classmethod
-    def _init_after(cls):
+    def init(cls):
         prop_list = (prop for prop in PropComp.list() if prop != "金币")
         dictHelpDocTemp["恶赌命令"] += "\n购买(道具名) #使用金币兑换道具."
 
         @commands.route("play", f"^(?:购买|購買) *({'|'.join(prop_list)})$")
-        def purchase(game, user_id, group_id, msg_groups):
+        def purchase(plugin_event, Proc, msgManager, groups):
+            user_id, game = msgManager.user_id, msgManager.game
             if game["shooter"] != user_id:
-                return f"現在是{GameWork.get_name(game)}的回合."
+                reply = msgManager.msg_format(
+                    "strMrActionsError", {"gamblerName": GameWork.get_name(game)}
+                )
+                plugin_event.reply(reply)
+                return False
             if "金币" not in game["players"][user_id]["props"]:
-                return "沒錢還想買道具?"
-            cls.purchase(game, user_id, msg_groups[0])
-            return GameWork.reply(game), True
+                reply = msgManager.msg_format("strMrPropError", {"propName": "金币"})
+                plugin_event.reply(reply)
+                return False
+            cls.purchase(game, user_id, groups[0])
+            reply = GameWork.reply(game)
+            plugin_event.reply(reply)
+            return True
 
     @staticmethod
     def reply():

@@ -43,7 +43,7 @@ class PropComp(Registerable):
         prop_helpDoc = {}
         for prop_name, prop_cls in cls._register.items():
             prop_helpDoc[f"恶赌道具 {prop_name}"] = prop_cls.brief
-            prop_cls._init_after()
+            prop_cls.init()
         dictHelpDocTemp.update(prop_helpDoc)
         return
 
