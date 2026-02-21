@@ -415,6 +415,7 @@ class Gold(PropComp, BaseProp):
 
         @commands.route("play", f"^(?:购买|購買) *({'|'.join(prop_list)})$")
         def purchase(plugin_event, Proc, msgManager, groups):
+            msgManager.val["game_update"] = True
             user_id, game = msgManager.user_id, msgManager.game
             if game["shooter"] != user_id:
                 reply = msgManager.msg_format(

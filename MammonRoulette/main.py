@@ -78,6 +78,7 @@ def unity_reply(plugin_event, Proc):
     ):
         return
     msgManager = MsgManager(plugin_event)
+    msgManager.val["game_update"] = False
     if not msgManager.allow_reply:
         return
     # region 数据
@@ -108,9 +109,11 @@ def unity_reply(plugin_event, Proc):
     msgManager.val["game"] = game
     # endregion
     forward = commands.search(state, msgManager.msg, ANY)
-    if forward:
-        handler, groups = forward[0]
+    result = False
+    for handler, groups in forward:
         result = handler(plugin_event, Proc, msgManager, groups)
         if result:
-            with open(GAME_PATH, "w", encoding="utf-8") as f:
-                json.dump(game_data, f, ensure_ascii=False, indent=4)
+            if msgManager.val["game_update"]:
+                with open(GAME_PATH, "w", encoding="utf-8") as f:
+                    json.dump(game_data, f, ensure_ascii=False, indent=4)
+            break

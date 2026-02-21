@@ -5,7 +5,7 @@ dictStrCustom = {
     "strMrCardHas": (
         "『惡魔資料卡』"
         "\n真名: {gamblerName}"
-        "\n排名: {gamblerRank}"
+        "\n排名: {gamblerRanking}"
         "\n賞金: {gamblerPoints}"
         "\n槍下亡魂: {gamblerKills}"
         "\n自取滅亡: {gamblerSuicide}"
@@ -14,11 +14,12 @@ dictStrCustom = {
     ),
     "strMrCardNone": "只是个没有战绩的观众.",
     "strMrLeaderboard": (
-        "『惡魔{rankingType}榜』\n"
-        "{gamblerCardList}\n"
+        "『惡魔{leaderboardType}榜』\n"
+        "{gamblerTopList}\n"
         "▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁\n"
-        "排名 {rankingPageHome}-{rankingPageEnd}｜总计上榜恶魔 {gamblerTotal}"
+        "排名 {rankingPageHome}-{rankingPageEnd}｜总计上榜恶魔 {gamblerNumCount}"
     ),
+    "strMrLeaderboardCard": "[{gamblerRanking}] {gamblerName}｜{gamblerRecord}",
     "strMrMatchPrep": "{gameMode}對局靜候惡魔[{seatsHas}/{seatsMax}].",
     "strMrMatchSeatsError": "非法人数, {gameMode}模式限定人数为[{seatsMin},{seatsMax}] Defaults to {seatsDef}.",
     "strMrMatchStartError": "对局已经开始, 无法加入.",
@@ -35,18 +36,19 @@ dictGValue = {}
 
 dictTValue = {
     "gamblerName": "NULL",
-    "gamblerRank": "NULL",
+    "gamblerRanking": "NULL",
     "gamblerPoints": "NULL",
     "gamblerKills": "NULL",
     "gamblerSuicide": "NULL",
     "gamblerWins": "NULL",
     "gamblerLosses": "NULL",
     "gamblerWinRate": "NULL",
-    "rankingType": "NULL",
-    "gamblerCardList": "NULL",
+    "leaderboardType": "NULL",
+    "gamblerTopList": "NULL",
     "rankingPageHome": "NULL",
     "rankingPageEnd": "NULL",
-    "gamblerTotal": "NULL",
+    "gamblerNumCount": "NULL",
+    "gamblerRecord": "NULL",
     "gameMode": "NULL",
     "seatsHas": "NULL",
     "seatsMax": "NULL",
@@ -60,6 +62,7 @@ dictStrCustomNote = {
     "strMrCardHas": "【恶魔名片】指令 显示玩家的资料.",
     "strMrCardNone": "【恶魔名片】指令 查看的玩家没有资料.",
     "strMrLeaderboard": "【恶魔排行】指令 显示排行榜.",
+    "strMrLeaderboardCard": "【恶魔排行】指令 玩家数据显示模板.",
     "strMrMatchPrep": "【匹配】指令 等待其他玩家加入.",
     "strMrMatchSeatsError": "【匹配】指令 席位设置不在允许范围.",
     "strMrMatchStartError": "【匹配】指令 对局已经开始, 无法加入.",
