@@ -166,9 +166,9 @@ def match_game(plugin_event, Proc, msg_manager, groups):
         gambler_info = db.select("gambler", "user_id", "user_id = ?", user_id)
     if not gambler_info:
         name = f"{random.choice(poker['suits'])+random.choice(poker['ranks'])}"
-        signed(plugin_event, Proc, msg_manager, groups)
+        signed(plugin_event, Proc, msg_manager, (name,))
     # endregion
-    # region 读取游戏数据
+    # region 读取模式数据
     mode_name, seats = groups[0], groups[1]
     mode_cfg = ModeComp.get(mode_name)
     seats_min, seats_max, seats_def = (
@@ -179,7 +179,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
     seats = int(seats) if seats else seats_def
     if not (seats_min <= seats <= seats_max):
         reply = msg_manager.msg_format(
-            "strMrMatchSeatsError",
+            "strMrGameSeatsError",
             {
                 "gameMode": mode_name,
                 "seatsMin": seats_min,
@@ -233,7 +233,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
             }
         )
     elif game["start"]:
-        reply = msg_manager.msg_format("strMrMatchStartError")
+        reply = msg_manager.msg_format("strMrGameStartError")
         plugin_event.reply(reply)
         return False
     elif mode_name != game["mode"]:
@@ -273,7 +273,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
         situation(plugin_event, Proc, msg_manager, groups)
     else:
         reply = msg_manager.msg_format(
-            "strMrMatchPrep",
+            "strMrGamePrep",
             {
                 "gameMode": game["mode"],
                 "seatsHas": len(game["order"]),

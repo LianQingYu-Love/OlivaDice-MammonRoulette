@@ -1,7 +1,10 @@
 import MammonRoulette
+import OlivOS  # type: ignore
 
 import json
 import os
+import time
+import random
 
 from AmorLib import DataBase, FsmRouter, MsgManager, init_msgCustom
 
@@ -62,10 +65,12 @@ class Event(object):
         unity_reply(plugin_event, Proc)
 
     def private_message(plugin_event, Proc):  # type: ignore
+        plugin_event.data.group_id = None  # type: ignore
         unity_reply(plugin_event, Proc)
 
     def poke(plugin_event, Proc):  # type: ignore
-        unity_reply(plugin_event, Proc)
+        if plugin_event.data.group_id:  # type: ignore
+            unity_reply(plugin_event, Proc)
 
 
 commands = FsmRouter(COMMON_CMD)
@@ -80,6 +85,12 @@ def unity_reply(plugin_event, Proc):
         pkl=False,
     ):
         return
+    is_poke = False
+    if plugin_event.plugin_info["func_type"] == "poke":
+        plugin_event.data.message = "poke"
+        plugin_event.data.sender = {}
+        plugin_event.data.extend = {}
+        is_poke = True
     msg_manager = MsgManager(plugin_event)
     msg_manager.val["game_update"] = False
     if not msg_manager.allow_reply:
@@ -101,8 +112,8 @@ def unity_reply(plugin_event, Proc):
     # endregion
     # region 状态
     game = {}
-    if msg_manager.flags["is_group"]:
-        game = game_data.setdefault(msg_manager.group_id, {})
+    if plugin_event.data.group_id:
+        game = game_data.setdefault(plugin_event.data.group_id, {})
         if msg_manager.user_id in game.get("order", []):
             state = "play" if game["start"] else "prep"
         else:
@@ -111,22 +122,18 @@ def unity_reply(plugin_event, Proc):
         state = "priv"
     msg_manager.val["game"] = game
     # endregion
-    msg = msg_manager.msg
-    if (
-        game
-        and msg_manager.flags["is_group"]
-        and msg_manager.func_type == "poke"
-        and msg_manager.val["target_id"] == msg_manager.bot_id
-    ):
-        if state == "ob":
-            msg = "加入"
-        elif state == "prep":
-            msg = "退出"
-        elif state == "play":
-            msg = "局势"
-    forward = commands.search(state, msg, ANY)
-    result = False
-    for handler, groups in forward:
+    # region poke
+    msg = ""
+    if not is_poke:
+        msg = msg_manager.msg
+    elif state == "ob":
+        msg = "加入"
+    elif state == "prep":
+        msg = "退出"
+    elif state == "play":
+        msg = "局势"
+    # endregion
+    for handler, groups in commands.search(state, msg, ANY):
         result = handler(plugin_event, Proc, msg_manager, groups)
         if result:
             if msg_manager.val["game_update"]:
