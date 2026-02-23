@@ -160,11 +160,7 @@ def leaderboard(plugin_event, Proc, msgManager, groups):
 @commands.route("ob", f"^({'|'.join(ModeComp.list())})匹配(?:(\\d+)p)?$")
 def match(plugin_event, Proc, msgManager, groups):
     msgManager.val["game_update"] = True
-    user_id, group_id, game = (
-        msgManager.user_id,
-        msgManager.group_id,
-        msgManager.val["game"],
-    )
+    user_id, game = msgManager.user_id, msgManager.val["game"]
     # region 自动注册
     with DataBase(DB_PATH) as db:
         gambler_info = db.select("gambler", "user_id", "user_id = ?", user_id)
@@ -272,7 +268,7 @@ def match(plugin_event, Proc, msgManager, groups):
         game["players"][shooter]["actions"] = 1
         mode_cfg.start(game)
         game["reply"].update({"info": [], "ammo": "", "shooter": ""})
-        situation(game, None, None, None)
+        situation(plugin_event, Proc, msgManager, groups)
     else:
         reply = msgManager.msg_format(
             "strMrMatchPrep",

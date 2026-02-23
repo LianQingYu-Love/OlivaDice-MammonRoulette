@@ -404,7 +404,7 @@ class 牛奶(PropComp, BaseProp):
         return True
 
 
-class Gold(PropComp, BaseProp):
+class 金币(PropComp, BaseProp):
     name = "金币"
     brief = "兑换任意 1 个未被ban的道具.\n#增加指令\n购买(道具名) //使用金币兑换道具."
 
