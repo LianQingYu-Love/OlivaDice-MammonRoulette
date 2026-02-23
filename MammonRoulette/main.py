@@ -64,6 +64,9 @@ class Event(object):
     def private_message(plugin_event, Proc):  # type: ignore
         unity_reply(plugin_event, Proc)
 
+    def poke(plugin_event, Proc):  # type: ignore
+        unity_reply(plugin_event, Proc)
+
 
 commands = FsmRouter(COMMON_CMD)
 ANY = commands.SearchMode.ANY
@@ -77,9 +80,9 @@ def unity_reply(plugin_event, Proc):
         pkl=False,
     ):
         return
-    msgManager = MsgManager(plugin_event)
-    msgManager.val["game_update"] = False
-    if not msgManager.allow_reply:
+    msg_manager = MsgManager(plugin_event)
+    msg_manager.val["game_update"] = False
+    if not msg_manager.allow_reply:
         return
     # region 数据
     if os.path.exists(GAME_PATH):
@@ -98,22 +101,35 @@ def unity_reply(plugin_event, Proc):
     # endregion
     # region 状态
     game = {}
-    if msgManager.flags["is_group"]:
-        game = game_data.setdefault(msgManager.group_id, {})
-        if msgManager.user_id in game.get("order", []):
+    if msg_manager.flags["is_group"]:
+        game = game_data.setdefault(msg_manager.group_id, {})
+        if msg_manager.user_id in game.get("order", []):
             state = "play" if game["start"] else "prep"
         else:
             state = "ob"
     else:
         state = "priv"
-    msgManager.val["game"] = game
+    msg_manager.val["game"] = game
     # endregion
-    forward = commands.search(state, msgManager.msg, ANY)
+    msg = msg_manager.msg
+    if (
+        game
+        and msg_manager.flags["is_group"]
+        and msg_manager.func_type == "poke"
+        and msg_manager.val["target_id"] == msg_manager.bot_id
+    ):
+        if state == "ob":
+            msg = "加入"
+        elif state == "prep":
+            msg = "退出"
+        elif state == "play":
+            msg = "局势"
+    forward = commands.search(state, msg, ANY)
     result = False
     for handler, groups in forward:
-        result = handler(plugin_event, Proc, msgManager, groups)
+        result = handler(plugin_event, Proc, msg_manager, groups)
         if result:
-            if msgManager.val["game_update"]:
+            if msg_manager.val["game_update"]:
                 with open(GAME_PATH, "w", encoding="utf-8") as f:
                     json.dump(game_data, f, ensure_ascii=False, indent=4)
             break

@@ -414,17 +414,17 @@ class 金币(PropComp, BaseProp):
         dictHelpDocTemp["恶赌命令"] += "\n购买(道具名) #使用金币兑换道具."
 
         @commands.route("play", f"^(?:购买|購買) *({'|'.join(prop_list)})$")
-        def purchase(plugin_event, Proc, msgManager, groups):
-            msgManager.val["game_update"] = True
-            user_id, game = msgManager.user_id, msgManager.game
+        def purchase(plugin_event, Proc, msg_manager, groups):
+            msg_manager.val["game_update"] = True
+            user_id, game = msg_manager.user_id, msg_manager.game
             if game["shooter"] != user_id:
-                reply = msgManager.msg_format(
+                reply = msg_manager.msg_format(
                     "strMrActionsError", {"gamblerName": GameWork.get_name(game)}
                 )
                 plugin_event.reply(reply)
                 return False
             if "金币" not in game["players"][user_id]["props"]:
-                reply = msgManager.msg_format("strMrPropError", {"propName": "金币"})
+                reply = msg_manager.msg_format("strMrPropError", {"propName": "金币"})
                 plugin_event.reply(reply)
                 return False
             cls.purchase(game, user_id, groups[0])
