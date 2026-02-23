@@ -4,8 +4,8 @@
     "namespace": "MammonRoulette",
     "info": "權衡風險與收益：是孤注一擲，還是步步爲營? 生死之間唯有膽識與策略並存的惡鬼得以幸存.",
     "priority": 50000,
-    "svn": 17,
-    "version": "2.4.3",
+    "svn": 18,
+    "version": "2.4.4",
     "compatible_svn": 201,
     "message_mode": "old_string",
     "support": [
@@ -19,6 +19,10 @@
         {
             "title": "[总开关]",
             "event": "MammonRoulette_Menu_main_enabled"
+        },
+        {
+            "title": "[poke开关]",
+            "event": "MammonRoulette_Menu_poke_enabled"
         },
         {
             "title": "[清除缓存]",

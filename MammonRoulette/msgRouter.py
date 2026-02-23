@@ -154,8 +154,6 @@ def leaderboard(plugin_event, Proc, msg_manager, groups):
 
 
 # endregion
-
-
 # region 房间操作
 @commands.route("ob", f"^({'|'.join(ModeComp.list())})匹配(?:(\\d+)p)?$")
 def match_game(plugin_event, Proc, msg_manager, groups):

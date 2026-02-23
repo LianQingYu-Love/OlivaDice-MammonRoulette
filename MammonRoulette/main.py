@@ -19,8 +19,20 @@ class Event(object):
     def init(plugin_event, Proc):  # type: ignore
         if not os.path.exists("plugin/data/MammonRoulette/"):
             os.mkdir("plugin/data/MammonRoulette/")
-        with open(GAME_PATH, "w", encoding="utf-8") as f:
-            json.dump({}, f)
+        try:
+            if os.path.exists(GAME_PATH):
+                with open(GAME_PATH, "r", encoding="utf-8") as f:
+                    json.load(f)
+            else:
+                Proc.log(3, "[恶魔轮盘] -「数据」-> 数据存储文件不存在, 尝试修复中……")
+                with open(GAME_PATH, "w", encoding="utf-8") as f:
+                    json.dump({}, f)
+                Proc.log(1, "[恶魔轮盘] -「数据」-> 修复成功.")
+        except Exception as e:
+            Proc.log(4, f"[恶魔轮盘] -「数据」-> 无法修复! 错误原因: \n{str(e)}")
+            Proc.database.set_basic_config(
+                "MammonRoulette", "main_enabled", 0, pkl=False
+            )
         with DataBase(DB_PATH) as db:
             db.create(
                 "gambler",
@@ -55,6 +67,18 @@ class Event(object):
                     "MammonRoulette", "main_enabled", int(main_enabled), pkl=False
                 )
                 Proc.log(2, "恶魔轮盘 -〈总开关〉-> " + str(main_enabled))
+            # poke开关
+            elif plugin_event.data.event == "MammonRoulette_Menu_poke_enabled":  # type: ignore
+                poke_enabled = not Proc.database.get_basic_config(
+                    "MammonRoulette",
+                    "poke_enabled",
+                    default_value=1,
+                    pkl=False,
+                )
+                Proc.database.set_basic_config(
+                    "MammonRoulette", "poke_enabled", int(poke_enabled), pkl=False
+                )
+                Proc.log(2, "恶魔轮盘 -〈poke开关〉-> " + str(poke_enabled))
             # 数据重加载
             elif plugin_event.data.event == "MammonRoulette_Menu_clear_cache":  # type: ignore
                 with open(GAME_PATH, "w", encoding="utf-8") as f:
@@ -69,7 +93,15 @@ class Event(object):
         unity_reply(plugin_event, Proc)
 
     def poke(plugin_event, Proc):  # type: ignore
-        if plugin_event.data.group_id:  # type: ignore
+        if plugin_event.data.group_id and Proc.database.get_basic_config(  # type: ignore
+            "MammonRoulette",
+            "poke_enabled",
+            default_value=1,
+            pkl=False,
+        ):  # type: ignore
+            plugin_event.data.message = "poke"  # type: ignore
+            plugin_event.data.sender = {}  # type: ignore
+            plugin_event.data.extend = {}  # type: ignore
             unity_reply(plugin_event, Proc)
 
 
@@ -85,30 +117,13 @@ def unity_reply(plugin_event, Proc):
         pkl=False,
     ):
         return
-    is_poke = False
-    if plugin_event.plugin_info["func_type"] == "poke":
-        plugin_event.data.message = "poke"
-        plugin_event.data.sender = {}
-        plugin_event.data.extend = {}
-        is_poke = True
     msg_manager = MsgManager(plugin_event)
     msg_manager.val["game_update"] = False
     if not msg_manager.allow_reply:
         return
     # region 数据
-    if os.path.exists(GAME_PATH):
-        with open(GAME_PATH, "r", encoding="utf-8") as f:
-            game_data = json.load(f)
-    else:
-        Proc.log(3, "[恶魔轮盘] -「数据」-> 数据文件不存在, 尝试修复中……")
-        try:
-            with open(GAME_PATH, "w", encoding="utf-8") as f:
-                json.dump({}, f)
-            game_data = {}
-            Proc.log(1, "[恶魔轮盘] -「数据」-> 修复成功.")
-        except Exception as e:
-            Proc.log(4, f"[恶魔轮盘] -「数据」-> 无法修复! 错误原因: \n{str(e)}")
-            return
+    with open(GAME_PATH, "r", encoding="utf-8") as f:
+        game_data = json.load(f)
     # endregion
     # region 状态
     game = {}
@@ -124,7 +139,7 @@ def unity_reply(plugin_event, Proc):
     # endregion
     # region poke
     msg = ""
-    if not is_poke:
+    if not plugin_event.plugin_info["func_type"] == "poke":
         msg = msg_manager.msg
     elif state == "ob":
         msg = "加入"
