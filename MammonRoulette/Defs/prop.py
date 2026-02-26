@@ -411,7 +411,7 @@ class 金币(PropComp, BaseProp):
     @classmethod
     def init(cls):
         prop_list = (prop for prop in PropComp.list() if prop != "金币")
-        dictHelpDocTemp["恶赌命令"] += "\n购买(道具名) //使用金币兑换道具."
+        dictHelpDocTemp["恶赌 命令"] += "\n购买(道具名) //使用金币兑换道具."
 
         @commands.route("play", f"^(?:购买|購買) *({'|'.join(prop_list)})$")
         def purchase(plugin_event, Proc, msg_manager, groups):
