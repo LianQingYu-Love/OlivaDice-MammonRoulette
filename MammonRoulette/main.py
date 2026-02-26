@@ -1,10 +1,7 @@
 import MammonRoulette
-import OlivOS  # type: ignore
 
 import json
 import os
-import time
-import random
 
 from AmorLib import DataBase, FsmRouter, MsgManager, init_msgCustom
 
@@ -24,12 +21,12 @@ class Event(object):
                 with open(GAME_PATH, "r", encoding="utf-8") as f:
                     json.load(f)
             else:
-                Proc.log(3, "[恶魔轮盘] -「数据」-> 数据存储文件不存在, 尝试修复中……")
+                Proc.log(3, "[恶魔轮盘] - (数据) -> 数据存储文件不存在, 尝试修复中……")
                 with open(GAME_PATH, "w", encoding="utf-8") as f:
                     json.dump({}, f)
-                Proc.log(1, "[恶魔轮盘] -「数据」-> 修复成功.")
+                Proc.log(1, "[恶魔轮盘] - (数据) -> 数据存储文件修复成功.")
         except Exception as e:
-            Proc.log(4, f"[恶魔轮盘] -「数据」-> 无法修复! 错误原因: \n{str(e)}")
+            Proc.log(4, f"[恶魔轮盘] - (数据) -> 无法修复! 错误原因:\n{str(e)}")
             Proc.database.set_basic_config(
                 "MammonRoulette", "main_enabled", 0, pkl=False
             )
@@ -66,7 +63,7 @@ class Event(object):
                 Proc.database.set_basic_config(
                     "MammonRoulette", "main_enabled", int(main_enabled), pkl=False
                 )
-                Proc.log(2, "恶魔轮盘 -〈总开关〉-> " + str(main_enabled))
+                Proc.log(2, "[恶魔轮盘] - (数据) -> " + str(main_enabled))
             # poke开关
             elif plugin_event.data.event == "MammonRoulette_Menu_poke_enabled":  # type: ignore
                 poke_enabled = not Proc.database.get_basic_config(
@@ -78,12 +75,12 @@ class Event(object):
                 Proc.database.set_basic_config(
                     "MammonRoulette", "poke_enabled", int(poke_enabled), pkl=False
                 )
-                Proc.log(2, "恶魔轮盘 -〈poke开关〉-> " + str(poke_enabled))
+                Proc.log(2, "[恶魔轮盘] - (数据) -> " + str(poke_enabled))
             # 数据重加载
             elif plugin_event.data.event == "MammonRoulette_Menu_clear_cache":  # type: ignore
                 with open(GAME_PATH, "w", encoding="utf-8") as f:
                     json.dump({}, f)
-                Proc.log(2, "[恶魔轮盘] -「数据」-> 清除缓存.")
+                Proc.log(2, "[恶魔轮盘] - (数据) -> 清除缓存.")
 
     def group_message(plugin_event, Proc):  # type: ignore
         unity_reply(plugin_event, Proc)
@@ -93,11 +90,15 @@ class Event(object):
         unity_reply(plugin_event, Proc)
 
     def poke(plugin_event, Proc):  # type: ignore
-        if plugin_event.data.group_id and Proc.database.get_basic_config(  # type: ignore
-            "MammonRoulette",
-            "poke_enabled",
-            default_value=1,
-            pkl=False,
+        if (
+            plugin_event.data.group_id  # type: ignore
+            and plugin_event.data.target_id == plugin_event.base_info["self_id"]  # type: ignore
+            and Proc.database.get_basic_config(  # type: ignore
+                "MammonRoulette",
+                "poke_enabled",
+                default_value=1,
+                pkl=False,
+            )
         ):  # type: ignore
             plugin_event.data.message = "poke"  # type: ignore
             plugin_event.data.sender = {}  # type: ignore

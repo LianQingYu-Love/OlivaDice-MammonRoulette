@@ -411,12 +411,12 @@ class 金币(PropComp, BaseProp):
     @classmethod
     def init(cls):
         prop_list = (prop for prop in PropComp.list() if prop != "金币")
-        dictHelpDocTemp["恶赌命令"] += "\n购买(道具名) #使用金币兑换道具."
+        dictHelpDocTemp["恶赌命令"] += "\n购买(道具名) //使用金币兑换道具."
 
         @commands.route("play", f"^(?:购买|購買) *({'|'.join(prop_list)})$")
         def purchase(plugin_event, Proc, msg_manager, groups):
             msg_manager.val["game_update"] = True
-            user_id, game = msg_manager.user_id, msg_manager.game
+            user_id, game = msg_manager.user_id, msg_manager.val["game"]
             if game["shooter"] != user_id:
                 reply = msg_manager.msg_format(
                     "strMrActionsError", {"gamblerName": GameWork.get_name(game)}

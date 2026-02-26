@@ -12,18 +12,18 @@ from .Core.work import GameWork
 
 dictHelpDocTemp["恶赌命令"] = (
     "〔设置〕\n"
-    "恶赌(on,off) #游戏开关(需管理权限).\n"
+    "恶赌(on,off) //游戏开关(需管理权限).\n"
     "〔资料〕\n"
-    "(名称)签署[生死状,契约] #注册角色或修改名称.\n"
-    "恶魔名片(数值,留空) #查看自己或他人的资料.\n"
-    "恶魔(赏金,杀戮,自杀,留空)[排行,榜] #查询排行, 留空默认查询赏金榜单.\n"
+    "(名称)签署[生死状,契约] //注册角色或修改名称.\n"
+    "恶魔名片(数值,留空) //查看自己或他人的资料.\n"
+    "恶魔(赏金,杀戮,自杀,留空)[排行,榜] //查询排行, 留空默认查询赏金榜单.\n"
     "〔对局操作〕\n"
-    "(模式名)匹配 #以默认人数匹配对局, 满人自动开启\n(模式名)匹配(数值)p #以自定义人数匹配对局.\n"
-    "退出 #退出匹配\n"
-    "(吞或开)枪(目标) #对目标射击, 可用qq号或序号指定目标, 留空默认下一顺位.\n"
-    "[使用,留空](道具名) (目标) #对目标使用道具, 可用qq号或序号指定目标.\n"
-    "局势 #查询当前游戏局势信息.\n"
-    "投降 #以自杀的形式结束."
+    "(模式名)匹配 //以默认人数匹配对局, 满人自动开启\n(模式名)匹配(数值)p //以自定义人数匹配对局.\n"
+    "退出 //退出匹配\n"
+    "(吞或开)枪(目标) //对目标射击, 可用qq号或序号指定目标, 留空默认下一顺位.\n"
+    "[使用,留空](道具名) (目标) //对目标使用道具, 可用qq号或序号指定目标.\n"
+    "局势 //查询当前游戏局势信息.\n"
+    "投降 //以自杀的形式结束."
 )
 
 
@@ -68,7 +68,7 @@ def signed(plugin_event, Proc, msg_manager, groups):
                     "losses": 0,
                 },
             )
-    reply = msg_manager.msg_format("strMrSigned", {"gamblerName": name})
+    reply = msg_manager.msg_format("strMrSignedResult", {"gamblerName": name})
     plugin_event.reply(reply)
     return True
 
@@ -268,7 +268,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
         game["players"][shooter]["actions"] = 1
         mode_cfg.start(game)
         game["reply"].update({"info": [], "ammo": "", "shooter": ""})
-        situation(plugin_event, Proc, msg_manager, groups)
+        situation(plugin_event, Proc, msg_manager, None)
     else:
         reply = msg_manager.msg_format(
             "strMrGamePrep",
@@ -286,7 +286,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
 @commands.route("ob", "^加入$")
 def join_game(plugin_event, Proc, msg_manager, groups):
     game = msg_manager.val["game"]
-    if not game:
+    if not game or game["start"]:
         return False
     mode_name = game["mode"]
     match_game(plugin_event, Proc, msg_manager, (mode_name, ""))
@@ -365,9 +365,9 @@ def use_prop(plugin_event, Proc, msg_manager, groups):
 @commands.route(COMMON_CMD, "^(?:局势|局勢)$")
 def situation(plugin_event, Proc, msg_manager, groups):
     game = msg_manager.val["game"]
-    order = game["order"]
-    players = game["players"]
-    shooter = game["shooter"]
+    if not game:
+        return False
+    order, players, shooter = game["order"], game["players"], game["shooter"]
     # 赌徒
     modify = game["modify"]
     pl_list = [
