@@ -4,7 +4,7 @@ import string
 from ..main import commands
 from ..msgCustom import dictHelpDocTemp
 from ..Core.cmop import PropComp
-from ..Core.work import GameWork
+from ..Core.work import RegGameWork
 
 
 class BaseProp:
@@ -43,7 +43,7 @@ class 手铐(PropComp, BaseProp):
             game["reply"]["info"].append(f"{pl['name']}被銬住了{cls.reply()}.")
             comp.append(target)
             pl["actions"] -= 1
-            GameWork.event(game, "手铐", "switch")
+            RegGameWork.event(game, "手铐", "switch")
             return True
         game["reply"]["info"].append(f"{pl['name']}已經被铐住了.")
         return False
@@ -70,7 +70,7 @@ class 锯子(PropComp, BaseProp):
             game["reply"]["info"].append("槍管被鋸斷了.")
             modify["dmg"] = modify.get("dmg", 0) + 1
             modify["锯子"] = {"ban": True, "shoot": False}
-            GameWork.event(game, "锯子", ("shoot", "end_round"))
+            RegGameWork.event(game, "锯子", ("shoot", "end_round"))
             return True
         game["reply"]["info"].append("槍管早已被鋸斷.")
         return False
@@ -94,15 +94,15 @@ class 邀请函(PropComp, BaseProp):
 
     @classmethod
     def apply(cls, game, target):
-        name = GameWork.get_name(game)
+        name = RegGameWork.get_name(game)
         if target == game["shooter"]:
             game["reply"]["info"].append(f"{name}將邀請函撕碎.")
         else:
             game["reply"]["info"].append(
-                f"{name}邀請{GameWork.get_name(game, target)}參加宴會."
+                f"{name}邀請{RegGameWork.get_name(game, target)}參加宴會."
             )
-        GameWork.draw_prop(game, target, 2, cls.pool)
-        GameWork.end_round(game)
+        RegGameWork.draw_prop(game, target, 2, cls.pool)
+        RegGameWork.end_round(game)
         return True
 
 
@@ -114,7 +114,7 @@ class 花生(PropComp, BaseProp):
     def apply(cls, game, target):
         game["reply"]["info"].append("花生殼被塞進彈倉.")
         game["ammo_blank"] += 1
-        GameWork.bullet(game)
+        RegGameWork.bullet(game)
         return True
 
 
@@ -145,7 +145,7 @@ class 巧克力(PropComp, BaseProp):
     def apply(cls, game, target):
         game["reply"]["info"].append(f"{cls.reply()}巧克力被塞進彈倉.")
         game["ammo_live"] += 1
-        GameWork.bullet(game)
+        RegGameWork.bullet(game)
         return True
 
 
@@ -163,9 +163,9 @@ class 香烟(PropComp, BaseProp):
             game["ammo_live"] -= 1
             bullet = "實彈"
         game["reply"]["info"].append(
-            f"{GameWork.get_name(game)}扔掉香煙, 取出一發{bullet}."
+            f"{RegGameWork.get_name(game)}扔掉香煙, 取出一發{bullet}."
         )
-        GameWork.bullet(game)
+        RegGameWork.bullet(game)
         return True
 
 
@@ -179,16 +179,16 @@ class 红牛(PropComp, BaseProp):
 
     @classmethod
     def apply(cls, game, target):
-        name = GameWork.get_name(game)
+        name = RegGameWork.get_name(game)
         if target == game["shooter"]:
             game["reply"]["info"].append(
                 f"{name}將混著{cls.reply()}的紅牛將其一飲而盡."
             )
         else:
             game["reply"]["info"].append(
-                f"{name}將混著{cls.reply()}的紅牛喂給{GameWork.get_name(game, target)}."
+                f"{name}將混著{cls.reply()}的紅牛喂給{RegGameWork.get_name(game, target)}."
             )
-        GameWork.damage(game, target, -1)
+        RegGameWork.damage(game, target, -1)
         return True
 
 
@@ -201,12 +201,12 @@ class 放大镜(PropComp, BaseProp):
         modify = game["modify"]
         if not modify.get("放大镜"):
             game["reply"]["info"].append(
-                f"{GameWork.get_name(game)}砸碎放大鏡, 發現槍膛裏是{'實彈' if game['bullet'] else '空包彈'}."
+                f"{RegGameWork.get_name(game)}砸碎放大鏡, 發現槍膛裏是{'實彈' if game['bullet'] else '空包彈'}."
             )
             modify["放大镜"] = True
             modify["bullet_show"] = True
             modify["ammo_hide"] = False
-            GameWork.event(game, "放大镜", "shoot")
+            RegGameWork.event(game, "放大镜", "shoot")
             return True
         game["reply"]["info"].append("已用放大镜, 开枪前可查看子弹虚实.")
         return False
@@ -264,7 +264,7 @@ class 口红(PropComp, BaseProp):
 
     @classmethod
     def apply(cls, game, target):
-        name = GameWork.get_name(game)
+        name = RegGameWork.get_name(game)
         props_list = [
             prop
             for prop in game["players"][target]["props"]
@@ -275,12 +275,12 @@ class 口红(PropComp, BaseProp):
             game["reply"]["info"].append(f"{name}{cls.reply()}的口紅, 神明贈予{prop}.")
         else:
             prop = random.choice(props_list)
-            target_name = GameWork.get_name(game, target)
+            target_name = RegGameWork.get_name(game, target)
             game["reply"]["info"].append(
                 f"{name}給{target_name}{cls.reply()}的口紅, {target_name}以{prop}回贈."
             )
-            GameWork.remove_prop(game, target, prop)
-        GameWork.get_prop(game, game["shooter"], prop)
+            RegGameWork.remove_prop(game, target, prop)
+        RegGameWork.get_prop(game, game["shooter"], prop)
         return True
 
 
@@ -305,7 +305,7 @@ class 扑克(PropComp, BaseProp):
         modify["ammo_hide"] = True
         callback = game["callback"]
         if "扑克" not in callback["shoot"] + callback["reload"]:
-            GameWork.event(game, "扑克", ("shoot", "reload"))
+            RegGameWork.event(game, "扑克", ("shoot", "reload"))
         bullet = not game["bullet"]
         game["bullet"] = bullet
         if bullet:
@@ -345,7 +345,7 @@ class 转盘(PropComp, BaseProp):
         ammo_live = ammo - ammo_blank
         game["ammo_live"] = ammo_live
         game["ammo_blank"] = ammo_blank
-        GameWork.bullet(game)
+        RegGameWork.bullet(game)
         game["reply"]["ammo"] = f"彈仓: {ammo_live} / {ammo}"
         return True
 
@@ -390,17 +390,17 @@ class 牛奶(PropComp, BaseProp):
 
     @classmethod
     def apply(cls, game, target):
-        name = GameWork.get_name(game)
+        name = RegGameWork.get_name(game)
         if target == game["shooter"]:
             game["reply"]["info"].append(f"{name}飲下{cls.reply()}")
         else:
             game["reply"]["info"].append(
-                f"{name}讓{GameWork.get_name(game, target)}飲下{cls.reply()}"
+                f"{name}讓{RegGameWork.get_name(game, target)}飲下{cls.reply()}"
             )
-        GameWork.draw_prop(game, target, 2, cls.pool)
+        RegGameWork.draw_prop(game, target, 2, cls.pool)
         for pl in game["order"]:
             if pl != target:
-                GameWork.draw_prop(game, pl, 1, cls.pool)
+                RegGameWork.draw_prop(game, pl, 1, cls.pool)
         return True
 
 
@@ -419,7 +419,7 @@ class 金币(PropComp, BaseProp):
             user_id, game = msg_manager.user_id, msg_manager.val["game"]
             if game["shooter"] != user_id:
                 reply = msg_manager.msg_format(
-                    "strMrActionsError", {"gamblerName": GameWork.get_name(game)}
+                    "strMrActionsError", {"gamblerName": RegGameWork.get_name(game)}
                 )
                 plugin_event.reply(reply)
                 return False
@@ -428,7 +428,7 @@ class 金币(PropComp, BaseProp):
                 plugin_event.reply(reply)
                 return False
             cls.purchase(game, user_id, groups[0])
-            reply = GameWork.reply(game)
+            reply = RegGameWork.reply(game)
             plugin_event.reply(reply)
             return True
 

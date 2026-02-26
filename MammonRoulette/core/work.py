@@ -6,7 +6,7 @@ from .cmop import ModeComp, PropComp
 from .. import DB_PATH
 
 
-class GameWork:
+class RegGameWork:
     # 消息
     @staticmethod
     def reply(game):
@@ -25,6 +25,7 @@ class GameWork:
             reply.update({"info": [], "ammo": "", "shooter": ""})
         return msg
 
+    # 名字
     @staticmethod
     def get_name(game, target=None):
         pls = game["players"]
@@ -32,6 +33,64 @@ class GameWork:
             return pls[target]["name"]
         return pls[game["shooter"]]["name"]
 
+    # region prop
+    # 抽取道具
+    @classmethod
+    def draw_prop(cls, game, target, count, pool=None):
+        pool = pool or game["props"]["pool"]
+        prop_list = []
+        for _ in range(count):
+            prop = random.choice(pool)
+            if not cls.get_prop(game, target, prop):
+                break
+            prop_list.append(prop)
+        if prop_list:
+            game["reply"]["info"].append(
+                f"{game['players'][target]['name']}得到: {'、'.join(prop_list)}"
+            )
+        return
+
+    # 删除道具
+    @staticmethod
+    def remove_prop(game, target, prop):
+        pl_props = game["players"][target]["props"]
+        if prop in pl_props:
+            pl_props.remove(prop)
+            return True
+        return False
+
+    # 获取道具
+    @staticmethod
+    def get_prop(game, target, prop):
+        pl_props = game["players"][target]["props"]
+        if len(pl_props) >= game["props"]["limit"]:
+            return False
+        elif prop in game["props"]["ban"]:
+            prop = random.choice(game["props"]["pool"])
+        pl_props.append(prop)
+        return True
+
+    # endregion
+    # region event
+    # 添加事件
+    @staticmethod
+    def event(game, prop, event_list: STRING_ROW | str):
+        if type(event_list) == str:
+            event_list = (event_list,)
+        for event in set(event_list):
+            game["callback"][event].append(prop)
+
+    # 事件触发器
+    @staticmethod
+    def trigger(game, event, **kwargs):
+        trigger = game["callback"][event]
+        for prop in trigger:
+            if PropComp.trigger(game, event, prop):
+                trigger.remove(prop)
+        ModeComp.trigger(game, game["mode"], event, **kwargs)
+
+    # endregion
+    # region action
     # 刷新子弹
     @classmethod
     def bullet(cls, game):
@@ -172,55 +231,8 @@ class GameWork:
             )
         return
 
-    # 抽取道具
-    @classmethod
-    def draw_prop(cls, game, target, count, pool=None):
-        pool = pool or game["props"]["pool"]
-        prop_list = []
-        for _ in range(count):
-            prop = random.choice(pool)
-            if not cls.get_prop(game, target, prop):
-                break
-            prop_list.append(prop)
-        if prop_list:
-            game["reply"]["info"].append(
-                f"{game['players'][target]['name']}得到: {'、'.join(prop_list)}"
-            )
-        return
+    # endregion
 
-    # 删除道具
-    @staticmethod
-    def remove_prop(game, target, prop):
-        pl_props = game["players"][target]["props"]
-        if prop in pl_props:
-            pl_props.remove(prop)
-            return True
-        return False
 
-    # 获取道具
-    @staticmethod
-    def get_prop(game, target, prop):
-        pl_props = game["players"][target]["props"]
-        if len(pl_props) >= game["props"]["limit"]:
-            return False
-        elif prop in game["props"]["ban"]:
-            prop = random.choice(game["props"]["pool"])
-        pl_props.append(prop)
-        return True
-
-    # 添加事件
-    @staticmethod
-    def event(game, prop, event_list: STRING_ROW | str):
-        if type(event_list) == str:
-            event_list = (event_list,)
-        for event in set(event_list):
-            game["callback"][event].append(prop)
-
-    # 事件触发器
-    @staticmethod
-    def trigger(game, event, **kwargs):
-        ModeComp.trigger(game, game["mode"], event, **kwargs)
-        trigger = game["callback"][event]
-        for prop in trigger:
-            if PropComp.trigger(game, event, prop):
-                trigger.remove(prop)
+# class FWGameWork(RegGameWork):
+#     pass

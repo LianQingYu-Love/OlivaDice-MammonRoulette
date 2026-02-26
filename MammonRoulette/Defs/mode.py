@@ -1,7 +1,7 @@
 import random
 
 from ..Core.cmop import ModeComp
-from ..Core.work import GameWork
+from ..Core.work import RegGameWork
 
 
 class BaseMode:
@@ -78,8 +78,8 @@ class 经典(ModeComp, BaseMode):
     @classmethod
     def start(cls, game):
         for pl in game["order"][2:]:
-            GameWork.draw_prop(game, pl, 1)
-        GameWork.draw_prop(game, game["shooter"], 2)
+            RegGameWork.draw_prop(game, pl, 1)
+        RegGameWork.draw_prop(game, game["shooter"], 2)
 
     @classmethod
     def join(cls, game, user_id):
@@ -88,7 +88,7 @@ class 经典(ModeComp, BaseMode):
     # 换人
     @classmethod
     def switch(cls, game, **kwargs):
-        GameWork.draw_prop(game, game["shooter"], 2)
+        RegGameWork.draw_prop(game, game["shooter"], 2)
 
 
 class 道具(ModeComp, BaseMode):
@@ -133,7 +133,7 @@ class 道具(ModeComp, BaseMode):
     @classmethod
     def reload(cls, game, **kwargs):
         for pl in game["order"]:
-            GameWork.draw_prop(game, pl, 4)
+            RegGameWork.draw_prop(game, pl, 4)
 
 
 class 金币(ModeComp, BaseMode):
@@ -155,7 +155,7 @@ class 金币(ModeComp, BaseMode):
 
     @classmethod
     def start(cls, game):
-        GameWork.get_prop(game, game["shooter"], "金币")
+        RegGameWork.get_prop(game, game["shooter"], "金币")
 
     @classmethod
     def join(cls, game, user_id):
@@ -164,7 +164,7 @@ class 金币(ModeComp, BaseMode):
     # 换人
     @classmethod
     def switch(cls, game, **kwargs):
-        GameWork.draw_prop(game, game["shooter"], 1)
+        RegGameWork.draw_prop(game, game["shooter"], 1)
 
     # 受伤
     @classmethod
@@ -172,9 +172,9 @@ class 金币(ModeComp, BaseMode):
         target, dmg = kwargs["target"], kwargs["dmg"]
         comp = game["modify"].setdefault("金币", [])
         if target not in comp and game["players"][target]["hp"] - dmg <= 2:
-            if GameWork.get_prop(game, target, "金币"):
+            if RegGameWork.get_prop(game, target, "金币"):
                 game["reply"]["info"].append(
-                    f"金光乍現！一枚金幣落入{GameWork.get_name(target)}手中."
+                    f"金光乍現！一枚金幣落入{RegGameWork.get_name(target)}手中."
                 )
             comp.append(target)
 
@@ -215,8 +215,8 @@ class 勇者(ModeComp, BaseMode):
     @classmethod
     def start(cls, game):
         for pl in game["order"][1:]:
-            GameWork.draw_prop(game, pl, 2)
-        GameWork.draw_prop(game, game["shooter"], 1)
+            RegGameWork.draw_prop(game, pl, 2)
+        RegGameWork.draw_prop(game, game["shooter"], 1)
 
     @classmethod
     def join(cls, game, user_id):
@@ -233,7 +233,7 @@ class 勇者(ModeComp, BaseMode):
             modify["魔弹"] = True
         target = kwargs["target"]
         if target == game["shooter"] and not bullet:
-            GameWork.draw_prop(game, target, 2)
+            RegGameWork.draw_prop(game, target, 2)
 
     # 回合结束
     @classmethod
@@ -253,7 +253,7 @@ class 赌徒(ModeComp, BaseMode):
         "\n{手铐,锯子,邀请函,红牛,放大镜,口红,牛奶,金币}"
         "\n〔机制〕"
         "\n1. 游戏开始时, 所有玩家抽取 2 个道具;"
-        "\n2. 向自己开枪且为空弹时抽取 3 个道具;"
+        "\n2. 向自己开枪且原本子弹为空弹时抽取 3 个道具;"
         "\n3. 实弹有1/3的概率使伤害+1;"
         "\n4. 每次开枪有1/3的概率反转子弹虚实."
     )
@@ -286,7 +286,7 @@ class 赌徒(ModeComp, BaseMode):
     def start(cls, game):
         game["modify"]["ammo_hide"] = True
         for pl in game["order"]:
-            GameWork.draw_prop(game, pl, 2)
+            RegGameWork.draw_prop(game, pl, 2)
 
     @classmethod
     def join(cls, game, user_id):
@@ -295,6 +295,9 @@ class 赌徒(ModeComp, BaseMode):
     # 开枪
     @classmethod
     def shoot(cls, game, **kwargs):
+        target = kwargs["target"]
+        if target == game["shooter"] and not game["bullet"]:
+            RegGameWork.draw_prop(game, target, 3)
         if random.randint(1, 3) == 1:
             game["reply"]["info"].append(f"子彈擊穿突然出現的{cls.reply()}.")
             bullet = not game["bullet"]
@@ -306,9 +309,6 @@ class 赌徒(ModeComp, BaseMode):
             modify = game["modify"]
             modify["dmg"] = modify.get("dmg", 0) + 1
             modify["魔弹"] = True
-        target = kwargs["target"]
-        if target == game["shooter"] and not game["bullet"]:
-            GameWork.draw_prop(game, target, 3)
 
     # 回合结束
     @classmethod

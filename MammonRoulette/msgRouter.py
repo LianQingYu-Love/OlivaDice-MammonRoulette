@@ -8,9 +8,9 @@ from . import DB_PATH
 from .main import commands, COMMON_CMD
 from .msgCustom import dictHelpDocTemp
 from .Core.cmop import ModeComp, PropComp
-from .Core.work import GameWork
+from .Core.work import RegGameWork
 
-dictHelpDocTemp["恶赌命令"] = (
+dictHelpDocTemp["恶赌 命令"] = (
     "#设置\n"
     "(名称)签署[生死状,契约] //注册角色或修改名称.\n"
     "恶魔名片(数值,留空) //查看自己或他人的资料.\n"
@@ -23,7 +23,10 @@ dictHelpDocTemp["恶赌命令"] = (
     "(吞或开)枪(目标) //对目标射击, 可用qq号或序号指定目标, 留空默认下一顺位.\n"
     "[使用,留空](道具名) (目标) //对目标使用道具, 可用qq号或序号指定目标.\n"
     "局势 //查询当前游戏局势信息.\n"
-    "投降 //以自杀的形式结束."
+    "投降 //以自杀的形式结束.\n"
+)
+dictHelpDocTemp["恶赌 戳一戳命令"] = (
+    "#戳一戳骰娘\n加入正则匹配的对局; 退出正则匹配的对局; 查看局势."
 )
 
 
@@ -261,7 +264,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
     if len(game["order"]) >= seats:
         game["start"] = True
         game["expireTime"] = 0
-        GameWork.bullet(game)
+        RegGameWork.bullet(game)
         random.shuffle(game["order"])
         shooter = game["order"][0]
         game["shooter"] = shooter
@@ -318,7 +321,7 @@ def shoot(plugin_event, Proc, msg_manager, groups):
     user_id, game = msg_manager.user_id, msg_manager.val["game"]
     if game["shooter"] != user_id:
         reply = msg_manager.msg_format(
-            "strMrActionsError", {"gamblerName": GameWork.get_name(game)}
+            "strMrActionsError", {"gamblerName": RegGameWork.get_name(game)}
         )
         plugin_event.reply(reply)
         return False
@@ -328,8 +331,8 @@ def shoot(plugin_event, Proc, msg_manager, groups):
         target = user_id
     elif not (target := get_target(game, target)):
         return False
-    GameWork.shoot(game, target)
-    reply = GameWork.reply(game)
+    RegGameWork.shoot(game, target)
+    reply = RegGameWork.reply(game)
     plugin_event.reply(reply)
     return True
 
@@ -340,7 +343,7 @@ def use_prop(plugin_event, Proc, msg_manager, groups):
     user_id, game = msg_manager.user_id, msg_manager.val["game"]
     if game["shooter"] != user_id:
         reply = msg_manager.msg_format(
-            "strMrActionsError", {"gamblerName": GameWork.get_name(game)}
+            "strMrActionsError", {"gamblerName": RegGameWork.get_name(game)}
         )
         plugin_event.reply(reply)
         return False
@@ -355,8 +358,8 @@ def use_prop(plugin_event, Proc, msg_manager, groups):
     elif not (target := get_target(game, target)):
         return False
     if PropComp.use(game, prop, target):
-        GameWork.remove_prop(game, user_id, prop)
-        reply = GameWork.reply(game)
+        RegGameWork.remove_prop(game, user_id, prop)
+        reply = RegGameWork.reply(game)
         plugin_event.reply(reply)
         return True
     return False
@@ -410,11 +413,11 @@ def situation(plugin_event, Proc, msg_manager, groups):
 def surrender(plugin_event, Proc, msg_manager, groups):
     msg_manager.val["game_update"] = True
     user_id, game = msg_manager.user_id, msg_manager.val["game"]
-    game["reply"]["info"].append(f"{GameWork.get_name(game,user_id)}被清除。")
-    GameWork.dead(game, user_id, True)
+    game["reply"]["info"].append(f"{RegGameWork.get_name(game,user_id)}被清除。")
+    RegGameWork.dead(game, user_id, True)
     if len(game["order"]) <= 1:
-        GameWork.end_round(game)
-    reply = GameWork.reply(game)
+        RegGameWork.end_round(game)
+    reply = RegGameWork.reply(game)
     plugin_event.reply(reply)
     return True
 

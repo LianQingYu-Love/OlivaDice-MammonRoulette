@@ -73,4 +73,4 @@ dictStrCustomNote = {
     "strMrPropError": "【使用道具】指令 没有使用的道具.",
 }
 
-dictHelpDocTemp = {"恶赌命令": ""}
+dictHelpDocTemp = {}
