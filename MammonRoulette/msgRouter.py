@@ -11,15 +11,15 @@ from .Core.cmop import ModeComp, PropComp
 from .Core.work import GameWork
 
 dictHelpDocTemp["恶赌命令"] = (
-    "〔设置〕\n"
-    "恶赌(on,off) //游戏开关(需管理权限).\n"
-    "〔资料〕\n"
+    "#设置\n"
     "(名称)签署[生死状,契约] //注册角色或修改名称.\n"
     "恶魔名片(数值,留空) //查看自己或他人的资料.\n"
     "恶魔(赏金,杀戮,自杀,留空)[排行,榜] //查询排行, 留空默认查询赏金榜单.\n"
-    "〔对局操作〕\n"
-    "(模式名)匹配 //以默认人数匹配对局, 满人自动开启\n(模式名)匹配(数值)p //以自定义人数匹配对局.\n"
-    "退出 //退出匹配\n"
+    "#房间操作\n"
+    "(模式名)[匹配,对局] //以默认人数匹配对局, 满人自动开启\n(模式名)匹配(数值)p //以自定义人数匹配对局.\n"
+    "[加入,进入] //加入正在匹配的对局\n"
+    "[退出,离开] //退出匹配\n"
+    "#对局操作\n"
     "(吞或开)枪(目标) //对目标射击, 可用qq号或序号指定目标, 留空默认下一顺位.\n"
     "[使用,留空](道具名) (目标) //对目标使用道具, 可用qq号或序号指定目标.\n"
     "局势 //查询当前游戏局势信息.\n"
@@ -155,7 +155,7 @@ def leaderboard(plugin_event, Proc, msg_manager, groups):
 
 # endregion
 # region 房间操作
-@commands.route("ob", f"^({'|'.join(ModeComp.list())})匹配(?:(\\d+)p)?$")
+@commands.route("ob", f"^({'|'.join(ModeComp.list())})(?:匹配|对局)(?:(\\d+)p)?$")
 def match_game(plugin_event, Proc, msg_manager, groups):
     msg_manager.val["game_update"] = True
     user_id, game = msg_manager.user_id, msg_manager.val["game"]
@@ -283,7 +283,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
     # endregion
 
 
-@commands.route("ob", "^加入$")
+@commands.route("ob", "^(?:加入|进入)$")
 def join_game(plugin_event, Proc, msg_manager, groups):
     game = msg_manager.val["game"]
     if not game or game["start"]:
@@ -293,7 +293,7 @@ def join_game(plugin_event, Proc, msg_manager, groups):
     return True
 
 
-@commands.route("prep", "^退出$")
+@commands.route("prep", "^(?:退出|离开)$")
 def exit_game(plugin_event, Proc, msg_manager, groups):
     msg_manager.val["game_update"] = True
     user_id, game = msg_manager.user_id, msg_manager.val["game"]
