@@ -92,7 +92,6 @@ class Event(object):
     def poke(plugin_event, Proc):  # type: ignore
         if (
             plugin_event.data.group_id  # type: ignore
-            and plugin_event.data.target_id == plugin_event.base_info["self_id"]  # type: ignore
             and Proc.database.get_basic_config(  # type: ignore
                 "MammonRoulette",
                 "poke_enabled",
@@ -142,13 +141,20 @@ def unity_reply(plugin_event, Proc):
     msg = ""
     if not plugin_event.plugin_info["func_type"] == "poke":
         msg = msg_manager.msg
-    elif state == "ob":
-        msg = "加入"
-    elif state == "prep":
-        msg = "退出"
-    elif state == "play":
-        msg = "局势"
+    else:
+        target_id = plugin_event.data.target_id
+        is_poke_bot = target_id == plugin_event.base_info["self_id"]
+        if is_poke_bot and state == "ob":
+            msg = "加入"
+        elif is_poke_bot and state == "prep":
+            msg = "退出"
+        elif is_poke_bot and state == "play":
+            msg = "局势"
+        elif msg_manager.user_id == game["shooter"] and target_id in game["order"]:
+            msg = f"开枪{target_id}"
     # endregion
+    if not msg:
+        return
     for handler, groups in commands.search(state, msg, ANY):
         result = handler(plugin_event, Proc, msg_manager, groups)
         if result:

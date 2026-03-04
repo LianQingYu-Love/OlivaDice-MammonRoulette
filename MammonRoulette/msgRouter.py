@@ -73,7 +73,7 @@ def signed(plugin_event, Proc, msg_manager, groups):
                     "losses": 0,
                 },
             )
-    reply = msg_manager.msg_format("strMrSignedResult", {"gamblerName": name})
+    reply = msg_manager.msg_format("strMrSignedResult", {"tGamblerName": name})
     plugin_event.reply(reply)
     return True
 
@@ -98,14 +98,14 @@ def card(plugin_event, Proc, msg_manager, groups):
     reply = msg_manager.msg_format(
         "strMrCardHas",
         {
-            "gamblerName": gambler_info["name"],
-            "gamblerRanking": gambler_ranking + 1,
-            "gamblerPoints": gambler_info["points"],
-            "gamblerKills": gambler_info["kills"],
-            "gamblerSuicide": gambler_info["suicide"],
-            "gamblerWins": wins,
-            "gamblerLosses": losses,
-            "gamblerWinRate": win_rate,
+            "tGamblerName": gambler_info["name"],
+            "tGamblerRanking": gambler_ranking + 1,
+            "tGamblerPoints": gambler_info["points"],
+            "tGamblerKills": gambler_info["kills"],
+            "tGamblerSuicide": gambler_info["suicide"],
+            "tGamblerWins": wins,
+            "tGamblerLosses": losses,
+            "tGamblerWinRate": win_rate,
         },
     )
     plugin_event.reply(reply)
@@ -137,9 +137,9 @@ def leaderboard(plugin_event, Proc, msg_manager, groups):
         msg_manager.msg_format(
             "strMrLeaderboardCard",
             {
-                "gamblerRanking": idx + ranking_page + 1,
-                "gamblerName": gambler_info["name"],
-                "gamblerRecord": gambler_info[leaderboard_type],
+                "tGamblerRanking": idx + ranking_page + 1,
+                "tGamblerName": gambler_info["name"],
+                "tGamblerRecord": gambler_info[leaderboard_type],
             },
         )
         for idx, gambler_info in enumerate(gambler_list)
@@ -147,11 +147,11 @@ def leaderboard(plugin_event, Proc, msg_manager, groups):
     reply = msg_manager.msg_format(
         "strMrLeaderboard",
         {
-            "leaderboardType": ranking_type,
-            "gamblerTopList": top_list,
-            "rankingPageHome": ranking_page + 1,
-            "rankingPageEnd": ranking_page + 10,
-            "gamblerNumCount": gambler_total[0][0],
+            "tLeaderboardType": ranking_type,
+            "tGamblerTopList": top_list,
+            "tRankingPageHome": ranking_page + 1,
+            "tRankingPageEnd": ranking_page + 10,
+            "tGamblerNumCount": gambler_total[0][0],
         },
     )
     plugin_event.reply(reply)
@@ -184,10 +184,10 @@ def match_game(plugin_event, Proc, msg_manager, groups):
         reply = msg_manager.msg_format(
             "strMrGameSeatsError",
             {
-                "gameMode": mode_name,
-                "seatsMin": seats_min,
-                "seatsMax": seats_max,
-                "seatsDef": seats_def,
+                "tGameMode": mode_name,
+                "tSeatsMin": seats_min,
+                "tSeatsMax": seats_max,
+                "tSeatsDef": seats_def,
             },
         )
         plugin_event.reply(reply)
@@ -241,7 +241,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
         return False
     elif mode_name != game["mode"]:
         reply = msg_manager.msg_format(
-            "strMrMatchModeError", {"gameMode": game["mode"]}
+            "strMrMatchModeError", {"tGameMode": game["mode"]}
         )
         plugin_event.reply(reply)
         return False
@@ -278,9 +278,9 @@ def match_game(plugin_event, Proc, msg_manager, groups):
         reply = msg_manager.msg_format(
             "strMrGamePrep",
             {
-                "gameMode": game["mode"],
-                "seatsHas": len(game["order"]),
-                "seatsMax": seats,
+                "tGameMode": game["mode"],
+                "tSeatsHas": len(game["order"]),
+                "tSeatsMax": seats,
             },
         )
         plugin_event.reply(reply)
@@ -309,7 +309,7 @@ def exit_game(plugin_event, Proc, msg_manager, groups):
         reply = msg_manager.msg_format("strMrExitDismiss")
     else:
         reply = msg_manager.msg_format(
-            "strMrExitRemain", {"seatsHas": len(game["order"])}
+            "strMrExitRemain", {"tSeatsHas": len(game["order"])}
         )
     plugin_event.reply(reply)
     return True
@@ -323,7 +323,7 @@ def shoot(plugin_event, Proc, msg_manager, groups):
     user_id, game = msg_manager.user_id, msg_manager.val["game"]
     if game["shooter"] != user_id:
         reply = msg_manager.msg_format(
-            "strMrActionsError", {"gamblerName": RegGameWork.get_name(game)}
+            "strMrActionsError", {"tGamblerName": RegGameWork.get_name(game)}
         )
         plugin_event.reply(reply)
         return False
@@ -345,14 +345,14 @@ def use_prop(plugin_event, Proc, msg_manager, groups):
     user_id, game = msg_manager.user_id, msg_manager.val["game"]
     if game["shooter"] != user_id:
         reply = msg_manager.msg_format(
-            "strMrActionsError", {"gamblerName": RegGameWork.get_name(game)}
+            "strMrActionsError", {"tGamblerName": RegGameWork.get_name(game)}
         )
         plugin_event.reply(reply)
         return False
     prop, target = groups[0], groups[1]
     pl = game["players"][user_id]
     if prop not in pl["props"]:
-        reply = msg_manager.msg_format("strMrPropError", {"propName": prop})
+        reply = msg_manager.msg_format("strMrPropError", {"tPropName": prop})
         plugin_event.reply(reply)
         return False
     if not target:
@@ -370,7 +370,7 @@ def use_prop(plugin_event, Proc, msg_manager, groups):
 @commands.route(COMMON_CMD, "^(?:局势|局勢)$")
 def situation(plugin_event, Proc, msg_manager, groups):
     game = msg_manager.val["game"]
-    if not game:
+    if not game.get("start"):
         return False
     order, players, shooter = game["order"], game["players"], game["shooter"]
     # 赌徒

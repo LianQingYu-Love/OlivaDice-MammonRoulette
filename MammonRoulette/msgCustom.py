@@ -1,33 +1,33 @@
 dictStrCustomDict = {}
 
 dictStrCustom = {
-    "strMrSignedResult": "{gamblerName}在生死狀簽下姓名.",
+    "strMrSignedResult": "{tGamblerName}在生死狀簽下姓名.",
     "strMrCardHas": (
         "『惡魔資料卡』"
-        "\n真名: {gamblerName}"
-        "\n排名: {gamblerRanking}"
-        "\n賞金: {gamblerPoints}"
-        "\n槍下亡魂: {gamblerKills}"
-        "\n自取滅亡: {gamblerSuicide}"
-        "\n取勝: {gamblerWins}｜戰敗: {gamblerLosses}"
-        "\n奪標率: {gamblerWinRate}"
+        "\n真名: {tGamblerName}"
+        "\n排名: {tGamblerRanking}"
+        "\n賞金: {tGamblerPoints}"
+        "\n槍下亡魂: {tGamblerKills}"
+        "\n自取滅亡: {tGamblerSuicide}"
+        "\n取勝: {tGamblerWins}｜戰敗: {tGamblerLosses}"
+        "\n奪標率: {tGamblerWinRate}"
     ),
     "strMrCardNone": "只是个没有战绩的观众.",
     "strMrLeaderboard": (
-        "『惡魔{leaderboardType}榜』\n"
-        "{gamblerTopList}\n"
+        "『惡魔{tLeaderboardType}榜』\n"
+        "{tGamblerTopList}\n"
         "▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁\n"
-        "排名 {rankingPageHome}-{rankingPageEnd}｜总计上榜恶魔 {gamblerNumCount}"
+        "排名 {tRankingPageHome}-{tRankingPageEnd}｜总计上榜恶魔 {tGamblerNumCount}"
     ),
-    "strMrLeaderboardCard": "[{gamblerRanking}] {gamblerName}｜{gamblerRecord}",
-    "strMrGamePrep": "{gameMode}對局靜候惡魔[{seatsHas}/{seatsMax}].",
-    "strMrGameSeatsError": "非法人数, {gameMode}模式限定人数为[{seatsMin},{seatsMax}] Defaults to {seatsDef}.",
+    "strMrLeaderboardCard": "[{tGamblerRanking}] {tGamblerName}｜{tGamblerRecord}",
+    "strMrGamePrep": "{tGameMode}對局靜候惡魔[{tSeatsHas}/{tSeatsMax}].",
+    "strMrGameSeatsError": "非法人数, {tGameMode}模式限定人数为[{tSeatsMin},{tSeatsMax}] Defaults to {tSeatsDef}.",
     "strMrGameStartError": "对局已经开始, 无法加入.",
-    "strMrMatchModeError": "已开设{gameMode}对局.",
+    "strMrMatchModeError": "已开设{tGameMode}对局.",
     "strMrExitDismiss": "你已退出，对局解散.",
-    "strMrExitRemain": "你已退出，剩余：{seatsHas}人.",
-    "strMrActionsError": "現在是{gamblerName}的回合.",
-    "strMrPropError": "你没有{propName}道具.",
+    "strMrExitRemain": "你已退出，剩余：{tSeatsHas}人.",
+    "strMrActionsError": "現在是{tGamblerName}的回合.",
+    "strMrPropError": "你没有{tPropName}道具.",
 }
 
 dictStrConst = {}
@@ -35,26 +35,26 @@ dictStrConst = {}
 dictGValue = {}
 
 dictTValue = {
-    "gamblerName": "NULL",
-    "gamblerRanking": "NULL",
-    "gamblerPoints": "NULL",
-    "gamblerKills": "NULL",
-    "gamblerSuicide": "NULL",
-    "gamblerWins": "NULL",
-    "gamblerLosses": "NULL",
-    "gamblerWinRate": "NULL",
-    "leaderboardType": "NULL",
-    "gamblerTopList": "NULL",
-    "rankingPageHome": "NULL",
-    "rankingPageEnd": "NULL",
-    "gamblerNumCount": "NULL",
-    "gamblerRecord": "NULL",
-    "gameMode": "NULL",
-    "seatsHas": "NULL",
-    "seatsMax": "NULL",
-    "seatsMin": "NULL",
-    "seatsDef": "NULL",
-    "propName": "NULL",
+    "tGamblerName": "NULL",
+    "tGamblerRanking": "NULL",
+    "tGamblerPoints": "NULL",
+    "tGamblerKills": "NULL",
+    "tGamblerSuicide": "NULL",
+    "tGamblerWins": "NULL",
+    "tGamblerLosses": "NULL",
+    "tGamblerWinRate": "NULL",
+    "tLeaderboardType": "NULL",
+    "tGamblerTopList": "NULL",
+    "tRankingPageHome": "NULL",
+    "tRankingPageEnd": "NULL",
+    "tGamblerNumCount": "NULL",
+    "tGamblerRecord": "NULL",
+    "tGameMode": "NULL",
+    "tSeatsHas": "NULL",
+    "tSeatsMax": "NULL",
+    "tSeatsMin": "NULL",
+    "tSeatsDef": "NULL",
+    "tPropName": "NULL",
 }
 
 dictStrCustomNote = {
