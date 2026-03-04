@@ -144,13 +144,14 @@ def unity_reply(plugin_event, Proc):
     else:
         target_id = plugin_event.data.target_id
         is_poke_bot = target_id == plugin_event.base_info["self_id"]
-        if is_poke_bot and state == "ob":
-            msg = "加入"
-        elif is_poke_bot and state == "prep":
-            msg = "退出"
-        elif is_poke_bot and state == "play":
-            msg = "局势"
-        elif msg_manager.user_id == game["shooter"] and target_id in game["order"]:
+        if is_poke_bot:
+            if state == "ob":
+                msg = "加入"
+            elif state == "prep":
+                msg = "退出"
+            elif state == "play":
+                msg = "局势"
+        elif state == "play" and msg_manager.user_id == game["shooter"] and target_id in game["order"]:
             msg = f"开枪{target_id}"
     # endregion
     if not msg:
