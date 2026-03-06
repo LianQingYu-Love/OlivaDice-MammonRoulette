@@ -164,6 +164,7 @@ def unity_reply(plugin_event, Proc):
     if not msg:
         return
     # endregion
-    for handler, groups in commands.search(state, msg, commands.SearchMode.ANY):
-        if handler(plugin_event, Proc, msg_manager, groups):
-            break
+    forward = commands.search(state, msg, commands.SearchMode.ANY)
+    if forward:
+        handler, groups = forward[0]
+        handler(plugin_event, Proc, msg_manager, groups)

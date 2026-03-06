@@ -75,7 +75,7 @@ def signed(plugin_event, Proc, msg_manager, groups):
             )
     reply = msg_manager.msg_format("strMrSignedResult", {"tGamblerName": name})
     plugin_event.reply(reply)
-    return True
+    return
 
 
 @commands.route(COMMON_CMD, "^[惡恶]魔名片(\\d*)$")
@@ -87,7 +87,7 @@ def card(plugin_event, Proc, msg_manager, groups):
         if not gambler_info:
             reply = msg_manager.msg_format("strMrCardNone")
             plugin_event.reply(reply)
-            return False
+            return
         gambler_info = gambler_info[0]
         gambler_ranking = db.select(
             "gambler", "COUNT(*)", "points > ?", gambler_info["points"]
@@ -109,7 +109,7 @@ def card(plugin_event, Proc, msg_manager, groups):
         },
     )
     plugin_event.reply(reply)
-    return True
+    return
 
 
 @commands.route(COMMON_CMD, "^[恶惡]魔(赏金|杀戮|自杀|)(?:排行|榜)(\\d*)$")
@@ -131,7 +131,7 @@ def leaderboard(plugin_event, Proc, msg_manager, groups):
             offset=ranking_page,
         )
         if not gambler_list:
-            return False
+            return
         gambler_total = db.select("gambler", "COUNT(*)")
     top_list = "\n".join(
         msg_manager.msg_format(
@@ -155,7 +155,7 @@ def leaderboard(plugin_event, Proc, msg_manager, groups):
         },
     )
     plugin_event.reply(reply)
-    return True
+    return
 
 
 # endregion
@@ -190,7 +190,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
             },
         )
         plugin_event.reply(reply)
-        return False
+        return
     # endregion
     # region 清除过期对局
     expireTime = int(time.time())
@@ -237,13 +237,13 @@ def match_game(plugin_event, Proc, msg_manager, groups):
     elif game["start"]:
         reply = msg_manager.msg_format("strMrGameStartError")
         plugin_event.reply(reply)
-        return False
+        return
     elif mode_name != game["mode"]:
         reply = msg_manager.msg_format(
             "strMrMatchModeError", {"tGameMode": game["mode"]}
         )
         plugin_event.reply(reply)
-        return False
+        return
     # endregion
     # region 添加玩家
     if user_id not in game["order"]:
@@ -283,7 +283,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
             },
         )
         plugin_event.reply(reply)
-        return True
+        return
     # endregion
 
 
@@ -291,10 +291,10 @@ def match_game(plugin_event, Proc, msg_manager, groups):
 def join_game(plugin_event, Proc, msg_manager, groups):
     game = msg_manager.val["game"]
     if not game or game["start"]:
-        return False
+        return
     mode_name = game["mode"]
     match_game(plugin_event, Proc, msg_manager, (mode_name, ""))
-    return True
+    return
 
 
 @commands.route("prep", "^(?:退出|离开)$")
@@ -310,7 +310,7 @@ def exit_game(plugin_event, Proc, msg_manager, groups):
             "strMrExitRemain", {"tSeatsHas": len(game["order"])}
         )
     plugin_event.reply(reply)
-    return True
+    return
 
 
 # endregion
@@ -323,17 +323,17 @@ def shoot(plugin_event, Proc, msg_manager, groups):
             "strMrActionsError", {"tGamblerName": RegGameWork.get_name(game)}
         )
         plugin_event.reply(reply)
-        return False
+        return
     # 确定目标
     target = groups[1]
     if groups[0] == "吞":
         target = user_id
     elif not (target := get_target(game, target)):
-        return False
+        return
     RegGameWork.shoot(game, target)
     reply = RegGameWork.reply(game)
     plugin_event.reply(reply)
-    return True
+    return
 
 
 @commands.route("play", f"^(?:使用|) *({'|'.join(PropComp.list())}) *(\\d*)$")
@@ -344,30 +344,30 @@ def use_prop(plugin_event, Proc, msg_manager, groups):
             "strMrActionsError", {"tGamblerName": RegGameWork.get_name(game)}
         )
         plugin_event.reply(reply)
-        return False
+        return
     prop, target = groups[0], groups[1]
     pl = game["players"][user_id]
     if prop not in pl["props"]:
         reply = msg_manager.msg_format("strMrPropError", {"tPropName": prop})
         plugin_event.reply(reply)
-        return False
+        return
     if not target:
         target = user_id
     elif not (target := get_target(game, target)):
-        return False
+        return
     if PropComp.use(game, prop, target):
         RegGameWork.remove_prop(game, user_id, prop)
         reply = RegGameWork.reply(game)
         plugin_event.reply(reply)
-        return True
-    return False
+        return
+    return
 
 
 @commands.route(COMMON_CMD, "^(?:局势|局勢)$")
 def situation(plugin_event, Proc, msg_manager, groups):
     game = msg_manager.val["game"]
     if not game.get("start"):
-        return False
+        return
     order, players, shooter = game["order"], game["players"], game["shooter"]
     # 赌徒
     modify = game["modify"]
@@ -404,7 +404,7 @@ def situation(plugin_event, Proc, msg_manager, groups):
         + dead
     )
     plugin_event.reply(reply)
-    return True
+    return
 
 
 @commands.route("play", "^投降$")
@@ -416,7 +416,7 @@ def surrender(plugin_event, Proc, msg_manager, groups):
         RegGameWork.end_round(game)
     reply = RegGameWork.reply(game)
     plugin_event.reply(reply)
-    return True
+    return
 
 
 # endregion
