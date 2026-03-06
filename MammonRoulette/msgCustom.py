@@ -1,4 +1,4 @@
-dictStrCustomDict = {}
+CountdictStrCustomDict = {}
 
 dictStrCustom = {
     "strMrSignedResult": "{tGamblerName}在生死狀簽下姓名.",
@@ -17,7 +17,7 @@ dictStrCustom = {
         "『惡魔{tLeaderboardType}榜』\n"
         "{tGamblerTopList}\n"
         "▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁\n"
-        "排名 {tRankingPageHome}-{tRankingPageEnd}｜总计上榜恶魔 {tGamblerNumCount}"
+        "排名 {tRankingPageHome}-{tRankingPageEnd}｜总计上榜恶魔 {tGamblerCount}"
     ),
     "strMrLeaderboardCard": "[{tGamblerRanking}] {tGamblerName}｜{tGamblerRecord}",
     "strMrGamePrep": "{tGameMode}對局靜候惡魔[{tSeatsHas}/{tSeatsMax}].",
@@ -35,26 +35,26 @@ dictStrConst = {}
 dictGValue = {}
 
 dictTValue = {
-    "tGamblerName": "NULL",
-    "tGamblerRanking": "NULL",
-    "tGamblerPoints": "NULL",
-    "tGamblerKills": "NULL",
-    "tGamblerSuicide": "NULL",
-    "tGamblerWins": "NULL",
-    "tGamblerLosses": "NULL",
-    "tGamblerWinRate": "NULL",
-    "tLeaderboardType": "NULL",
-    "tGamblerTopList": "NULL",
-    "tRankingPageHome": "NULL",
-    "tRankingPageEnd": "NULL",
-    "tGamblerNumCount": "NULL",
-    "tGamblerRecord": "NULL",
-    "tGameMode": "NULL",
-    "tSeatsHas": "NULL",
-    "tSeatsMax": "NULL",
-    "tSeatsMin": "NULL",
-    "tSeatsDef": "NULL",
-    "tPropName": "NULL",
+    "tGamblerName": "",
+    "tGamblerRanking": "N/A",
+    "tGamblerPoints": "0",
+    "tGamblerKills": "0",
+    "tGamblerSuicide": "0",
+    "tGamblerWins": "0",
+    "tGamblerLosses": "0",
+    "tGamblerWinRate": "0",
+    "tLeaderboardType": "N/A",
+    "tGamblerTopList": "N/A",
+    "tRankingPageHome": "N/A",
+    "tRankingPageEnd": "N/A",
+    "tGamblerCount": "N/A",
+    "tGamblerRecord": "N/A",
+    "tGameMode": "N/A",
+    "tSeatsHas": "N/A",
+    "tSeatsMax": "N/A",
+    "tSeatsMin": "N/A",
+    "tSeatsDef": "N/A",
+    "tPropName": "N/A",
 }
 
 dictStrCustomNote = {

@@ -8,28 +8,15 @@ from AmorLib import DataBase, FsmRouter, MsgManager, init_msgCustom
 from . import DB_PATH
 from .Core.cmop import ModeComp, PropComp
 
-GAME_PATH = "plugin/data/MammonRoulette/game.json"
+GAME_PATH = "plugin/tmp/MammonRoulette_game_data.json"
 COMMON_CMD = ("priv", "ob", "prep", "play")
+game_data = {}
 
 
 class Event(object):
     def init(plugin_event, Proc):  # type: ignore
         if not os.path.exists("plugin/data/MammonRoulette/"):
             os.mkdir("plugin/data/MammonRoulette/")
-        try:
-            if os.path.exists(GAME_PATH):
-                with open(GAME_PATH, "r", encoding="utf-8") as f:
-                    json.load(f)
-            else:
-                Proc.log(3, "[恶魔轮盘] - (数据) -> 数据存储文件不存在, 尝试修复中……")
-                with open(GAME_PATH, "w", encoding="utf-8") as f:
-                    json.dump({}, f)
-                Proc.log(1, "[恶魔轮盘] - (数据) -> 数据存储文件修复成功.")
-        except Exception as e:
-            Proc.log(4, f"[恶魔轮盘] - (数据) -> 无法修复! 错误原因:\n{str(e)}")
-            Proc.database.set_basic_config(
-                "MammonRoulette", "main_enabled", 0, pkl=False
-            )
         with DataBase(DB_PATH) as db:
             db.create(
                 "gambler",
@@ -46,9 +33,31 @@ class Event(object):
             )
 
     def init_after(plugin_event, Proc):  # type: ignore
+        # region 加载对局数据
+        try:
+            if os.path.exists(GAME_PATH):
+                with open(GAME_PATH, "r", encoding="utf-8") as f:
+                    global game_data
+                    game_data = json.load(f)
+            else:
+                Proc.log(
+                    1, "[恶魔轮盘] - (数据) -> 对局数据存储文件不存在, 尝试创建中……"
+                )
+                with open(GAME_PATH, "w", encoding="utf-8") as f:
+                    json.dump({}, f)
+        except Exception as e:
+            Proc.log(
+                3,
+                f"[恶魔轮盘] - (数据) -> 对局数据存储文件丢失, 对局数据清空!\n错误原因:{str(e)}",
+            )
+        # endregion
         ModeComp.init_after()
         PropComp.init_after()
         init_msgCustom(MammonRoulette, Proc)
+
+    def save(plugin_event, Proc):  # type: ignore
+        with open(GAME_PATH, "w", encoding="utf-8") as f:
+            json.dump(game_data, f, ensure_ascii=False, indent=4)
 
     def menu(plugin_event, Proc):  # type: ignore
         if plugin_event.data.namespace == "MammonRoulette":  # type: ignore
@@ -80,24 +89,24 @@ class Event(object):
             elif plugin_event.data.event == "MammonRoulette_Menu_clear_cache":  # type: ignore
                 with open(GAME_PATH, "w", encoding="utf-8") as f:
                     json.dump({}, f)
+                game_data.clear()
                 Proc.log(2, "[恶魔轮盘] - (数据) -> 清除缓存.")
 
     def group_message(plugin_event, Proc):  # type: ignore
         unity_reply(plugin_event, Proc)
 
     def private_message(plugin_event, Proc):  # type: ignore
-        plugin_event.data.group_id = None  # type: ignore
         unity_reply(plugin_event, Proc)
 
     def poke(plugin_event, Proc):  # type: ignore
         if (
-            plugin_event.data.group_id  # type: ignore
-            and Proc.database.get_basic_config(  # type: ignore
+            Proc.database.get_basic_config(  # type: ignore
                 "MammonRoulette",
                 "poke_enabled",
                 default_value=1,
                 pkl=False,
             )
+            and plugin_event.data.group_id  # type: ignore
         ):  # type: ignore
             plugin_event.data.message = "poke"  # type: ignore
             plugin_event.data.sender = {}  # type: ignore
@@ -106,7 +115,6 @@ class Event(object):
 
 
 commands = FsmRouter(COMMON_CMD)
-ANY = commands.SearchMode.ANY
 
 
 def unity_reply(plugin_event, Proc):
@@ -121,23 +129,19 @@ def unity_reply(plugin_event, Proc):
     msg_manager.val["game_update"] = False
     if not msg_manager.allow_reply:
         return
-    # region 数据
-    with open(GAME_PATH, "r", encoding="utf-8") as f:
-        game_data = json.load(f)
-    # endregion
-    # region 状态
-    game = {}
-    if plugin_event.data.group_id:
-        game = game_data.setdefault(plugin_event.data.group_id, {})
+    # region 数据与状态
+    if msg_manager.group_id:
+        game = game_data.setdefault(msg_manager.group_id, {})
         if msg_manager.user_id in game.get("order", []):
             state = "play" if game["start"] else "prep"
         else:
             state = "ob"
     else:
+        game = {}
         state = "priv"
     msg_manager.val["game"] = game
     # endregion
-    # region poke
+    # region poke操作
     msg = ""
     if not plugin_event.plugin_info["func_type"] == "poke":
         msg = msg_manager.msg
@@ -151,15 +155,15 @@ def unity_reply(plugin_event, Proc):
                 msg = "退出"
             elif state == "play":
                 msg = "局势"
-        elif state == "play" and msg_manager.user_id == game["shooter"] and target_id in game["order"]:
+        elif (
+            state == "play"
+            and msg_manager.user_id == game["shooter"]
+            and target_id in game["order"]
+        ):
             msg = f"开枪{target_id}"
-    # endregion
     if not msg:
         return
-    for handler, groups in commands.search(state, msg, ANY):
-        result = handler(plugin_event, Proc, msg_manager, groups)
-        if result:
-            if msg_manager.val["game_update"]:
-                with open(GAME_PATH, "w", encoding="utf-8") as f:
-                    json.dump(game_data, f, ensure_ascii=False, indent=4)
+    # endregion
+    for handler, groups in commands.search(state, msg, commands.SearchMode.ANY):
+        if handler(plugin_event, Proc, msg_manager, groups):
             break

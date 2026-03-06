@@ -151,7 +151,7 @@ def leaderboard(plugin_event, Proc, msg_manager, groups):
             "tGamblerTopList": top_list,
             "tRankingPageHome": ranking_page + 1,
             "tRankingPageEnd": ranking_page + 10,
-            "tGamblerNumCount": gambler_total[0][0],
+            "tGamblerCount": gambler_total[0][0],
         },
     )
     plugin_event.reply(reply)
@@ -162,7 +162,6 @@ def leaderboard(plugin_event, Proc, msg_manager, groups):
 # region 房间操作
 @commands.route("ob", f"^({'|'.join(ModeComp.list())})(?:匹配|对局)(?:(\\d+)p)?$")
 def match_game(plugin_event, Proc, msg_manager, groups):
-    msg_manager.val["game_update"] = True
     user_id, game = msg_manager.user_id, msg_manager.val["game"]
     # region 自动注册
     with DataBase(DB_PATH) as db:
@@ -300,7 +299,6 @@ def join_game(plugin_event, Proc, msg_manager, groups):
 
 @commands.route("prep", "^(?:退出|离开)$")
 def exit_game(plugin_event, Proc, msg_manager, groups):
-    msg_manager.val["game_update"] = True
     user_id, game = msg_manager.user_id, msg_manager.val["game"]
     game["order"].remove(user_id)
     del game["players"][user_id]
@@ -319,7 +317,6 @@ def exit_game(plugin_event, Proc, msg_manager, groups):
 # region 对局操作
 @commands.route("play", "^(吞|开|開)[槍|枪] *(\\d*)$")
 def shoot(plugin_event, Proc, msg_manager, groups):
-    msg_manager.val["game_update"] = True
     user_id, game = msg_manager.user_id, msg_manager.val["game"]
     if game["shooter"] != user_id:
         reply = msg_manager.msg_format(
@@ -341,7 +338,6 @@ def shoot(plugin_event, Proc, msg_manager, groups):
 
 @commands.route("play", f"^(?:使用|) *({'|'.join(PropComp.list())}) *(\\d*)$")
 def use_prop(plugin_event, Proc, msg_manager, groups):
-    msg_manager.val["game_update"] = True
     user_id, game = msg_manager.user_id, msg_manager.val["game"]
     if game["shooter"] != user_id:
         reply = msg_manager.msg_format(
@@ -413,7 +409,6 @@ def situation(plugin_event, Proc, msg_manager, groups):
 
 @commands.route("play", "^投降$")
 def surrender(plugin_event, Proc, msg_manager, groups):
-    msg_manager.val["game_update"] = True
     user_id, game = msg_manager.user_id, msg_manager.val["game"]
     game["reply"]["info"].append(f"{RegGameWork.get_name(game,user_id)}被清除。")
     RegGameWork.dead(game, user_id, True)
