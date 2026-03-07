@@ -126,7 +126,6 @@ def unity_reply(plugin_event, Proc):
     ):
         return
     msg_manager = MsgManager(plugin_event)
-    msg_manager.val["game_update"] = False
     if not msg_manager.allow_reply:
         return
     # region 数据与状态
