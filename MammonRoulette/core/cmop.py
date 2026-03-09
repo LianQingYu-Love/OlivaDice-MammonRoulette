@@ -1,6 +1,10 @@
 from ..msgCustom import dictHelpDocTemp
 
 
+def _():
+    pass
+
+
 class Registerable:
     _register = {}
 
@@ -12,7 +16,7 @@ class Registerable:
 
     @classmethod
     def get(cls, name):
-        return cls._register[name]
+        return cls._register.get(name, _)
 
     @classmethod
     def list(cls):
@@ -26,13 +30,14 @@ class ModeComp(Registerable):
     def init_after(cls):
         mode_helpDoc = {}
         for mode_name, mode_cls in cls._register.items():
+            mode_cls.init()
             mode_helpDoc[f"恶赌模式 {mode_name}"] = mode_cls.brief
         dictHelpDocTemp.update(mode_helpDoc)
         return
 
     @classmethod
-    def trigger(cls, game, mode, event, **kwargs):
-        return getattr(cls.get(mode), event)(game, **kwargs)
+    def trigger(cls, game, event):
+        return getattr(cls.get(game["mode"]["name"]), event)(game)
 
 
 class PropComp(Registerable):
@@ -42,8 +47,8 @@ class PropComp(Registerable):
     def init_after(cls):
         prop_helpDoc = {}
         for prop_name, prop_cls in cls._register.items():
-            prop_helpDoc[f"恶赌道具 {prop_name}"] = prop_cls.brief
             prop_cls.init()
+            prop_helpDoc[f"恶赌道具 {prop_name}"] = prop_cls.brief
         dictHelpDocTemp.update(prop_helpDoc)
         return
 
@@ -52,5 +57,5 @@ class PropComp(Registerable):
         return cls.get(prop).apply(game, target)
 
     @classmethod
-    def trigger(cls, game, event, prop):
-        return cls.get(prop).callback(game, event)
+    def trigger(cls, game, prop, moment):
+        return cls.get(prop).callback(game, moment)

@@ -41,12 +41,13 @@ poker = {
 
 
 def get_target(game, target):
-    order = game["order"]
+    data = game["data"]
+    order = data["order"]
     if not target:
-        target = order[(order.index(game["shooter"]) + 1) % len(order)]
+        target = order[(order.index(data["shooter"]) + 1) % len(order)]
     elif target not in order:
         target = int(target)
-        if target > len(order):
+        if target > len(order) or target < 1:
             return
         target = order[target - 1]
     return target
@@ -70,6 +71,7 @@ def signed(plugin_event, Proc, msg_manager, groups):
                     "points": 0,
                     "kills": 0,
                     "suicide": 0,
+                    "surrender": 0,
                     "wins": 0,
                     "losses": 0,
                 },
@@ -104,6 +106,7 @@ def card(plugin_event, Proc, msg_manager, groups):
             "tGamblerPoints": gambler_info["points"],
             "tGamblerKills": gambler_info["kills"],
             "tGamblerSuicide": gambler_info["suicide"],
+            "tGamblerSurrender": gambler_info["surrender"],
             "tGamblerWins": wins,
             "tGamblerLosses": losses,
             "tGamblerWinRate": win_rate,
@@ -113,16 +116,20 @@ def card(plugin_event, Proc, msg_manager, groups):
     return
 
 
-@commands.route(COMMON_CMD, "^[恶惡]魔(赏金|杀戮|自杀|)(?:排行|榜)(\\d*)$")
+@commands.route(COMMON_CMD, "^[恶惡]魔(赏金|杀戮|自杀|投降|)(?:排行|榜)(\\d*)$")
 def leaderboard(plugin_event, Proc, msg_manager, groups):
     ranking_page = int(groups[1] or 1) * 10 - 10
-    ranking_type = groups[0] or "赏金"
+    ranking_type = groups[0]
     if ranking_type == "赏金":
         leaderboard_type = "points"
     elif ranking_type == "杀戮":
         leaderboard_type = "kills"
-    else:
+    elif ranking_type == "自杀":
         leaderboard_type = "suicide"
+    elif ranking_type == "投降":
+        leaderboard_type = "surrender"
+    else:
+        leaderboard_type = "points"
     with DataBase(DB_PATH) as db:
         gambler_list = db.select(
             "gambler",
@@ -193,9 +200,10 @@ def match_game(plugin_event, Proc, msg_manager, groups):
         plugin_event.reply(reply)
         return
     # endregion
+    game_start = game.get("start", False)
     # region 清除过期对局
     expireTime = int(time.time())
-    if expireTime > game.get("expireTime", 0) and not game.get("start", False):
+    if expireTime > game.get("expireTime", 0) and not game_start:
         game.clear()
     # endregion
     # region 构建对局
@@ -205,72 +213,87 @@ def match_game(plugin_event, Proc, msg_manager, groups):
             {
                 "start": False,
                 "expireTime": expireTime + 600,
-                "mode": mode_name,
-                "points": mode_cfg.points,
                 "seats": seats,
-                "ammo_live": 0,
-                "ammo_blank": 0,
-                "bullet": False,
-                "shooter": "",
-                "order": [],
-                "props": {
-                    "pool": mode_cfg.props.pool,
-                    "ban": mode_cfg.props.ban,
-                    "limit": mode_cfg.props.limit,
+                "mode": {
+                    "name": mode_name,
+                    "points": mode_cfg.points,
+                    "props": {
+                        "pool": mode_cfg.props.pool,
+                        "ban": mode_cfg.props.ban,
+                        "limit": mode_cfg.props.limit,
+                    },
                 },
-                "players": {},
-                "modify": {},
-                "callback": {
-                    "reload": [],
-                    "shoot": [],
-                    "damage": [],
-                    "end_round": [],
-                    "switch": [],
+                "data": {
+                    "ammo_live": 0,
+                    "ammo_blank": 0,
+                    "bullet": False,
+                    "shooter": "",
+                    "order": [],
+                    "players": {},
+                    "modify": {
+                        "dmg": mode_cfg.modify.dmg,
+                        "ammo_show": mode_cfg.modify.ammo_show,
+                        "bullet_show": mode_cfg.modify.bullet_show,
+                    },
+                    "prop_event": {
+                        "shoot": [],
+                        "damage": [],
+                        "roundEnd": [],
+                        "switch": [],
+                        "reload": [],
+                    },
                 },
                 "reply": {
                     "info": [],
-                    "ammo": "",
-                    "shooter": "",
-                    "over": "",
+                    "note": {
+                        "ammo": "",
+                        "shooter": "",
+                    },
+                    "only": "",
                 },
+                "tmp": {},
             }
         )
-    elif game["start"]:
+    elif game_start:
         reply = msg_manager.msg_format("strMrGameStartError")
         plugin_event.reply(reply)
         return
-    elif mode_name != game["mode"]:
+    elif mode_name != game["mode"]["name"]:
         reply = msg_manager.msg_format(
-            "strMrMatchModeError", {"tGameMode": game["mode"]}
+            "strMrMatchModeError", {"tGameMode": game["mode"]["name"]}
         )
         plugin_event.reply(reply)
         return
     # endregion
+    data = game["data"]
+    order = data["order"]
     # region 添加玩家
-    if user_id not in game["order"]:
+    if user_id not in order:
         with DataBase(DB_PATH) as db:
             name = db.select("gambler", "name", "user_id = ?", user_id)[0][0]
-        game["order"].append(user_id)
-        game["players"][user_id] = {
+        order.append(user_id)
+        data["players"][user_id] = {
             "name": name,
             "hp": 3,
             "actions": 0,
             "props": [],
             "kills": 0,
             "suicide": False,
+            "surrender": False,
+            "points_mult": 0,
         }
         mode_cfg.join(game, user_id)
     # endregion
     # region 检查人数
     seats = game["seats"]
-    if len(game["order"]) >= seats:
+    if len(order) >= seats:
         game["start"] = True
         game["expireTime"] = 0
         RegGameWork.bullet(game)
-        random.shuffle(game["order"])
-        shooter = game["order"][0]
-        game["shooter"] = shooter
-        game["players"][shooter]["actions"] = 1
+        random.shuffle(order)
+        shooter = order[0]
+        data["shooter"] = shooter
+        data["players"][shooter]["actions"] = 1
         mode_cfg.start(game)
         game["reply"].update({"info": [], "ammo": "", "shooter": ""})
         situation(plugin_event, Proc, msg_manager, None)
@@ -278,8 +301,8 @@ def match_game(plugin_event, Proc, msg_manager, groups):
         reply = msg_manager.msg_format(
             "strMrGamePrep",
             {
-                "tGameMode": game["mode"],
-                "tSeatsHas": len(game["order"]),
+                "tGameMode": mode_name,
+                "tSeatsHas": len(order),
                 "tSeatsMax": seats,
             },
         )
@@ -293,7 +316,7 @@ def join_game(plugin_event, Proc, msg_manager, groups):
     game = msg_manager.val["game"]
     if not game or game["start"]:
         return
-    mode_name = game["mode"]
+    mode_name = game["mode"]["name"]
     match_game(plugin_event, Proc, msg_manager, (mode_name, ""))
     return
 
@@ -301,15 +324,15 @@ def join_game(plugin_event, Proc, msg_manager, groups):
 @commands.route("prep", "^(?:退出|离开)$")
 def exit_game(plugin_event, Proc, msg_manager, groups):
     user_id, game = msg_manager.user_id, msg_manager.val["game"]
-    game["order"].remove(user_id)
-    del game["players"][user_id]
-    if not game["order"]:
+    data = game["data"]
+    order = data["order"]
+    order.remove(user_id)
+    del data["players"][user_id]
+    if not order:
         game.clear()
         reply = msg_manager.msg_format("strMrExitDismiss")
     else:
-        reply = msg_manager.msg_format(
-            "strMrExitRemain", {"tSeatsHas": len(game["order"])}
-        )
+        reply = msg_manager.msg_format("strMrExitRemain", {"tSeatsHas": len(order)})
     plugin_event.reply(reply)
     return
 
@@ -319,20 +342,19 @@ def exit_game(plugin_event, Proc, msg_manager, groups):
 @commands.route("play", "^(吞|开|開)[槍|枪] *(\\d*)$")
 def shoot(plugin_event, Proc, msg_manager, groups):
     user_id, game = msg_manager.user_id, msg_manager.val["game"]
-    if game["shooter"] != user_id:
+    shooter = game["data"]["shooter"]
+    if user_id != shooter:
         reply = msg_manager.msg_format(
-            "strMrActionsError", {"tGamblerName": RegGameWork.get_name(game)}
+            "strMrActionsError", {"tGamblerName": RegGameWork.get_name(game, shooter)}
         )
         plugin_event.reply(reply)
         return
-    # 确定目标
-    target = groups[1]
     if groups[0] == "吞":
         target = user_id
-    elif not (target := get_target(game, target)):
+    elif not (target := get_target(game, groups[1])):
         return
     RegGameWork.shoot(game, target)
-    reply = RegGameWork.reply(game)
+    reply = RegGameWork.format_reply(game)
     plugin_event.reply(reply)
     return
 
@@ -340,15 +362,16 @@ def shoot(plugin_event, Proc, msg_manager, groups):
 @commands.route("play", f"^(?:使用|) *({'|'.join(PropComp.list())}) *(\\d*)$")
 def use_prop(plugin_event, Proc, msg_manager, groups):
     user_id, game = msg_manager.user_id, msg_manager.val["game"]
-    if game["shooter"] != user_id:
+    data = game["data"]
+    shooter = data["shooter"]
+    if user_id != shooter:
         reply = msg_manager.msg_format(
-            "strMrActionsError", {"tGamblerName": RegGameWork.get_name(game)}
+            "strMrActionsError", {"tGamblerName": RegGameWork.get_name(game, shooter)}
         )
         plugin_event.reply(reply)
         return
     prop, target = groups[0], groups[1]
-    pl = game["players"][user_id]
-    if prop not in pl["props"]:
+    if prop not in data["players"][user_id]["props"]:
         reply = msg_manager.msg_format("strMrPropError", {"tPropName": prop})
         plugin_event.reply(reply)
         return
@@ -358,9 +381,24 @@ def use_prop(plugin_event, Proc, msg_manager, groups):
         return
     if PropComp.use(game, prop, target):
         RegGameWork.remove_prop(game, user_id, prop)
-        reply = RegGameWork.reply(game)
+        reply = RegGameWork.format_reply(game)
         plugin_event.reply(reply)
         return
+    return
+
+
+@commands.route("play", "^投降$")
+def surrender(plugin_event, Proc, msg_manager, groups):
+    user_id, game = msg_manager.user_id, msg_manager.val["game"]
+    data = game["data"]
+    order = data["order"]
+    order.remove(user_id)
+    pl_user = data["players"][user_id]["surrender"] = True
+    if len(order) <= 1:
+        RegGameWork.end_round(game)
+    game["reply"]["info"].append(f"{RegGameWork.get_name(game,user_id)}被清除.")
+    reply = RegGameWork.format_reply(game)
+    plugin_event.reply(reply)
     return
 
 
@@ -369,9 +407,14 @@ def situation(plugin_event, Proc, msg_manager, groups):
     game = msg_manager.val["game"]
     if not game.get("start"):
         return
-    order, players, shooter = game["order"], game["players"], game["shooter"]
+    data = game["data"]
+    order, players, shooter, modify = (
+        data["order"],
+        data["players"],
+        data["shooter"],
+        data["modify"],
+    )
     # 赌徒
-    modify = game["modify"]
     pl_list = [
         (
             f"〔{idx+1}〕 {pl['name']}{'「束縛中」' if pl in modify.get('手铐',[]) else ''}\n"
@@ -382,16 +425,16 @@ def situation(plugin_event, Proc, msg_manager, groups):
         for pl in [players[user_id]]
     ]
     # 弹药
-    ammo_live, ammo_blank = game["ammo_live"], game["ammo_blank"]
+    ammo_live, ammo_blank = data["ammo_live"], data["ammo_blank"]
     ammo = (
         f"\n彈仓: {ammo_live} / {ammo_live+ammo_blank}"
-        if not game["modify"].get("ammo_hide")
+        if modify["ammo_show"]
         else "\n霰彈槍隱匿于迷霧之中."
     )
     # 子弹
     bullet = (
-        f"\n當前子彈: {'實彈' if game['bullet'] else '空包彈'}"
-        if game["modify"].get("bullet_show")
+        f"\n當前子彈: {'實彈' if data['bullet'] else '空包彈'}"
+        if modify["bullet_show"]
         else ""
     )
     # 死亡
@@ -404,18 +447,6 @@ def situation(plugin_event, Proc, msg_manager, groups):
         + bullet
         + dead
     )
-    plugin_event.reply(reply)
-    return
-
-
-@commands.route("play", "^投降$")
-def surrender(plugin_event, Proc, msg_manager, groups):
-    user_id, game = msg_manager.user_id, msg_manager.val["game"]
-    game["reply"]["info"].append(f"{RegGameWork.get_name(game,user_id)}被清除。")
-    RegGameWork.dead(game, user_id, True)
-    if len(game["order"]) <= 1:
-        RegGameWork.end_round(game)
-    reply = RegGameWork.reply(game)
     plugin_event.reply(reply)
     return
 

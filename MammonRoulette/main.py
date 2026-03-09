@@ -26,6 +26,7 @@ class Event(object):
                     "points": int,  # 积分
                     "kills": int,  # 击杀
                     "suicide": int,  # 自杀
+                    "surrender": int,  # 投降
                     "wins": int,  # 胜局
                     "losses": int,  # 败局
                 },
@@ -72,7 +73,7 @@ class Event(object):
                 Proc.database.set_basic_config(
                     "MammonRoulette", "main_enabled", int(main_enabled), pkl=False
                 )
-                Proc.log(2, "[恶魔轮盘] - (数据) -> " + str(main_enabled))
+                Proc.log(2, "[恶魔轮盘] - (总开关) -> " + str(main_enabled))
             # poke开关
             elif plugin_event.data.event == "MammonRoulette_Menu_poke_enabled":  # type: ignore
                 poke_enabled = not Proc.database.get_basic_config(
@@ -84,7 +85,32 @@ class Event(object):
                 Proc.database.set_basic_config(
                     "MammonRoulette", "poke_enabled", int(poke_enabled), pkl=False
                 )
-                Proc.log(2, "[恶魔轮盘] - (数据) -> " + str(poke_enabled))
+                Proc.log(2, "[恶魔轮盘] - (poke开关) -> " + str(poke_enabled))
+            # debug
+            elif plugin_event.data.event == "MammonRoulette_Menu_debug":  # type: ignore
+                debug_enabled = not Proc.database.get_basic_config(
+                    "MammonRoulette",
+                    "debug_enabled",
+                    default_value=1,
+                    pkl=False,
+                )
+                Proc.database.set_basic_config(
+                    "MammonRoulette", "debug_enabled", int(debug_enabled), pkl=False
+                )
+                Proc.log(2, "[恶魔轮盘] - (debug) -> " + str(debug_enabled))
+            # 开关重置
+            elif plugin_event.data.event == "MammonRoulette_Menu_reset":  # type: ignore
+                Proc.database.set_basic_config(
+                    "MammonRoulette", "main_enabled", 1, pkl=False
+                )
+                Proc.database.set_basic_config(
+                    "MammonRoulette", "poke_enabled", 1, pkl=False
+                )
+                Proc.database.set_basic_config("MammonRoulette", "debug", 0, pkl=False)
+                Proc.log(
+                    2,
+                    "[恶魔轮盘] - (开关) -> 总开关: true; poke开关: true; debug开关: false.",
+                )
             # 数据重加载
             elif plugin_event.data.event == "MammonRoulette_Menu_clear_cache":  # type: ignore
                 with open(GAME_PATH, "w", encoding="utf-8") as f:
@@ -131,7 +157,7 @@ def unity_reply(plugin_event, Proc):
     # region 数据与状态
     if msg_manager.group_id:
         game = game_data.setdefault(msg_manager.group_id, {})
-        if msg_manager.user_id in game.get("order", []):
+        if msg_manager.user_id in game.get("data", {}).get("order", []):
             state = "play" if game["start"] else "prep"
         else:
             state = "ob"
@@ -167,3 +193,11 @@ def unity_reply(plugin_event, Proc):
     if forward:
         handler, groups = forward[0]
         handler(plugin_event, Proc, msg_manager, groups)
+    if Proc.database.get_basic_config(
+        "MammonRoulette",
+        "debug_enabled",
+        default_value=1,
+        pkl=False,
+    ):
+        with open(GAME_PATH, "w", encoding="utf-8") as f:
+            json.dump(game_data, f, ensure_ascii=False, indent=4)

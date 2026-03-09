@@ -9,6 +9,7 @@ dictStrCustom = {
         "\n賞金: {tGamblerPoints}"
         "\n槍下亡魂: {tGamblerKills}"
         "\n自取滅亡: {tGamblerSuicide}"
+        "\n臨陣脫逃: {tGamblerSurrender}"
         "\n取勝: {tGamblerWins}｜戰敗: {tGamblerLosses}"
         "\n奪標率: {tGamblerWinRate}"
     ),
@@ -39,7 +40,8 @@ dictTValue = {
     "tGamblerRanking": "N/A",
     "tGamblerPoints": "0",
     "tGamblerKills": "0",
-    "tGamblerSuicide": "0",
+    "tGamblerSuicide": "从未",
+    "tGamblerSurrender": "从不",
     "tGamblerWins": "0",
     "tGamblerLosses": "0",
     "tGamblerWinRate": "0",

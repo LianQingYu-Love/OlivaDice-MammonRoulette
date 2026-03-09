@@ -9,19 +9,30 @@ class BaseMode:
     brief = ""
     points = 0
 
-    class seats:  # type: ignore
+    class _seats:
         default: int = 2
         max: int = 8
         min: int = 2
 
-    seats: type = seats
+    seats: type = _seats
 
-    class props:  # type: ignore
+    class _props:
         pool: list = []
         ban: list = []
         limit: int = 0
 
-    props: type = props
+    props: type = _props
+
+    class _modify:
+        dmg: int = 1
+        ammo_show: bool = True
+        bullet_show: bool = False
+
+    modify: type = _modify
+
+    @classmethod
+    def init(cls):
+        pass
 
     @classmethod
     def start(cls, game):
@@ -33,27 +44,27 @@ class BaseMode:
 
     # 装弹
     @classmethod
-    def reload(cls, game, **kwargs):
+    def reload(cls, game):
         pass
 
     # 开枪
     @classmethod
-    def shoot(cls, game, **kwargs):
+    def shoot(cls, game):
         pass
 
     # 受伤
     @classmethod
-    def damage(cls, game, **kwargs):
+    def damage(cls, game):
         pass
 
     # 回合结束
     @classmethod
-    def end_round(cls, game, **kwargs):
+    def end_round(cls, game):
         pass
 
     # 换人
     @classmethod
-    def switch(cls, game, **kwargs):
+    def switch(cls, game):
         pass
 
 
@@ -77,18 +88,19 @@ class 经典(ModeComp, BaseMode):
 
     @classmethod
     def start(cls, game):
-        for pl in game["order"][2:]:
+        data = game["data"]
+        for pl in data["order"][2:]:
             RegGameWork.draw_prop(game, pl, 1)
-        RegGameWork.draw_prop(game, game["shooter"], 2)
+        RegGameWork.draw_prop(game, data["shooter"], 2)
 
     @classmethod
     def join(cls, game, user_id):
-        game["players"][user_id]["hp"] = 4
+        game["data"]["players"][user_id]["hp"] = 4
 
     # 换人
     @classmethod
-    def switch(cls, game, **kwargs):
-        RegGameWork.draw_prop(game, game["shooter"], 2)
+    def switch(cls, game):
+        RegGameWork.draw_prop(game, game["data"]["shooter"], 2)
 
 
 class 道具(ModeComp, BaseMode):
@@ -123,16 +135,17 @@ class 道具(ModeComp, BaseMode):
 
     @classmethod
     def join(cls, game, user_id):
-        pl = game["players"][user_id]
-        if len(game["order"]) < 4:
-            pl["hp"] = 5
+        data = game["data"]
+        pl_user = data["players"][user_id]
+        if len(data["order"]) < 4:
+            pl_user["hp"] = 5
         else:
-            pl["hp"] = 6
+            pl_user["hp"] = 6
 
     # 装弹
     @classmethod
-    def reload(cls, game, **kwargs):
-        for pl in game["order"]:
+    def reload(cls, game):
+        for pl in game["data"]["order"]:
             RegGameWork.draw_prop(game, pl, 4)
 
 
@@ -155,26 +168,31 @@ class 金币(ModeComp, BaseMode):
 
     @classmethod
     def start(cls, game):
-        RegGameWork.get_prop(game, game["shooter"], "金币")
+        RegGameWork.get_prop(game, game["data"]["shooter"], "金币")
 
     @classmethod
     def join(cls, game, user_id):
-        game["players"][user_id]["hp"] = 5
+        game["data"]["players"][user_id]["hp"] = 5
 
     # 换人
     @classmethod
-    def switch(cls, game, **kwargs):
-        RegGameWork.draw_prop(game, game["shooter"], 1)
+    def switch(cls, game):
+        RegGameWork.draw_prop(game, game["data"]["shooter"], 1)
 
     # 受伤
     @classmethod
-    def damage(cls, game, **kwargs):
-        target, dmg = kwargs["target"], kwargs["dmg"]
-        comp = game["modify"].setdefault("金币", [])
-        if target not in comp and game["players"][target]["hp"] - dmg <= 2:
+    def damage(cls, game):
+        data, reply = game["data"], game["reply"]
+        target, dmg = game["tmp"]["target"], game["tmp"]["dmg"]
+        comp = data["modify"].setdefault("金币", [])
+        if target not in comp and data["players"][target]["hp"] - dmg <= 2:
             if RegGameWork.get_prop(game, target, "金币"):
-                game["reply"]["info"].append(
-                    f"金光乍現！一枚金幣落入{RegGameWork.get_name(target)}手中."
+                reply["info"].append(
+                    f"金光乍現！一枚金幣落入{RegGameWork.get_name(game,target)}手中."
+                )
+            else:
+                reply["info"].append(
+                    f"金光乍現！一枚金幣落入{RegGameWork.get_name(game,target)}手中, 但不慎滑落."
                 )
             comp.append(target)
 
@@ -214,34 +232,36 @@ class 勇者(ModeComp, BaseMode):
 
     @classmethod
     def start(cls, game):
-        for pl in game["order"][1:]:
+        data = game["data"]
+        for pl in data["order"][1:]:
             RegGameWork.draw_prop(game, pl, 2)
-        RegGameWork.draw_prop(game, game["shooter"], 1)
+        RegGameWork.draw_prop(game, data["shooter"], 1)
 
     @classmethod
     def join(cls, game, user_id):
-        game["players"][user_id]["hp"] = 5
+        game["data"]["players"][user_id]["hp"] = 5
 
     # 开枪
     @classmethod
-    def shoot(cls, game, **kwargs):
-        bullet = game["bullet"]
+    def shoot(cls, game):
+        data = game["data"]
+        bullet = data["bullet"]
         if bullet and random.randint(1, 3) == 1:
-            game["reply"]["info"].append(f"伴隨七彩光芒，魔彈發射.")
-            modify = game["modify"]
-            modify["dmg"] = modify.get("dmg", 0) + 1
+            modify = data["modify"]
             modify["魔弹"] = True
-        target = kwargs["target"]
-        if target == game["shooter"] and not bullet:
+            modify["dmg"] = modify["dmg"] + 1
+            game["reply"]["info"].append(f"伴隨七彩光芒，魔彈發射.")
+        target = game["tmp"]["target"]
+        if target == data["shooter"] and not bullet:
             RegGameWork.draw_prop(game, target, 2)
 
     # 回合结束
     @classmethod
     def end_round(cls, game, **kwargs):
-        modify = game["modify"]
+        modify = game["data"]["modify"]
         if modify.get("魔弹"):
             modify["魔弹"] = False
-            modify["dmg"] = modify.get("dmg", 1) - 1
+            modify["dmg"] = modify["dmg"] - 1
 
 
 class 赌徒(ModeComp, BaseMode):
@@ -255,7 +275,8 @@ class 赌徒(ModeComp, BaseMode):
         "\n1. 游戏开始时, 所有玩家抽取 2 个道具;"
         "\n2. 向自己开枪且原本子弹为空弹时抽取 3 个道具;"
         "\n3. 实弹有1/3的概率使伤害+1;"
-        "\n4. 每次开枪有1/3的概率反转子弹虚实."
+        "\n4. 每次开枪有1/3的概率反转子弹虚实;"
+        "\n5. 不会正常显示弹药数量."
     )
     points = 40
 
@@ -273,6 +294,9 @@ class 赌徒(ModeComp, BaseMode):
         ban = []
         limit = 12
 
+    class modify:
+        ammo_show = False
+
     @staticmethod
     def reply():
         if random.randint(1, 54) > 2:
@@ -284,37 +308,38 @@ class 赌徒(ModeComp, BaseMode):
 
     @classmethod
     def start(cls, game):
-        game["modify"]["ammo_hide"] = True
-        for pl in game["order"]:
+        data = game["data"]
+        data["modify"]["ammo_hide"] = True
+        for pl in data["order"]:
             RegGameWork.draw_prop(game, pl, 2)
 
     @classmethod
     def join(cls, game, user_id):
-        game["players"][user_id]["hp"] = 5
+        game["data"]["players"][user_id]["hp"] = 5
 
     # 开枪
     @classmethod
-    def shoot(cls, game, **kwargs):
-        target = kwargs["target"]
-        if target == game["shooter"] and not game["bullet"]:
+    def shoot(cls, game):
+        data, reply = game["data"], game["reply"]
+        target = game["tmp"]["target"]
+        if target == data["shooter"] and not data["bullet"]:
             RegGameWork.draw_prop(game, target, 3)
         if random.randint(1, 3) == 1:
-            game["reply"]["info"].append(f"子彈擊穿突然出現的{cls.reply()}.")
-            bullet = not game["bullet"]
-            game["bullet"] = bullet
-            game["ammo_blank"] += -1 if bullet else 1
-            game["ammo_live"] += 1 if bullet else -1
-        if game["bullet"] and random.randint(1, 3) == 1:
-            game["reply"]["info"].append(f"伴隨七彩光芒，魔彈發射.")
-            modify = game["modify"]
-            modify["dmg"] = modify.get("dmg", 0) + 1
+            bullet = not data["bullet"]
+            data["bullet"] = bullet
+            data["ammo_blank"] += -1 if bullet else 1
+            data["ammo_live"] += 1 if bullet else -1
+            reply["info"].append(f"子彈擊穿突然出現的{cls.reply()}.")
+        if data["bullet"] and random.randint(1, 3) == 1:
+            modify = data["modify"]
             modify["魔弹"] = True
+            modify["dmg"] = modify["dmg"] + 1
+            reply["info"].append(f"伴隨七彩光芒，魔彈發射.")
 
     # 回合结束
     @classmethod
     def end_round(cls, game, **kwargs):
-        modify = game["modify"]
-        modify["ammo_hide"] = True
+        modify = game["data"]["modify"]
         if modify.get("魔弹"):
             modify["魔弹"] = False
-            modify["dmg"] = modify.get("dmg", 1) - 1
+            modify["dmg"] = modify["dmg"] - 1
