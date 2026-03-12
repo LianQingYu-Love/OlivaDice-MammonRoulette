@@ -143,7 +143,7 @@ def leaderboard(plugin_event, Proc, msg_manager, groups):
         gambler_total = db.select("gambler", "COUNT(*)")
     top_list = "\n".join(
         msg_manager.msg_format(
-            "strMrLeaderboardCard",
+            "strMrReplyGamblerRanking",
             {
                 "tGamblerRanking": idx + ranking_page + 1,
                 "tGamblerName": gambler_info["name"],
@@ -153,7 +153,7 @@ def leaderboard(plugin_event, Proc, msg_manager, groups):
         for idx, gambler_info in enumerate(gambler_list)
     )
     reply = msg_manager.msg_format(
-        "strMrLeaderboard",
+        "strMrLeaderboardResult",
         {
             "tLeaderboardType": ranking_type,
             "tGamblerTopList": top_list,
@@ -255,12 +255,12 @@ def match_game(plugin_event, Proc, msg_manager, groups):
             }
         )
     elif game_start:
-        reply = msg_manager.msg_format("strMrGameStartError")
+        reply = msg_manager.msg_format("strMrGameStarted")
         plugin_event.reply(reply)
         return
     elif mode_name != game["mode"]["name"]:
         reply = msg_manager.msg_format(
-            "strMrMatchModeError", {"tGameMode": game["mode"]["name"]}
+            "strMrGameModeError", {"tGameMode": game["mode"]["name"]}
         )
         plugin_event.reply(reply)
         return
@@ -330,9 +330,9 @@ def exit_game(plugin_event, Proc, msg_manager, groups):
     del data["players"][user_id]
     if not order:
         game.clear()
-        reply = msg_manager.msg_format("strMrExitDismiss")
+        reply = msg_manager.msg_format("strMrGameDismiss")
     else:
-        reply = msg_manager.msg_format("strMrExitRemain", {"tSeatsHas": len(order)})
+        reply = msg_manager.msg_format("strMrGameRemain", {"tSeatsHas": len(order)})
     plugin_event.reply(reply)
     return
 
@@ -345,7 +345,7 @@ def shoot(plugin_event, Proc, msg_manager, groups):
     shooter = game["data"]["shooter"]
     if user_id != shooter:
         reply = msg_manager.msg_format(
-            "strMrActionsError", {"tGamblerName": RegGameWork.get_name(game, shooter)}
+            "strMrCurrentTurn", {"tGamblerName": RegGameWork.get_name(game, shooter)}
         )
         plugin_event.reply(reply)
         return
@@ -366,13 +366,13 @@ def use_prop(plugin_event, Proc, msg_manager, groups):
     shooter = data["shooter"]
     if user_id != shooter:
         reply = msg_manager.msg_format(
-            "strMrActionsError", {"tGamblerName": RegGameWork.get_name(game, shooter)}
+            "strMrCurrentTurn", {"tGamblerName": RegGameWork.get_name(game, shooter)}
         )
         plugin_event.reply(reply)
         return
     prop, target = groups[0], groups[1]
     if prop not in data["players"][user_id]["props"]:
-        reply = msg_manager.msg_format("strMrPropError", {"tPropName": prop})
+        reply = msg_manager.msg_format("strMrNoProp", {"tPropName": prop})
         plugin_event.reply(reply)
         return
     if not target:
@@ -393,7 +393,7 @@ def surrender(plugin_event, Proc, msg_manager, groups):
     data = game["data"]
     order = data["order"]
     order.remove(user_id)
-    pl_user = data["players"][user_id]["surrender"] = True
+    data["players"][user_id]["surrender"] = True
     if len(order) <= 1:
         RegGameWork.end_round(game)
     game["reply"]["info"].append(f"{RegGameWork.get_name(game,user_id)}被清除.")
@@ -414,39 +414,95 @@ def situation(plugin_event, Proc, msg_manager, groups):
         data["shooter"],
         data["modify"],
     )
+    t_value = {}
+    link = msg_manager.msg_format("strMrLink")
     # 赌徒
-    pl_list = [
-        (
-            f"〔{idx+1}〕 {pl['name']}{'「束縛中」' if pl in modify.get('手铐',[]) else ''}\n"
-            f"「hp: {pl['hp']}」\n"
-            f"{('、'.join(f'{prop}' if count == 1 else f'{prop}*{count}' for prop, count in Counter(pl['props']).items()) if pl.get('props') else '無道具')}\n"
-        )
-        for idx, user_id in enumerate(order)
-        for pl in [players[user_id]]
-    ]
-    # 弹药
-    ammo_live, ammo_blank = data["ammo_live"], data["ammo_blank"]
-    ammo = (
-        f"\n彈仓: {ammo_live} / {ammo_live+ammo_blank}"
-        if modify["ammo_show"]
-        else "\n霰彈槍隱匿于迷霧之中."
+    pl_data_list = []
+    for idx, user_id in enumerate(order):
+        pl = players[user_id]
+        props = []
+        for prop, count in Counter(pl["props"]).items():
+            props.append(
+                msg_manager.msg_format(
+                    "strMrReplyPropOnly" if count == 1 else "strMrReplyPropMany",
+                    {"tPropName": prop, "tPropCount": count},
+                )
+            )
+        pl_data = {
+            "tGamblerIdx": idx + 1,
+            "tGamblerName": pl["name"],
+            "tGamblerHp": pl["hp"],
+            "tGamblerProps": (
+                link.join(props)
+                if pl["props"]
+                else msg_manager.msg_format("strMrReplyGamblerPropNone")
+            ),
+            "tGamblerActions": pl["actions"],
+            "tGamblerKills": pl["kills"],
+        }
+        pl_data_list.append(msg_manager.msg_format("strMrReplyGamblerData", pl_data))
+    t_value.update({"tReplyGamblerData": "".join(pl_data_list)})
+    # 枪手
+    t_value.update(
+        {
+            "tReplyShooter": msg_manager.msg_format(
+                "strMrReplyShooter",
+                {
+                    "tGamblerIdx": order.index(shooter) + 1,
+                    "tGamblerName": players[shooter]["name"],
+                },
+            )
+        }
     )
     # 子弹
-    bullet = (
-        f"\n當前子彈: {'實彈' if data['bullet'] else '空包彈'}"
-        if modify["bullet_show"]
-        else ""
+    t_value.update(
+        {
+            "tNowBulletType": msg_manager.msg_format(
+                "strMrAmmoLive" if data["bullet"] else "strMrAmmoBlank"
+            )
+        }
+    )
+    t_value.update(
+        {
+            "tReplyNowBullet": (
+                msg_manager.msg_format("strMrReplyNowBulletShow", t_value)
+                if modify["bullet_show"]
+                else msg_manager.msg_format("strMrReplyNowBulletHide", t_value)
+            )
+        }
+    )
+    # 弹药
+    ammo_live, ammo_blank = data["ammo_live"], data["ammo_blank"]
+    t_value.update(
+        {
+            "tAmmoLiveCount": ammo_live,
+            "tAmmoBlankCount": ammo_blank,
+            "tAmmoCount": ammo_live + ammo_blank,
+        }
+    )
+    t_value.update(
+        {
+            "tReplyAmmo": (
+                msg_manager.msg_format("strMrReplyAmmoShow", t_value)
+                if modify["ammo_show"]
+                else msg_manager.msg_format("strMrReplyAmmoHide", t_value)
+            )
+        }
     )
     # 死亡
     dead_list = [players[uid]["name"] for uid in players if uid not in order]
-    dead = f"\n滅亡[{'、'.join(dead_list)}]" if dead_list else ""
-    reply = (
-        "".join(pl_list) + "▁▁▁▁▁▁▁▁▁▁▁▁▁▁\n"
-        f"槍手:〔{order.index(shooter)+1}〕{players[shooter]['name']}"
-        + ammo
-        + bullet
-        + dead
+    t_value.update({"tDeadList": f"{link.join(dead_list)}"})
+    t_value.update(
+        {
+            "tReplyDeadList": (
+                msg_manager.msg_format("strMrReplyDeadList", t_value)
+                if dead_list
+                else msg_manager.msg_format("strMrReplyDeadNone", t_value)
+            )
+        }
     )
+
+    reply = msg_manager.msg_format("strMrSituationResult", t_value)
     plugin_event.reply(reply)
     return
 

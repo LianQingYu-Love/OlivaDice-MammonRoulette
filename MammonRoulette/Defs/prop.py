@@ -432,17 +432,13 @@ class 金币(PropComp, BaseProp):
             shooter = data["shooter"]
             if user_id != shooter:
                 reply = msg_manager.msg_format(
-                    "strMrActionsError",
+                    "strMrCurrentTurn",
                     {"tGamblerName": RegGameWork.get_name(game, shooter)},
                 )
                 plugin_event.reply(reply)
                 return
             if "金币" not in data["players"][user_id]["props"]:
-                reply = msg_manager.msg_format("strMrPropError", {"tPropName": "金币"})
-                plugin_event.reply(reply)
-                return
-            if "金币" not in data["players"][user_id]["props"]:
-                reply = msg_manager.msg_format("strMrPropError", {"propName": "金币"})
+                reply = msg_manager.msg_format("strMrNoProp", {"tPropName": "金币"})
                 plugin_event.reply(reply)
                 return
             cls.purchase(game, user_id, groups[0])
