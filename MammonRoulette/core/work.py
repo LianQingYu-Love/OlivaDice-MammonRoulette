@@ -1,4 +1,5 @@
 import random
+import re
 
 from AmorLib import DataBase, STRING_ROW
 
@@ -16,17 +17,27 @@ class RegGameWork:
 
     @staticmethod
     def format_reply(game):  # 格式化回复消息
-        reply = game["reply"]
-        if not reply["only"]:
-            info, note = reply["info"], reply["note"]
+        game_reply = game["reply"]
+        if not game_reply["only"]:
+            info, note = game_reply["info"], game_reply["note"]
             extra = [note[key] for key in ["ammo", "shooter"] if note[key]]
             if extra:
                 info.extend(["▁▁▁▁▁▁▁▁▁▁▁▁▁▁"] + extra)
-            msg = "\n".join(info)
+            reply = "\n".join(info)
+            reply = re.sub(r"\n\n+", "\n", reply)
         else:
-            msg = reply["only"]
-        reply.clear()
-        return msg
+            reply = game_reply["only"]
+        game_reply.update(
+            {
+                "info": [],
+                "note": {
+                    "ammo": "",
+                    "shooter": "",
+                },
+                "only": "",
+            }
+        )
+        return reply
 
     # region 事件
     @staticmethod
@@ -36,13 +47,14 @@ class RegGameWork:
             game["data"]["prop_event"][moment].append(callback)
 
     @staticmethod
-    def handle_event(game, moment, **kwargs):
+    def handle_event(msg_manager, moment, **kwargs):
+        game = msg_manager.val["game"]
         game["tmp"].update(kwargs)
         prop_event = game["data"]["prop_event"][moment]
         for prop in prop_event:
-            if PropComp.trigger(game, prop, moment):
+            if PropComp.trigger(msg_manager, prop, moment):
                 prop_event.remove(prop)
-        ModeComp.trigger(game, moment)
+        ModeComp.trigger(msg_manager, moment)
 
     # endregion
     # region 道具
@@ -66,7 +78,8 @@ class RegGameWork:
         return True
 
     @classmethod
-    def draw_prop(cls, game, user_id, count, prop_pool=None):  # 抽取道具
+    def draw_prop(cls, msg_manager, user_id, count, prop_pool=None):  # 抽取道具
+        game = msg_manager.val["game"]
         prop_pool = prop_pool or game["mode"]["props"]["pool"]
         draw_props = []
         for _ in range(count):
@@ -75,72 +88,118 @@ class RegGameWork:
                 break
             draw_props.append(prop)
         if draw_props:
+            link = msg_manager.msg_format("strMrLink")
             game["reply"]["info"].append(
-                f"{game['players'][user_id]['name']}抽取: {'、'.join(draw_props)}"
+                msg_manager.msg_format(
+                    "strMrGamblerDrawnProps",
+                    {
+                        "tGamblerName": cls.get_name(game, user_id),
+                        "tDrawnProps": link.join(draw_props),
+                    },
+                )
             )
         return
 
     # endregion
     # region action
     @classmethod
-    def bullet(cls, game):  # 刷新子弹
+    def bullet(cls, msg_manager):  # 刷新子弹
+        game = msg_manager.val["game"]
         data = game["data"]
         if data["ammo_live"] < 1:
-            ammo_live, ammo_blank = cls.reload(game)
+            ammo_live, ammo_blank = cls.reload(msg_manager)
         else:
-            ammo_live, ammo_blank = game["ammo_live"], game["ammo_blank"]
+            ammo_live, ammo_blank = data["ammo_live"], data["ammo_blank"]
+
         ammo = ammo_live + ammo_blank
         data["bullet"] = random.randint(1, ammo) > ammo_blank
 
         modify = data["modify"]
         ammo_reply = []
         if modify["ammo_show"]:
-            ammo_reply.append(f"彈仓: {ammo_live} / {ammo}")
+            t_value = {
+                "tAmmoLiveCount": ammo_live,
+                "tAmmoBlankCount": ammo_blank,
+                "tAmmoCount": ammo,
+            }
+            ammo_reply.append(
+                msg_manager.msg_format("strMrReplyAmmoShow", t_value)
+                if modify["ammo_show"]
+                else msg_manager.msg_format("strMrReplyAmmoHide", t_value)
+            )
         if modify["bullet_show"]:
-            ammo_reply.append(f"當前子彈: {'實彈' if data['bullet'] else '空包彈'}")
+            t_value = {
+                "tBulletType": msg_manager.msg_format(
+                    "strMrAmmoLive" if data["bullet"] else "strMrAmmoBlank"
+                ),
+            }
+            ammo_reply.append(
+                msg_manager.msg_format("strMrReplyBulletShow", t_value)
+                if modify["bullet_show"]
+                else msg_manager.msg_format("strMrReplyBulletHide", t_value)
+            )
         game["reply"]["note"]["ammo"] = "\n".join(ammo_reply)
         return
 
     @classmethod
-    def reload(cls, game):  # 装弹
+    def reload(cls, msg_manager):  # 装弹
+        game = msg_manager.val["game"]
         data = game["data"]
-        cls.handle_event(game, "reload")
+        cls.handle_event(msg_manager, "reload")
         ammo_live, ammo_blank = random.randint(1, 4), random.randint(1, 4)
         data["ammo_live"], data["ammo_blank"] = ammo_live, ammo_blank
-        game["reply"]["info"].append("彈藥耗盡，重新裝填中……")
+        game["reply"]["info"].append(msg_manager.msg_format("strMrGameAmmoRanOut"))
         return ammo_live, ammo_blank
 
     @classmethod
-    def shoot(cls, game, target):  # 开枪
+    def shoot(cls, msg_manager, target):  # 开枪
+        game = msg_manager.val["game"]
         data, reply, tmp = game["data"], game["reply"], game["tmp"]
         is_attack_me = target == data["shooter"]
-        cls.handle_event(game, "shoot", target=target, is_attack_me=is_attack_me)
+        cls.handle_event(msg_manager, "shoot", target=target, is_attack_me=is_attack_me)
         target = tmp["target"]
         pl_target, pl_shooter = (
             data["players"][target],
             data["players"][data["shooter"]],
         )
+        hp_before = pl_target["hp"]
         if data["bullet"]:
-            hp_before = pl_target["hp"]
-            cls.damage(game, target, data["modify"]["dmg"])
+            cls.damage(msg_manager, target, data["modify"]["dmg"])
             hp_now = pl_target["hp"]
             data["ammo_live"] -= 1
             reply["info"].append(
-                f"“嘭！”{pl_target['name']}被崩倒在地[hp {hp_before}->{hp_now}]."
+                msg_manager.msg_format(
+                    "strMrGamblerWasAmmoLiveShot",
+                    {
+                        "tGamblerName": pl_target["name"],
+                        "tHpBefore": hp_before,
+                        "tHpNow": hp_now,
+                    },
+                )
             )
         else:
             data["ammo_blank"] -= 1
             if tmp["is_attack_me"]:
                 pl_shooter["actions"] += 1
-            reply["info"].append("“咔哒——”是空彈……")
-        cls.bullet(game)
-        cls.end_round(game)
+            reply["info"].append(
+                msg_manager.msg_format(
+                    "strMrGamblerWasAmmoBlankShot",
+                    {
+                        "tGamblerName": pl_target["name"],
+                        "tHpBefore": hp_before,
+                        "tHpNow": hp_before,
+                    },
+                )
+            )
+        cls.bullet(msg_manager)
+        cls.end_round(msg_manager)
         return
 
     @classmethod
-    def damage(cls, game, target, dmg):  # 受伤
+    def damage(cls, msg_manager, target, dmg):  # 受伤
+        game = msg_manager.val["game"]
         data, reply = game["data"], game["reply"]
-        cls.handle_event(game, "damage", target=target, dmg=dmg)
+        cls.handle_event(msg_manager, "damage", target=target, dmg=dmg)
         target, dmg = game["tmp"]["target"], game["tmp"]["dmg"]
         pl_target, pl_shooter = (
             data["players"][target],
@@ -151,32 +210,44 @@ class RegGameWork:
         if pl_target["hp"] <= 0:
             if game["tmp"]["is_attack_me"]:
                 pl_target["suicide"] = True
-                reply["info"].append(f"{name}自殺了……")
+                reply["info"].append(
+                    msg_manager.msg_format(
+                        "strMrGamblerSuicide", {"tGamblerName": name}
+                    )
+                )
             else:
                 pl_shooter["kills"] += 1
                 pl_target["suicide"] = False
-                reply["info"].append(f"{name}死於他手.")
+                reply["info"].append(
+                    msg_manager.msg_format(
+                        "strMrGamblerKilled",
+                        {"tGamblerName": name, "tMurdererName": pl_shooter["name"]},
+                    )
+                )
             data["order"].remove(target)
         return
 
     @classmethod
-    def end_round(cls, game):  # 回合结束
+    def end_round(cls, msg_manager):  # 回合结束
+        game = msg_manager.val["game"]
         data = game["data"]
         order = data["order"]
         if len(order) > 1:
-            cls.handle_event(game, "end_round")
+            cls.handle_event(msg_manager, "end_round")
             pc_shooter = data["players"][data["shooter"]]
             pc_shooter["actions"] -= 1
             if pc_shooter["actions"] < 1:
-                cls.switch(game)
+                cls.switch(msg_manager)
         else:
-            name = cls.get_name(game, order[0])
+            game["reply"]["only"] = msg_manager.msg_format(
+                "strMrGameEnd", {"tWinnerName": cls.get_name(game, order[0])}
+            )
             cls.over(game)
-            game.update({"reply": {"only": f"{name}用鮮血爲這場生死對局畫上句號."}})
         return
 
     @classmethod
-    def switch(cls, game):  # 换人
+    def switch(cls, msg_manager):  # 换人
+        game = msg_manager.val["game"]
         data = game["data"]
         order, shooter = data["order"], data["shooter"]
         for _ in range(game["seats"] * 10):
@@ -188,8 +259,10 @@ class RegGameWork:
         if shooter != data["shooter"]:
             data["shooter"] = shooter
             pc_shooter = data["players"][shooter]
-            game["reply"]["shooter"] = f"現在是{pc_shooter['name']}的回合。"
-            cls.handle_event(game, "switch")
+            game["reply"]["note"]["shooter"] = msg_manager.msg_format(
+                "strMrGamblerTurn", {"tGamblerName": pc_shooter["name"]}
+            )
+            cls.handle_event(msg_manager, "switch")
         return
 
     @classmethod
@@ -219,7 +292,7 @@ class RegGameWork:
                     pl,
                     increment=("points", "kills", "suicide", wl),
                 )
-        game.clear()
+        game["over"] = True
         return
 
     # endregion

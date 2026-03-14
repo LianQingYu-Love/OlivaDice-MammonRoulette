@@ -143,7 +143,7 @@ def leaderboard(plugin_event, Proc, msg_manager, groups):
         gambler_total = db.select("gambler", "COUNT(*)")
     top_list = "\n".join(
         msg_manager.msg_format(
-            "strMrReplyGamblerRanking",
+            "strMrGamblerRankTpl",
             {
                 "tGamblerRanking": idx + ranking_page + 1,
                 "tGamblerName": gambler_info["name"],
@@ -212,6 +212,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
         game.update(
             {
                 "start": False,
+                "over": False,
                 "expireTime": expireTime + 600,
                 "seats": seats,
                 "mode": {
@@ -238,7 +239,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
                     "prop_event": {
                         "shoot": [],
                         "damage": [],
-                        "roundEnd": [],
+                        "end_round": [],
                         "switch": [],
                         "reload": [],
                     },
@@ -282,20 +283,29 @@ def match_game(plugin_event, Proc, msg_manager, groups):
             "surrender": False,
             "points_mult": 0,
         }
-        mode_cfg.join(game, user_id)
+        mode_cfg.join(msg_manager, user_id)
     # endregion
     # region 检查人数
     seats = game["seats"]
     if len(order) >= seats:
         game["start"] = True
         game["expireTime"] = 0
-        RegGameWork.bullet(game)
+        RegGameWork.bullet(msg_manager)
         random.shuffle(order)
         shooter = order[0]
         data["shooter"] = shooter
         data["players"][shooter]["actions"] = 1
-        mode_cfg.start(game)
-        game["reply"].update({"info": [], "ammo": "", "shooter": ""})
+        mode_cfg.start(msg_manager)
+        game["reply"].update(
+            {
+                "info": [],
+                "note": {
+                    "ammo": "",
+                    "shooter": "",
+                },
+                "only": "",
+            }
+        )
         situation(plugin_event, Proc, msg_manager, None)
     else:
         reply = msg_manager.msg_format(
@@ -345,7 +355,7 @@ def shoot(plugin_event, Proc, msg_manager, groups):
     shooter = game["data"]["shooter"]
     if user_id != shooter:
         reply = msg_manager.msg_format(
-            "strMrCurrentTurn", {"tGamblerName": RegGameWork.get_name(game, shooter)}
+            "strMrGamblerTurn", {"tGamblerName": RegGameWork.get_name(game, shooter)}
         )
         plugin_event.reply(reply)
         return
@@ -353,7 +363,7 @@ def shoot(plugin_event, Proc, msg_manager, groups):
         target = user_id
     elif not (target := get_target(game, groups[1])):
         return
-    RegGameWork.shoot(game, target)
+    RegGameWork.shoot(msg_manager, target)
     reply = RegGameWork.format_reply(game)
     plugin_event.reply(reply)
     return
@@ -366,20 +376,20 @@ def use_prop(plugin_event, Proc, msg_manager, groups):
     shooter = data["shooter"]
     if user_id != shooter:
         reply = msg_manager.msg_format(
-            "strMrCurrentTurn", {"tGamblerName": RegGameWork.get_name(game, shooter)}
+            "strMrGamblerTurn", {"tGamblerName": RegGameWork.get_name(game, shooter)}
         )
         plugin_event.reply(reply)
         return
     prop, target = groups[0], groups[1]
     if prop not in data["players"][user_id]["props"]:
-        reply = msg_manager.msg_format("strMrNoProp", {"tPropName": prop})
+        reply = msg_manager.msg_format("strMrGamblerNoProp", {"tPropName": prop})
         plugin_event.reply(reply)
         return
     if not target:
         target = user_id
     elif not (target := get_target(game, target)):
         return
-    if PropComp.use(game, prop, target):
+    if PropComp.use(msg_manager, prop, target):
         RegGameWork.remove_prop(game, user_id, prop)
         reply = RegGameWork.format_reply(game)
         plugin_event.reply(reply)
@@ -395,8 +405,13 @@ def surrender(plugin_event, Proc, msg_manager, groups):
     order.remove(user_id)
     data["players"][user_id]["surrender"] = True
     if len(order) <= 1:
-        RegGameWork.end_round(game)
-    game["reply"]["info"].append(f"{RegGameWork.get_name(game,user_id)}被清除.")
+        RegGameWork.end_round(msg_manager)
+    game["reply"]["info"].append(
+        msg_manager.msg_format(
+            "strMrGamblerSurrender",
+            {"tGamblerName": RegGameWork.get_name(game, user_id)},
+        )
+    )
     reply = RegGameWork.format_reply(game)
     plugin_event.reply(reply)
     return
@@ -435,7 +450,7 @@ def situation(plugin_event, Proc, msg_manager, groups):
             "tGamblerProps": (
                 link.join(props)
                 if pl["props"]
-                else msg_manager.msg_format("strMrReplyGamblerPropNone")
+                else msg_manager.msg_format("strMrReplyPropNone")
             ),
             "tGamblerActions": pl["actions"],
             "tGamblerKills": pl["kills"],

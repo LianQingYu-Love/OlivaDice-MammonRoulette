@@ -106,7 +106,9 @@ class Event(object):
                 Proc.database.set_basic_config(
                     "MammonRoulette", "poke_enabled", 1, pkl=False
                 )
-                Proc.database.set_basic_config("MammonRoulette", "debug", 0, pkl=False)
+                Proc.database.set_basic_config(
+                    "MammonRoulette", "debug_enabled", 0, pkl=False
+                )
                 Proc.log(
                     2,
                     "[恶魔轮盘] - (开关) -> 总开关: true; poke开关: true; debug开关: false.",
@@ -119,41 +121,63 @@ class Event(object):
                 Proc.log(2, "[恶魔轮盘] - (数据) -> 清除缓存.")
 
     def group_message(plugin_event, Proc):  # type: ignore
-        unity_reply(plugin_event, Proc)
+        if not Proc.database.get_basic_config(
+            "MammonRoulette",
+            "main_enabled",
+            default_value=1,
+            pkl=False,
+        ):
+            return
+        msg_manager = MsgManager(plugin_event)
+        if not msg_manager.allow_reply:
+            return
+        unity_reply(plugin_event, Proc, msg_manager)
 
     def private_message(plugin_event, Proc):  # type: ignore
-        unity_reply(plugin_event, Proc)
+        if not Proc.database.get_basic_config(
+            "MammonRoulette",
+            "main_enabled",
+            default_value=1,
+            pkl=False,
+        ):
+            return
+        msg_manager = MsgManager(plugin_event)
+        if not msg_manager.allow_reply:
+            return
+        unity_reply(plugin_event, Proc, msg_manager)
 
     def poke(plugin_event, Proc):  # type: ignore
-        if (
+        if not (
             Proc.database.get_basic_config(  # type: ignore
                 "MammonRoulette",
                 "poke_enabled",
                 default_value=1,
                 pkl=False,
             )
+            and Proc.database.get_basic_config(
+                "MammonRoulette",
+                "main_enabled",
+                default_value=1,
+                pkl=False,
+            )
             and plugin_event.data.group_id  # type: ignore
         ):  # type: ignore
-            plugin_event.data.message = "poke"  # type: ignore
-            plugin_event.data.sender = {}  # type: ignore
-            plugin_event.data.extend = {}  # type: ignore
-            unity_reply(plugin_event, Proc)
+            return
+        plugin_event.data.message = "poke"  # type: ignore
+        plugin_event.data.sender = {}  # type: ignore
+        plugin_event.data.extend = {}  # type: ignore
+        msg_manager = MsgManager(plugin_event)
+        if not msg_manager.allow_reply:
+            return
+        msg_manager.group_id = plugin_event.data.group_id  # type: ignore
+        msg_manager.flags["is_group"] = True
+        unity_reply(plugin_event, Proc, msg_manager)
 
 
 commands = FsmRouter(COMMON_CMD)
 
 
-def unity_reply(plugin_event, Proc):
-    if not Proc.database.get_basic_config(
-        "MammonRoulette",
-        "main_enabled",
-        default_value=1,
-        pkl=False,
-    ):
-        return
-    msg_manager = MsgManager(plugin_event)
-    if not msg_manager.allow_reply:
-        return
+def unity_reply(plugin_event, Proc, msg_manager):
     # region 数据与状态
     if msg_manager.group_id:
         game = game_data.setdefault(msg_manager.group_id, {})
@@ -193,6 +217,8 @@ def unity_reply(plugin_event, Proc):
     if forward:
         handler, groups = forward[0]
         handler(plugin_event, Proc, msg_manager, groups)
+        if game.get("over", False):
+            game.clear()
     if Proc.database.get_basic_config(
         "MammonRoulette",
         "debug_enabled",
@@ -201,3 +227,4 @@ def unity_reply(plugin_event, Proc):
     ):
         with open(GAME_PATH, "w", encoding="utf-8") as f:
             json.dump(game_data, f, ensure_ascii=False, indent=4)
+        Proc.log(0, f"[恶魔轮盘] - (debug) -> state: {state}; msg: {msg}.")

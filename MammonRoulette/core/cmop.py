@@ -36,8 +36,10 @@ class ModeComp(Registerable):
         return
 
     @classmethod
-    def trigger(cls, game, event):
-        return getattr(cls.get(game["mode"]["name"]), event)(game)
+    def trigger(cls, msg_manager, event):
+        return getattr(cls.get(msg_manager.val["game"]["mode"]["name"]), event)(
+            msg_manager
+        )
 
 
 class PropComp(Registerable):
@@ -53,9 +55,9 @@ class PropComp(Registerable):
         return
 
     @classmethod
-    def use(cls, game, prop, target):
-        return cls.get(prop).apply(game, target)
+    def use(cls, msg_manager, prop, target):
+        return cls.get(prop).apply(msg_manager, target)
 
     @classmethod
-    def trigger(cls, game, prop, moment):
-        return cls.get(prop).callback(game, moment)
+    def trigger(cls, msg_manager, prop, moment):
+        return cls.get(prop).callback(msg_manager, moment)

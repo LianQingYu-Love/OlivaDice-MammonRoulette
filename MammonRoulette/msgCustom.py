@@ -13,7 +13,7 @@ dictStrCustom = {
         "\n奪標率: {tGamblerWinRate}"
     ),
     "strMrCardNone": "只是个没有战绩的观众.",
-    "strMrReplyGamblerRanking": "[{tGamblerRanking}] {tGamblerName}｜{tGamblerRecord}",
+    "strMrGamblerRankTpl": "[{tGamblerRanking}] {tGamblerName}｜{tGamblerRecord}",
     "strMrLeaderboardResult": (
         "『惡魔{tLeaderboardType}榜』\n"
         "{tGamblerTopList}\n"
@@ -29,8 +29,16 @@ dictStrCustom = {
     "strMrGameModeError": "已开设{tGameMode}对局.",
     "strMrGameDismiss": "你已退出，对局解散.",
     "strMrGameRemain": "你已退出，剩余：{tSeatsHas}人.",
-    "strMrCurrentTurn": "現在是{tGamblerName}的回合.",
-    "strMrNoProp": "你没有{tPropName}道具.",
+    "strMrGameAmmoRanOut": "彈藥耗盡，重新裝填中……",
+    "strMrGameEnd": "{tWinnerName}用鮮血爲這場生死對局畫上句號.",
+    "strMrGamblerWasAmmoLiveShot": "“嘭！”{tGamblerName}被崩倒在地[hp {tHpBefore}->{tHpNow}].",
+    "strMrGamblerWasAmmoBlankShot": "“咔哒——”是空彈……",
+    "strMrGamblerKilled": "{tGamblerName}死於他手.",
+    "strMrGamblerSuicide": "{tGamblerName}自殺了……",
+    "strMrGamblerSurrender": "{tGamblerName}臨陣脫逃.",
+    "strMrGamblerTurn": "現在是{tGamblerName}的回合.",
+    "strMrGamblerNoProp": "你没有{tPropName}道具.",
+    "strMrGamblerDrawnProps": "{tGamblerName}抽取: {tDrawnProps}.",
     "strMrReplyGamblerData": "〔{tGamblerIdx}〕 {tGamblerName}\n「hp: {tGamblerHp}」\n{tGamblerProps}\n",
     "strMrReplyPropOnly": "{tPropName}",
     "strMrReplyPropMany": "{tPropName}*{tPropCount}",
@@ -42,14 +50,14 @@ dictStrCustom = {
     "strMrReplyAmmoHide": "\n霰彈槍隱匿于迷霧之中.",
     "strMrReplyDeadList": "\n滅亡: {tDeadList}",
     "strMrReplyDeadNone": "",
-    "strMrSituationResult": "{tReplyGamblerData}▁▁▁▁▁▁▁▁▁▁▁▁▁▁\n{tReplyShooter}{tReplyNowBullet}{tReplyAmmo}{tReplyDeadList}",
+    "strMrSituationResult": "{tReplyGamblerData}▁▁▁▁▁▁▁▁▁▁▁▁▁▁{tReplyShooter}{tReplyNowBullet}{tReplyAmmo}{tReplyDeadList}",
 }
 
 dictStrCustomNote = {
     "strMrSignedResult": "【签署生死状】指令 注册或修改名称.",
     "strMrCardHas": "【恶魔名片】指令 显示玩家的资料.",
     "strMrCardNone": "【恶魔名片】指令 查看的玩家没有资料.",
-    "strMrReplyGamblerRanking": "【恶魔排行】指令 玩家数据的显示模板.",
+    "strMrGamblerRankTpl": "【恶魔排行】指令 玩家数据的显示模板.",
     "strMrLeaderboardResult": "【恶魔排行】指令 显示排行榜.",
     "strMrLink": "同类个体的连接符号 如道具、死亡玩家.",
     "strMrAmmoLive": "实弹",
@@ -60,8 +68,16 @@ dictStrCustomNote = {
     "strMrGameModeError": "【匹配】指令 已开设其他模式的对局.",
     "strMrGameDismiss": "【退出】指令 退出游戏后, 对局解散.",
     "strMrGameRemain": "【退出】指令 退出游戏后的剩余人数显示.",
-    "strMrCurrentTurn": "显示当前行动的玩家, 一般在非行动玩家行动时显示.",
-    "strMrNoProp": "【使用道具】指令 没有使用的道具.",
+    "strMrGameAmmoRanOut": "实弹耗尽, 重新装弹时的显示.",
+    "strMrGameEnd": "游戏结束时的显示",
+    "strMrGamblerWasAmmoLiveShot": "开枪 子弹为[AmmoLive]",
+    "strMrGamblerWasAmmoBlankShot": "开枪 子弹为[AmmoBlank]",
+    "strMrGamblerKilled": "玩家被其他玩家杀死时的显示.",
+    "strMrGamblerSuicide": "玩家被自己杀死时的显示.",
+    "strMrGamblerSurrender": "【投降】指令 玩家投降时的显示.",
+    "strMrGamblerTurn": "显示当前行动的玩家, 一般在非行动玩家行动时显示.",
+    "strMrGamblerNoProp": "【使用道具】指令 没有使用的道具.",
+    "strMrGamblerDrawnProps": "显示玩家抽取的道具.",
     "strMrReplyGamblerData": "【局势】指令 玩家数据显示模板.",
     "strMrReplyPropOnly": "【局势】指令 同名道具只有一个时的显示模板.",
     "strMrReplyPropMany": "【局势】指令 同名道具有多个时的显示模板.",
@@ -110,6 +126,7 @@ dictTValue = {
     "tPropName": "N/A",  # 道具名称
     "tPropCount": "N/A",  # 道具数量
     "tGamblerProps": "N/A",  # 赌徒持有的道具
+    "tDrawnProps": "N/A",  # 玩家抽取的道具
     # 子弹/弹药相关
     "tNowBulletType": "N/A",  # 当前子弹类型
     "tAmmoLiveCount": "N/A",  # 实弹数量
@@ -122,6 +139,9 @@ dictTValue = {
     "tReplyNowBullet": "N/A",  # 回复-当前子弹
     "tReplyAmmo": "N/A",  # 回复-弹药信息
     "tReplyDeadList": "N/A",  # 回复-死亡列表
+    "tHpBefore": "N/A",  # 玩家血量-受伤前
+    "tHpNow": "N/A",  # 玩家血量-受伤后
+    "tWinnerName": "N/A",  # 胜利者名称
 }
 
 dictHelpDocTemp = {}
