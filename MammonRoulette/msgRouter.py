@@ -143,7 +143,7 @@ def leaderboard(plugin_event, Proc, msg_manager, groups):
         gambler_total = db.select("gambler", "COUNT(*)")
     top_list = "\n".join(
         msg_manager.msg_format(
-            "strMrGamblerRankTpl",
+            "strMrGamblerRankNone",
             {
                 "tGamblerRanking": idx + ranking_page + 1,
                 "tGamblerName": gambler_info["name"],

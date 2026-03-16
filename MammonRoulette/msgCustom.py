@@ -13,7 +13,7 @@ dictStrCustom = {
         "\n奪標率: {tGamblerWinRate}"
     ),
     "strMrCardNone": "只是个没有战绩的观众.",
-    "strMrGamblerRankTpl": "[{tGamblerRanking}] {tGamblerName}｜{tGamblerRecord}",
+    "strMrGamblerRankNone": "[{tGamblerRanking}] {tGamblerName}｜{tGamblerRecord}",
     "strMrLeaderboardResult": (
         "『惡魔{tLeaderboardType}榜』\n"
         "{tGamblerTopList}\n"
@@ -57,7 +57,7 @@ dictStrCustomNote = {
     "strMrSignedResult": "【签署生死状】指令 注册或修改名称.",
     "strMrCardHas": "【恶魔名片】指令 显示玩家的资料.",
     "strMrCardNone": "【恶魔名片】指令 查看的玩家没有资料.",
-    "strMrGamblerRankTpl": "【恶魔排行】指令 玩家数据的显示模板.",
+    "strMrGamblerRankNone": "【恶魔排行】指令 每行玩家数据的显示格式.",
     "strMrLeaderboardResult": "【恶魔排行】指令 显示排行榜.",
     "strMrLink": "同类个体的连接符号 如道具、死亡玩家.",
     "strMrAmmoLive": "实弹",
