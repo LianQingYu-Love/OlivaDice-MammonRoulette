@@ -1,4 +1,4 @@
-from ..msgCustom import dictHelpDocTemp
+from ..msgCustom import dictHelpDoc
 
 
 def _():
@@ -32,7 +32,7 @@ class ModeComp(Registerable):
         for mode_name, mode_cls in cls._register.items():
             mode_cls.init()
             mode_helpDoc[f"恶赌模式 {mode_name}"] = mode_cls.brief
-        dictHelpDocTemp.update(mode_helpDoc)
+        dictHelpDoc.update(mode_helpDoc)
         return
 
     @classmethod
@@ -51,7 +51,7 @@ class PropComp(Registerable):
         for prop_name, prop_cls in cls._register.items():
             prop_cls.init()
             prop_helpDoc[f"恶赌道具 {prop_name}"] = prop_cls.brief
-        dictHelpDocTemp.update(prop_helpDoc)
+        dictHelpDoc.update(prop_helpDoc)
         return
 
     @classmethod

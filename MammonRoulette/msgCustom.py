@@ -1,5 +1,4 @@
-CountdictStrCustomDict = {}
-dictStrCustom = {
+dictStrCustomDict = {
     "strMrSignedResult": "{tGamblerName}在生死狀簽下姓名.",
     "strMrCardHas": (
         "『惡魔資料卡』"
@@ -52,7 +51,6 @@ dictStrCustom = {
     "strMrGameDeadNone": "",
     "strMrSituationResult": "{tGamblerData}▁▁▁▁▁▁▁▁▁▁▁▁▁▁{tShooter}{tGameNowBullet}{tGameAmmo}{tGameDeadList}",
 }
-
 dictStrCustomNote = {
     "strMrSignedResult": "【签署生死状】指令 注册或修改名称.",
     "strMrCardHas": "【恶魔名片】指令 显示玩家的资料.",
@@ -69,31 +67,30 @@ dictStrCustomNote = {
     "strMrGameDismiss": "【退出】指令 退出游戏后, 对局解散.",
     "strMrGameRemain": "【退出】指令 退出游戏后的剩余人数显示.",
     "strMrGameAmmoRanOut": "实弹耗尽, 重新装弹时的显示.",
-    "strMrGameEnd": "游戏结束时的显示",
+    "strMrGameEnd": "游戏结束时的显示.",
     "strMrGamblerWasAmmoLiveShot": "开枪 子弹为[AmmoLive]",
     "strMrGamblerWasAmmoBlankShot": "开枪 子弹为[AmmoBlank]",
     "strMrGamblerKilled": "玩家被其他玩家杀死时的显示.",
     "strMrGamblerSuicide": "玩家被自己杀死时的显示.",
     "strMrGamblerSurrender": "【投降】指令 玩家投降时的显示.",
-    "strMrGamblerTurn": "显示当前行动的玩家, 一般在非行动玩家行动时显示.",
+    "strMrGamblerTurn": "显示当前行动的玩家, 一般在行动换人或非行动玩家行动时显示.",
     "strMrGamblerNoProp": "【使用道具】指令 没有使用的道具.",
     "strMrGamblerDrawnProps": "显示玩家抽取的道具.",
-    "strMrReplyGamblerData": "【局势】指令 玩家数据显示模板.",
-    "strMrReplyPropOnly": "【局势】指令 同名道具只有一个时的显示模板.",
-    "strMrReplyPropMany": "【局势】指令 同名道具有多个时的显示模板.",
-    "strMrReplyPropNone": "【局势】指令 玩家没有道具时的显示模板.",
-    "strMrReplyShooter": "【局势】指令 当前枪手的显示模板.",
-    "strMrReplyNowBulletShow": "【局势】指令 显示当前子弹时的模板.",
-    "strMrReplyNowBulletHide": "【局势】指令 隐藏当前子弹时的模板.",
-    "strMrReplyAmmoShow": "【局势】指令 显示当前弹药时的模板.",
-    "strMrReplyAmmoHide": "【局势】指令 隐藏当前弹药时的模板.",
-    "strMrReplyDeadList": "【局势】指令 显示死亡玩家列表的模板.",
-    "strMrReplyDeadNone": "【局势】指令 没有死亡玩家时的显示模板.",
-    "strMrSituationResult": "【局势】指令 显示当前游戏局势.",
+    "strMrGamblerData": "玩家数据显示模板, 包含道具列表.",
+    "strMrPropOneNode": "道具列表 同名道具只有一个时的显示模板.",
+    "strMrPropManyNode": "道具列表 同名道具有多个时的显示模板.",
+    "strMrPropNoneNode": "道具列表 玩家没有道具时的显示模板.",
+    "strMrGameShooter": "枪手 当前枪手的显示.",
+    "strMrGameNowBulletShow": "子弹 显示当前子弹的类型.",
+    "strMrGameNowBulletHide": "子弹 隐藏当前子弹时的显示.",
+    "strMrGameAmmoShow": "弹药 显示实弹、空包弹、总弹药.",
+    "strMrGameAmmoHide": "弹药 隐藏弹药时的显示.",
+    "strMrGameDeadList": "死亡列表 显示死亡的玩家.",
+    "strMrGameDeadNone": "死亡列表 没有玩家死亡时的显示.",
+    "strMrSituationResult": "【局势】指令 显示当前游戏局势, 包括玩家数据、枪手、当前子弹、弹药、死亡玩家.",
 }
 
 dictStrConst = {}
-
 dictGValue = {}
 dictTValue = {
     # 赌徒基础信息
@@ -144,4 +141,7 @@ dictTValue = {
     "tWinnerName": "N/A",  # 胜利者名称
 }
 
-dictHelpDocTemp = {}
+dictHelpDoc = {}
+
+dictConsoleSwitch = {}
+dictConsoleSwitchNote = {}

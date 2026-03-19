@@ -64,36 +64,21 @@ class Event(object):
         if plugin_event.data.namespace == "MammonRoulette":  # type: ignore
             # 总开关
             if plugin_event.data.event == "MammonRoulette_Menu_main_enabled":  # type: ignore
-                main_enabled = not Proc.database.get_basic_config(
-                    "MammonRoulette",
-                    "main_enabled",
-                    default_value=1,
-                    pkl=False,
-                )
+                main_enabled = not unity_enabled(Proc, "main_enabled")
                 Proc.database.set_basic_config(
                     "MammonRoulette", "main_enabled", int(main_enabled), pkl=False
                 )
                 Proc.log(2, "[恶魔轮盘] - (总开关) -> " + str(main_enabled))
             # poke开关
             elif plugin_event.data.event == "MammonRoulette_Menu_poke_enabled":  # type: ignore
-                poke_enabled = not Proc.database.get_basic_config(
-                    "MammonRoulette",
-                    "poke_enabled",
-                    default_value=1,
-                    pkl=False,
-                )
+                poke_enabled = not unity_enabled(Proc, "poke_enabled")
                 Proc.database.set_basic_config(
                     "MammonRoulette", "poke_enabled", int(poke_enabled), pkl=False
                 )
                 Proc.log(2, "[恶魔轮盘] - (poke开关) -> " + str(poke_enabled))
             # debug
             elif plugin_event.data.event == "MammonRoulette_Menu_debug":  # type: ignore
-                debug_enabled = not Proc.database.get_basic_config(
-                    "MammonRoulette",
-                    "debug_enabled",
-                    default_value=1,
-                    pkl=False,
-                )
+                debug_enabled = not unity_enabled(Proc, "debug_enabled")
                 Proc.database.set_basic_config(
                     "MammonRoulette", "debug_enabled", int(debug_enabled), pkl=False
                 )
@@ -121,45 +106,19 @@ class Event(object):
                 Proc.log(2, "[恶魔轮盘] - (数据) -> 清除缓存.")
 
     def group_message(plugin_event, Proc):  # type: ignore
-        if not Proc.database.get_basic_config(
-            "MammonRoulette",
-            "main_enabled",
-            default_value=1,
-            pkl=False,
-        ):
+        if not unity_enabled(Proc, "main_enabled"):
             return
-        msg_manager = MsgManager(plugin_event)
-        if not msg_manager.allow_reply:
-            return
-        unity_reply(plugin_event, Proc, msg_manager)
+        unity_reply(plugin_event, Proc, MsgManager(plugin_event))
 
     def private_message(plugin_event, Proc):  # type: ignore
-        if not Proc.database.get_basic_config(
-            "MammonRoulette",
-            "main_enabled",
-            default_value=1,
-            pkl=False,
-        ):
+        if not unity_enabled(Proc, "main_enabled"):
             return
-        msg_manager = MsgManager(plugin_event)
-        if not msg_manager.allow_reply:
-            return
-        unity_reply(plugin_event, Proc, msg_manager)
+        unity_reply(plugin_event, Proc, MsgManager(plugin_event))
 
     def poke(plugin_event, Proc):  # type: ignore
         if not (
-            Proc.database.get_basic_config(  # type: ignore
-                "MammonRoulette",
-                "poke_enabled",
-                default_value=1,
-                pkl=False,
-            )
-            and Proc.database.get_basic_config(
-                "MammonRoulette",
-                "main_enabled",
-                default_value=1,
-                pkl=False,
-            )
+            unity_enabled(Proc, "main_enabled")
+            and unity_enabled(Proc, "poke_enabled")
             and plugin_event.data.group_id  # type: ignore
         ):  # type: ignore
             return
@@ -167,8 +126,6 @@ class Event(object):
         plugin_event.data.sender = {}  # type: ignore
         plugin_event.data.extend = {}  # type: ignore
         msg_manager = MsgManager(plugin_event)
-        if not msg_manager.allow_reply:
-            return
         msg_manager.group_id = plugin_event.data.group_id  # type: ignore
         msg_manager.flags["is_group"] = True
         unity_reply(plugin_event, Proc, msg_manager)
@@ -177,7 +134,18 @@ class Event(object):
 commands = FsmRouter(COMMON_CMD)
 
 
+def unity_enabled(Proc, enabled):
+    return Proc.database.get_basic_config(
+        "MammonRoulette",
+        enabled,
+        default_value=1,
+        pkl=False,
+    )
+
+
 def unity_reply(plugin_event, Proc, msg_manager):
+    if not msg_manager.allow_reply:
+        return
     # region 数据与状态
     if msg_manager.group_id:
         game = game_data.setdefault(msg_manager.group_id, {})

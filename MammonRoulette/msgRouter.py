@@ -6,11 +6,11 @@ from AmorLib import DataBase
 
 from . import DB_PATH
 from .main import commands, COMMON_CMD
-from .msgCustom import dictHelpDocTemp
+from .msgCustom import dictHelpDoc
 from .Core.cmop import ModeComp, PropComp
 from .Core.work import RegGameWork
 
-dictHelpDocTemp["恶赌 命令"] = (
+dictHelpDoc["恶赌 命令"] = (
     "#设置\n"
     "(名称)签署[生死状,契约] //注册角色或修改名称.\n"
     "恶魔名片(数值,留空) //查看自己或他人的资料.\n"
@@ -25,7 +25,7 @@ dictHelpDocTemp["恶赌 命令"] = (
     "局势 //查询当前游戏局势信息.\n"
     "投降 //以自杀的形式结束.\n"
 )
-dictHelpDocTemp["恶赌 戳一戳命令"] = (
+dictHelpDoc["恶赌 戳一戳命令"] = (
     "#戳一戳骰娘\n未加入对局: 加入正则匹配的对局;\n"
     "对局匹配中: 退出正则匹配的对局;\n"
     "对局进行时: 查看局势.\n"
