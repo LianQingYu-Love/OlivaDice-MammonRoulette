@@ -123,9 +123,9 @@ class RegGameWork:
                 "tAmmoCount": ammo,
             }
             ammo_reply.append(
-                msg_manager.msg_format("strMrReplyAmmoShow", t_value)
+                msg_manager.msg_format("strMrGameAmmoShow", t_value)
                 if modify["ammo_show"]
-                else msg_manager.msg_format("strMrReplyAmmoHide", t_value)
+                else msg_manager.msg_format("strMrGameAmmoHide", t_value)
             )
         if modify["bullet_show"]:
             t_value = {
@@ -134,9 +134,9 @@ class RegGameWork:
                 ),
             }
             ammo_reply.append(
-                msg_manager.msg_format("strMrReplyBulletShow", t_value)
+                msg_manager.msg_format("strMrGameNowBulletShow", t_value)
                 if modify["bullet_show"]
-                else msg_manager.msg_format("strMrReplyBulletHide", t_value)
+                else msg_manager.msg_format("strMrGameNowBulletHide", t_value)
             )
         game["reply"]["note"]["ammo"] = "\n".join(ammo_reply)
         return

@@ -13,7 +13,7 @@ dictStrCustom = {
         "\n奪標率: {tGamblerWinRate}"
     ),
     "strMrCardNone": "只是个没有战绩的观众.",
-    "strMrGamblerRankNone": "[{tGamblerRanking}] {tGamblerName}｜{tGamblerRecord}",
+    "strMrGamblerRankNode": "[{tGamblerRanking}] {tGamblerName}｜{tGamblerRecord}",
     "strMrLeaderboardResult": (
         "『惡魔{tLeaderboardType}榜』\n"
         "{tGamblerTopList}\n"
@@ -39,25 +39,25 @@ dictStrCustom = {
     "strMrGamblerTurn": "現在是{tGamblerName}的回合.",
     "strMrGamblerNoProp": "你没有{tPropName}道具.",
     "strMrGamblerDrawnProps": "{tGamblerName}抽取: {tDrawnProps}.",
-    "strMrReplyGamblerData": "〔{tGamblerIdx}〕 {tGamblerName}\n「hp: {tGamblerHp}」\n{tGamblerProps}\n",
-    "strMrReplyPropOnly": "{tPropName}",
-    "strMrReplyPropMany": "{tPropName}*{tPropCount}",
-    "strMrReplyPropNone": "無道具",
-    "strMrReplyShooter": "\n槍手:〔{tGamblerIdx}〕{tGamblerName}",
-    "strMrReplyNowBulletShow": "\n當前子彈: {tNowBulletType}",
-    "strMrReplyNowBulletHide": "",
-    "strMrReplyAmmoShow": "\n彈仓: {tAmmoLiveCount} / {tAmmoCount}",
-    "strMrReplyAmmoHide": "\n霰彈槍隱匿于迷霧之中.",
-    "strMrReplyDeadList": "\n滅亡: {tDeadList}",
-    "strMrReplyDeadNone": "",
-    "strMrSituationResult": "{tReplyGamblerData}▁▁▁▁▁▁▁▁▁▁▁▁▁▁{tReplyShooter}{tReplyNowBullet}{tReplyAmmo}{tReplyDeadList}",
+    "strMrGamblerData": "〔{tGamblerIdx}〕 {tGamblerName}\n「hp: {tGamblerHp}」\n{tGamblerProps}\n",
+    "strMrPropOneNode": "{tPropName}",
+    "strMrPropManyNode": "{tPropName}*{tPropCount}",
+    "strMrPropNoneNode": "無道具",
+    "strMrGameShooter": "\n槍手:〔{tGamblerIdx}〕{tGamblerName}",
+    "strMrGameNowBulletShow": "\n當前子彈: {tNowBulletType}",
+    "strMrGameNowBulletHide": "",
+    "strMrGameAmmoShow": "\n彈仓: {tAmmoLiveCount} / {tAmmoCount}",
+    "strMrGameAmmoHide": "\n霰彈槍隱匿于迷霧之中.",
+    "strMrGameDeadList": "\n滅亡: {tDeadList}",
+    "strMrGameDeadNone": "",
+    "strMrSituationResult": "{tGamblerData}▁▁▁▁▁▁▁▁▁▁▁▁▁▁{tShooter}{tGameNowBullet}{tGameAmmo}{tGameDeadList}",
 }
 
 dictStrCustomNote = {
     "strMrSignedResult": "【签署生死状】指令 注册或修改名称.",
     "strMrCardHas": "【恶魔名片】指令 显示玩家的资料.",
     "strMrCardNone": "【恶魔名片】指令 查看的玩家没有资料.",
-    "strMrGamblerRankNone": "【恶魔排行】指令 每行玩家数据的显示格式.",
+    "strMrGamblerRankNode": "【恶魔排行】指令 每行玩家数据的显示格式.",
     "strMrLeaderboardResult": "【恶魔排行】指令 显示排行榜.",
     "strMrLink": "同类个体的连接符号 如道具、死亡玩家.",
     "strMrAmmoLive": "实弹",
@@ -134,11 +134,11 @@ dictTValue = {
     "tAmmoCount": "N/A",  # 总弹药数
     # 回复相关
     "tDeadList": "N/A",  # 死亡列表
-    "tReplyGamblerData": "N/A",  # 回复-赌徒数据
-    "tReplyShooter": "N/A",  # 回复-枪手信息
-    "tReplyNowBullet": "N/A",  # 回复-当前子弹
-    "tReplyAmmo": "N/A",  # 回复-弹药信息
-    "tReplyDeadList": "N/A",  # 回复-死亡列表
+    "tGamblerData": "N/A",  # 赌徒数据
+    "tShooter": "N/A",  # 枪手信息
+    "tGameNowBullet": "N/A",  # 回复-当前子弹
+    "tGameAmmo": "N/A",  # 回复-弹药信息
+    "tGameDeadList": "N/A",  # 回复-死亡列表
     "tHpBefore": "N/A",  # 玩家血量-受伤前
     "tHpNow": "N/A",  # 玩家血量-受伤后
     "tWinnerName": "N/A",  # 胜利者名称

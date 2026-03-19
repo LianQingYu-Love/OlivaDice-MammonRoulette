@@ -143,7 +143,7 @@ def leaderboard(plugin_event, Proc, msg_manager, groups):
         gambler_total = db.select("gambler", "COUNT(*)")
     top_list = "\n".join(
         msg_manager.msg_format(
-            "strMrGamblerRankNone",
+            "strMrGamblerRankNode",
             {
                 "tGamblerRanking": idx + ranking_page + 1,
                 "tGamblerName": gambler_info["name"],
@@ -439,7 +439,7 @@ def situation(plugin_event, Proc, msg_manager, groups):
         for prop, count in Counter(pl["props"]).items():
             props.append(
                 msg_manager.msg_format(
-                    "strMrReplyPropOnly" if count == 1 else "strMrReplyPropMany",
+                    "strMrPropOneNode" if count == 1 else "strMrPropManyNode",
                     {"tPropName": prop, "tPropCount": count},
                 )
             )
@@ -450,18 +450,18 @@ def situation(plugin_event, Proc, msg_manager, groups):
             "tGamblerProps": (
                 link.join(props)
                 if pl["props"]
-                else msg_manager.msg_format("strMrReplyPropNone")
+                else msg_manager.msg_format("strMrPropNoneNode")
             ),
             "tGamblerActions": pl["actions"],
             "tGamblerKills": pl["kills"],
         }
-        pl_data_list.append(msg_manager.msg_format("strMrReplyGamblerData", pl_data))
-    t_value.update({"tReplyGamblerData": "".join(pl_data_list)})
+        pl_data_list.append(msg_manager.msg_format("strMrGamblerData", pl_data))
+    t_value.update({"tGamblerData": "".join(pl_data_list)})
     # 枪手
     t_value.update(
         {
-            "tReplyShooter": msg_manager.msg_format(
-                "strMrReplyShooter",
+            "tShooter": msg_manager.msg_format(
+                "strMrGameShooter",
                 {
                     "tGamblerIdx": order.index(shooter) + 1,
                     "tGamblerName": players[shooter]["name"],
@@ -479,10 +479,10 @@ def situation(plugin_event, Proc, msg_manager, groups):
     )
     t_value.update(
         {
-            "tReplyNowBullet": (
-                msg_manager.msg_format("strMrReplyNowBulletShow", t_value)
+            "tGameNowBullet": (
+                msg_manager.msg_format("strMrGameNowBulletShow", t_value)
                 if modify["bullet_show"]
-                else msg_manager.msg_format("strMrReplyNowBulletHide", t_value)
+                else msg_manager.msg_format("strMrGameNowBulletHide", t_value)
             )
         }
     )
@@ -497,10 +497,10 @@ def situation(plugin_event, Proc, msg_manager, groups):
     )
     t_value.update(
         {
-            "tReplyAmmo": (
-                msg_manager.msg_format("strMrReplyAmmoShow", t_value)
+            "tGameAmmo": (
+                msg_manager.msg_format("strMrGameAmmoShow", t_value)
                 if modify["ammo_show"]
-                else msg_manager.msg_format("strMrReplyAmmoHide", t_value)
+                else msg_manager.msg_format("strMrGameAmmoHide", t_value)
             )
         }
     )
@@ -509,10 +509,10 @@ def situation(plugin_event, Proc, msg_manager, groups):
     t_value.update({"tDeadList": f"{link.join(dead_list)}"})
     t_value.update(
         {
-            "tReplyDeadList": (
-                msg_manager.msg_format("strMrReplyDeadList", t_value)
+            "tGameDeadList": (
+                msg_manager.msg_format("strMrGameDeadList", t_value)
                 if dead_list
-                else msg_manager.msg_format("strMrReplyDeadNone", t_value)
+                else msg_manager.msg_format("strMrGameDeadNone", t_value)
             )
         }
     )
