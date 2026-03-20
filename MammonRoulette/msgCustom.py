@@ -1,4 +1,4 @@
-dictStrCustomDict = {
+dictStrCustom = {
     "strMrSignedResult": "{tGamblerName}在生死狀簽下姓名.",
     "strMrCardHas": (
         "『惡魔資料卡』"
@@ -73,10 +73,10 @@ dictStrCustomNote = {
     "strMrGamblerKilled": "玩家被其他玩家杀死时的显示.",
     "strMrGamblerSuicide": "玩家被自己杀死时的显示.",
     "strMrGamblerSurrender": "【投降】指令 玩家投降时的显示.",
-    "strMrGamblerTurn": "显示当前行动的玩家, 一般在行动换人或非行动玩家行动时显示.",
+    "strMrGamblerTurn": "显示当前行动的玩家.\n一般在行动换人或非行动玩家行动时显示.",
     "strMrGamblerNoProp": "【使用道具】指令 没有使用的道具.",
     "strMrGamblerDrawnProps": "显示玩家抽取的道具.",
-    "strMrGamblerData": "玩家数据显示模板, 包含道具列表.",
+    "strMrGamblerData": "玩家数据显示模板.\n包含道具列表.",
     "strMrPropOneNode": "道具列表 同名道具只有一个时的显示模板.",
     "strMrPropManyNode": "道具列表 同名道具有多个时的显示模板.",
     "strMrPropNoneNode": "道具列表 玩家没有道具时的显示模板.",
@@ -87,7 +87,7 @@ dictStrCustomNote = {
     "strMrGameAmmoHide": "弹药 隐藏弹药时的显示.",
     "strMrGameDeadList": "死亡列表 显示死亡的玩家.",
     "strMrGameDeadNone": "死亡列表 没有玩家死亡时的显示.",
-    "strMrSituationResult": "【局势】指令 显示当前游戏局势, 包括玩家数据、枪手、当前子弹、弹药、死亡玩家.",
+    "strMrSituationResult": "【局势】指令 显示当前游戏局势.\n包括玩家数据、枪手、当前子弹、弹药、死亡玩家.",
 }
 
 dictStrConst = {}
@@ -143,5 +143,13 @@ dictTValue = {
 
 dictHelpDoc = {}
 
-dictConsoleSwitch = {}
-dictConsoleSwitchNote = {}
+dictConsoleSwitch = {
+    "MrMainEnabled": 1,
+    "MrPokeEnabled": 1,
+    "MrDebugEnabled": -1,
+}
+dictConsoleSwitchNote = {
+    "MrMainEnabled": "[恶魔轮盘]全局开关, 默认开启\n-1 关闭\n0 跟随全局\n1 开启",
+    "MrPokeEnabled": "[恶魔轮盘]poke开关, 默认开启\n-1 关闭\n0 跟随全局\n1 开启",
+    "MrDebugEnabled": "[恶魔轮盘]调试开关, 默认关闭\n-1 关闭\n0 跟随全局\n1 开启",
+}
