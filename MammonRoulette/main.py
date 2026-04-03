@@ -143,10 +143,7 @@ def unity_enabled(switchKey, bot_hash="unity"):
     return switchValue == 1
 
 
-def unity_reply(plugin_event, Proc, msg_manager):
-    if not msg_manager.allow_reply:
-        return
-    # region 数据与状态
+def unity_state(msg_manager):
     if msg_manager.group_id:
         game = game_data.setdefault(msg_manager.group_id, {})
         if msg_manager.user_id in game.get("data", {}).get("order", []):
@@ -157,7 +154,15 @@ def unity_reply(plugin_event, Proc, msg_manager):
         game = {}
         state = "priv"
     msg_manager.val["game"] = game
-    # endregion
+    msg_manager.val["state"] = state
+
+
+def unity_reply(plugin_event, Proc, msg_manager):
+    if not msg_manager.allow_reply:
+        return
+    unity_state(msg_manager)
+    game = msg_manager.val["game"]
+    state = msg_manager.val["state"]
     # region poke操作
     msg = ""
     if not plugin_event.plugin_info["func_type"] == "poke":
