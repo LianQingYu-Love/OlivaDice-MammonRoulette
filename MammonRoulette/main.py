@@ -9,7 +9,7 @@ from AmorLib import DataBase, FsmRouter, MsgManager, init_msgCustom
 from . import DB_PATH
 from .Core.cmop import ModeComp, PropComp
 
-GAME_PATH = "plugin/tmp/MammonRoulette_game_data.json"
+GAME_PATH = "plugin/tmp/MammonRoulette_data.json"
 COMMON_CMD = ("priv", "ob", "prep", "play")
 game_data = {}
 
@@ -139,7 +139,7 @@ def unity_enabled(switchKey, bot_hash="unity"):
     if switchValue == 0 and bot_hash != "unity":
         switchValue = OlivaDiceCore.console.getConsoleSwitchByHash(switchKey)
     if switchValue == 0:
-        switchValue = MammonRoulette.msgCustom.dictConsoleSwitch[switchKey]
+        switchValue = MammonRoulette.custom.dictConsoleSwitch[switchKey]
     return switchValue == 1
 
 

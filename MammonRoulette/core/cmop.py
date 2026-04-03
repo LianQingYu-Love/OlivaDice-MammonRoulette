@@ -1,4 +1,4 @@
-from ..msgCustom import dictHelpDoc
+from ..custom import dictHelpDoc
 
 
 def _():

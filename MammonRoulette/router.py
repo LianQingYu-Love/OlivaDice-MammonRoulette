@@ -6,7 +6,7 @@ from AmorLib import DataBase
 
 from . import DB_PATH
 from .main import commands, COMMON_CMD
-from .msgCustom import dictHelpDoc
+from .custom import dictHelpDoc
 from .Core.cmop import ModeComp, PropComp
 from .Core.work import RegGameWork
 

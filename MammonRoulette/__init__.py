@@ -4,6 +4,6 @@ from . import Core
 from . import Defs
 
 from . import main
-from . import msgCustom
-from . import msgRouter
+from . import custom
+from . import router
 
