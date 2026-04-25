@@ -51,7 +51,7 @@ class RegGameWork:
         game = msg_manager.val["game"]
         game["tmp"].update(kwargs)
         prop_event = game["data"]["prop_event"][moment]
-        for prop in prop_event:
+        for prop in reversed(prop_event):
             if PropComp.trigger(msg_manager, prop, moment):
                 prop_event.remove(prop)
         ModeComp.trigger(msg_manager, moment)
@@ -116,28 +116,29 @@ class RegGameWork:
 
         modify = data["modify"]
         ammo_reply = []
-        if modify["ammo_show"]:
-            t_value = {
-                "tAmmoLiveCount": ammo_live,
-                "tAmmoBlankCount": ammo_blank,
-                "tAmmoCount": ammo,
-            }
-            ammo_reply.append(
-                msg_manager.msg_format("strMrGameAmmoShow", t_value)
-                if modify["ammo_show"]
-                else msg_manager.msg_format("strMrGameAmmoHide", t_value)
-            )
-        if modify["bullet_show"]:
-            t_value = {
-                "tBulletType": msg_manager.msg_format(
-                    "strMrAmmoLive" if data["bullet"] else "strMrAmmoBlank"
-                ),
-            }
-            ammo_reply.append(
-                msg_manager.msg_format("strMrGameNowBulletShow", t_value)
-                if modify["bullet_show"]
-                else msg_manager.msg_format("strMrGameNowBulletHide", t_value)
-            )
+
+        t_value = {
+            "tAmmoLiveCount": ammo_live,
+            "tAmmoBlankCount": ammo_blank,
+            "tAmmoCount": ammo,
+        }
+        show_ammo = (
+            msg_manager.msg_format("strMrGameAmmoShow", t_value)
+            if modify["ammo_show"]
+            else msg_manager.msg_format("strMrGameAmmoHide", t_value)
+        )
+        ammo_reply.append(show_ammo)
+        t_value = {
+            "tBulletType": msg_manager.msg_format(
+                "strMrAmmoLive" if data["bullet"] else "strMrAmmoBlank"
+            ),
+        }
+        show_bullet = (
+            msg_manager.msg_format("strMrGameNowBulletShow", t_value)
+            if modify["bullet_show"]
+            else msg_manager.msg_format("strMrGameNowBulletHide", t_value)
+        )
+        ammo_reply.append(show_bullet)
         game["reply"]["note"]["ammo"] = "\n".join(ammo_reply)
         return
 

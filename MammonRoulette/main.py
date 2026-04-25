@@ -160,6 +160,11 @@ def unity_state(msg_manager):
 def unity_reply(plugin_event, Proc, msg_manager):
     if not msg_manager.allow_reply:
         return
+    debug = unity_enabled("MrDebugEnabled", plugin_event.bot_info.hash)
+    if debug:
+        global game_data
+        with open(GAME_PATH, "r", encoding="utf-8") as f:
+            game_data = json.load(f)
     unity_state(msg_manager)
     game = msg_manager.val["game"]
     state = msg_manager.val["state"]
@@ -192,7 +197,7 @@ def unity_reply(plugin_event, Proc, msg_manager):
         handler(plugin_event, Proc, msg_manager, groups)
         if game.get("over", False):
             game.clear()
-    if unity_enabled("MrDebugEnabled", plugin_event.bot_info.hash):
+    if debug:
         with open(GAME_PATH, "w", encoding="utf-8") as f:
             json.dump(game_data, f, ensure_ascii=False, indent=4)
         Proc.log(0, f"[恶魔轮盘] - (debug) -> state: {state}; msg: {msg}.")

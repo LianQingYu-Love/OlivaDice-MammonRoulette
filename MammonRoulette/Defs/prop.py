@@ -71,9 +71,10 @@ class 锯子(PropComp, BaseProp):
         game = msg_manager.val["game"]
         data, reply = game["data"], game["reply"]
         modify = data["modify"]
-        if modify.get("锯子", False):
+        if not modify.get("锯子", False):
             RegGameWork.create_prop_event(game, "锯子", "shoot")
-            reply["info"].append("槍管早已被鋸斷.")
+            modify["锯子"] = True
+            reply["info"].append("槍管被鋸斷.")
             return True
         reply["info"].append("槍管早已被鋸斷.")
         return False
@@ -87,7 +88,7 @@ class 锯子(PropComp, BaseProp):
             RegGameWork.create_prop_event(game, "锯子", "damage")
         elif moment == "damage":
             game["tmp"]["dmg"] = modify["dmg"] + 1
-        modify["锯子"] = False
+            modify["锯子"] = False
         return True
 
 
