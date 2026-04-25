@@ -127,7 +127,8 @@ class RegGameWork:
             if modify["ammo_show"]
             else msg_manager.msg_format("strMrGameAmmoHide", t_value)
         )
-        ammo_reply.append(show_ammo)
+        if show_ammo:
+            ammo_reply.append(show_ammo)
         t_value = {
             "tBulletType": msg_manager.msg_format(
                 "strMrAmmoLive" if data["bullet"] else "strMrAmmoBlank"
@@ -138,7 +139,8 @@ class RegGameWork:
             if modify["bullet_show"]
             else msg_manager.msg_format("strMrGameNowBulletHide", t_value)
         )
-        ammo_reply.append(show_bullet)
+        if show_bullet:
+            ammo_reply.append(show_bullet)
         game["reply"]["note"]["ammo"] = "\n".join(ammo_reply)
         return
 
