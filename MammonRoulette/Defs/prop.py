@@ -324,14 +324,14 @@ class 扑克(PropComp, BaseProp):
         prop_event = data["prop_event"]
         if "扑克" not in prop_event["shoot"] + prop_event["reload"]:
             RegGameWork.create_prop_event(game, "扑克", ("shoot", "reload"))
-        bullet = not game["bullet"]
+        bullet = not data["bullet"]
         data["bullet"] = bullet
         if bullet:
-            game["ammo_blank"] -= 1
-            game["ammo_live"] += 1
+            data["ammo_blank"] -= 1
+            data["ammo_live"] += 1
         else:
-            game["ammo_blank"] += 1
-            game["ammo_live"] -= 1
+            data["ammo_blank"] += 1
+            data["ammo_live"] -= 1
         modify["扑克"] = True
         modify["ammo_show"] = False
         reply["info"].append(f"從牌堆抽到[{cls.reply()}], 命運已然改變.")
@@ -477,7 +477,7 @@ class 金币(PropComp, BaseProp):
         if prop in game["mode"]["props"]["ban"]:
             game["reply"]["info"].append(f"{prop}被禁售了.")
             return
-        pl_user = game["players"][user_id]
+        pl_user = data["players"][user_id]
         props = pl_user["props"]
         props[props.index("金币")] = prop
         name = pl_user["name"]
