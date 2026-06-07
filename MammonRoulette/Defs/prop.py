@@ -72,7 +72,7 @@ class 锯子(PropComp, BaseProp):
         data, reply = game["data"], game["reply"]
         modify = data["modify"]
         if not modify.get("锯子", False):
-            RegGameWork.create_prop_event(game, "锯子", "shoot","damage")
+            RegGameWork.create_prop_event(game, "锯子", ("shoot","damage"))
             modify["锯子"] = True
             reply["info"].append("槍管被鋸斷.")
             return True
