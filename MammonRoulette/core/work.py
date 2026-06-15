@@ -201,34 +201,41 @@ class RegGameWork:
     @classmethod
     def damage(cls, msg_manager, target, dmg):  # 受伤
         game = msg_manager.val["game"]
-        data, reply = game["data"], game["reply"]
+        data = game["data"]
         cls.handle_event(msg_manager, "damage", target=target, dmg=dmg)
         target, dmg = game["tmp"]["target"], game["tmp"]["dmg"]
+        pl_target = data["players"][target]
+        pl_target["hp"] -= dmg
+        if pl_target["hp"] <= 0:
+            cls.dead(msg_manager, target)
+        return
+
+    @classmethod
+    def dead(cls, msg_manager, target):  # 死亡
+        game = msg_manager.val["game"]
+        data, reply = game["data"], game["reply"]
+        cls.handle_event(msg_manager, "dead", target=target,)
+        target = game["tmp"]["target"]
         pl_target, pl_shooter = (
             data["players"][target],
             data["players"][data["shooter"]],
         )
         name = pl_target["name"]
-        pl_target["hp"] -= dmg
-        if pl_target["hp"] <= 0:
-            if game["tmp"]["is_attack_me"]:
-                pl_target["suicide"] = True
-                reply["info"].append(
-                    msg_manager.msg_format(
-                        "strMrGamblerSuicide", {"tGamblerName": name}
-                    )
+        if game["tmp"]["is_attack_me"]:
+            pl_target["suicide"] = True
+            reply["info"].append(
+                msg_manager.msg_format("strMrGamblerSuicide", {"tGamblerName": name})
+            )
+        else:
+            pl_shooter["kills"] += 1
+            pl_target["suicide"] = False
+            reply["info"].append(
+                msg_manager.msg_format(
+                    "strMrGamblerKilled",
+                    {"tGamblerName": name, "tMurdererName": pl_shooter["name"]},
                 )
-            else:
-                pl_shooter["kills"] += 1
-                pl_target["suicide"] = False
-                reply["info"].append(
-                    msg_manager.msg_format(
-                        "strMrGamblerKilled",
-                        {"tGamblerName": name, "tMurdererName": pl_shooter["name"]},
-                    )
-                )
-            data["order"].remove(target)
-        return
+            )
+        data["order"].remove(target)
 
     @classmethod
     def end_round(cls, msg_manager):  # 回合结束

@@ -72,7 +72,7 @@ class 锯子(PropComp, BaseProp):
         data, reply = game["data"], game["reply"]
         modify = data["modify"]
         if not modify.get("锯子", False):
-            RegGameWork.create_prop_event(game, "锯子", ("shoot","damage"))
+            RegGameWork.create_prop_event(game, "锯子", ("shoot", "damage"))
             modify["锯子"] = True
             reply["info"].append("槍管被鋸斷.")
             return True
@@ -379,7 +379,7 @@ class 转盘(PropComp, BaseProp):
 
 class 牛奶(PropComp, BaseProp):
     name = "牛奶"
-    brief = "使目标抽取 2 个道具, 其余恶魔抽取 1 个道具."
+    brief = "使目标抽取 2 个道具, 其余赌徒抽取 1 个道具."
     pool = (
         "手铐",
         "锯子",
@@ -488,3 +488,9 @@ class 金币(PropComp, BaseProp):
         )
         game["reply"]["info"].append(reply)
         return
+
+
+class 止疼药(PropComp, BaseProp):
+    name = "止疼药"
+    brief = "不能对目标重复使用止疼药. 使目标在其回合结束前受到和造成的伤害转变成等数值的[神经麻痹].\n[神经麻痹]:回合结束时失去所有[神经麻痹], 并失去等同值+1的HP."
+    effect = "神经麻痹"

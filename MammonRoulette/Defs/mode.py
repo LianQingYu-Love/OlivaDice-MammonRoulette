@@ -57,6 +57,11 @@ class BaseMode:
     def damage(cls, msg_manager):
         pass
 
+    # 死亡
+    @classmethod
+    def dead(cls, msg_manager):
+        pass
+
     # 回合结束
     @classmethod
     def end_round(cls, msg_manager):

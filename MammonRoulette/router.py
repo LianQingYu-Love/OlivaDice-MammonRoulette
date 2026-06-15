@@ -239,6 +239,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
                     "prop_event": {
                         "shoot": [],
                         "damage": [],
+                        "dead": [],
                         "end_round": [],
                         "switch": [],
                         "reload": [],
