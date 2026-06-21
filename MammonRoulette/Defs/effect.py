@@ -1,3 +1,13 @@
+# -*- encoding: utf-8 -*-
+"""
+@File      :    MammonRoulette/Defs/effect.py
+@Author    :    LianQingYu-Love恋倾雨
+@Contact   :    xinghu2408@foxmail.com
+@License   :    AGPLv3
+@Copyright :    (C) 2026 MammonRoulette
+@Desc      :    None
+"""
+
 from ..Core.cmop import EffectComp
 from ..Core.work import RegGameWork
 

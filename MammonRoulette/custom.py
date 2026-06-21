@@ -1,3 +1,13 @@
+# -*- encoding: utf-8 -*-
+"""
+@File      :    MammonRoulette/custom.py
+@Author    :    LianQingYu-Love恋倾雨
+@Contact   :    xinghu2408@foxmail.com
+@License   :    AGPLv3
+@Copyright :    (C) 2026 MammonRoulette
+@Desc      :    None
+"""
+
 dictStrCustom = {
     "strMrSignedResult": "{tGamblerName}在生死狀簽下姓名.",
     "strMrCardHas": (
