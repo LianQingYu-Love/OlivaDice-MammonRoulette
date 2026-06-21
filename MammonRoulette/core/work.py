@@ -3,31 +3,43 @@ import re
 
 from AmorLib import DataBase, STRING_ROW
 
-from .cmop import ModeComp, PropComp
+from .cmop import ModeComp, PropComp, EffectComp
 from .. import DB_PATH
 
 
 class RegGameWork:
+    # region Base
     @staticmethod
-    def get_name(game, user_id: str | None = None):  # 获取玩家昵称
+    def get_name(game, user_id: str | None = None) -> str:  # 获取玩家昵称
         data = game["data"]
         if not user_id:
             user_id = data["shooter"]
         return data["players"][user_id]["name"]
 
     @staticmethod
-    def format_reply(game):  # 格式化回复消息
-        game_reply = game["reply"]
-        if not game_reply["only"]:
-            info, note = game_reply["info"], game_reply["note"]
+    def get_index(msg_manager):
+        game: dict = msg_manager.val["game"]
+        data: dict = game["data"]
+        reply: dict = game["reply"]
+        tmp: dict = game["tmp"]
+        players: dict = data["players"]
+        shooter: str = data["shooter"]
+        modify: dict = data["modify"]
+        return game, data, reply, tmp, players, shooter, modify
+
+    @staticmethod
+    def format_reply(game) -> str:  # 格式化回复消息
+        reply = game["reply"]
+        if not reply["only"]:
+            info, note = reply["info"], reply["note"]
             extra = [note[key] for key in ["ammo", "shooter"] if note[key]]
             if extra:
                 info.extend(["▁▁▁▁▁▁▁▁▁▁▁▁▁▁"] + extra)
-            reply = "\n".join(info)
-            reply = re.sub(r"\n\n+", "\n", reply)
+            msg_reply = "\n".join(info)
+            msg_reply = re.sub(r"\n\n+", "\n", msg_reply)
         else:
-            reply = game_reply["only"]
-        game_reply.update(
+            msg_reply = reply["only"]
+        reply.update(
             {
                 "info": [],
                 "note": {
@@ -37,24 +49,58 @@ class RegGameWork:
                 "only": "",
             }
         )
-        return reply
+        return msg_reply
 
+    # endregion
     # region 事件
     @staticmethod
-    def create_prop_event(game, callback, moments: STRING_ROW | str):
+    def get_effect_stacks(game, effect, target):
+        return game["data"]["players"][target]["effect_event"].get(effect, 0)
+
+    @staticmethod
+    def create_prop_event(game, prop, moments: STRING_ROW | str):
         moments = (moments,) if type(moments) == str else moments
         for moment in moments:
-            game["data"]["prop_event"][moment].append(callback)
+            game["data"]["prop_event"][moment].append(prop)
+        return
+
+    @staticmethod
+    def create_effect_event(game, effect, target, stacks: int = 1):
+        effect_event = game["data"]["players"][target]["effect_event"]
+        effect_event[effect] = effect_event.get(effect, 0) + stacks
+        return
+
+    @staticmethod
+    def remove_prop_event(game, prop, moment: STRING_ROW | str):
+        moments = (moment,) if type(moment) == str else moment
+        for moment in moments:
+            game["data"]["prop_event"][moment].remove(prop)
+        return
+
+    @staticmethod
+    def remove_effect_event(game, effect, target, stacks: int = 1):
+        effect_event = game["data"]["players"][target]["effect_event"]
+        effect_event[effect] -= stacks
+        if effect_event[effect] <= 0:
+            del effect_event[effect]
+        return
 
     @staticmethod
     def handle_event(msg_manager, moment, **kwargs):
-        game = msg_manager.val["game"]
+        game, data, _, _, players, _, _ = RegGameWork.get_index(msg_manager)
         game["tmp"].update(kwargs)
-        prop_event = game["data"]["prop_event"][moment]
+        prop_event = data["prop_event"][moment]
         for prop in reversed(prop_event):
             if PropComp.trigger(msg_manager, prop, moment):
                 prop_event.remove(prop)
+        for target in players:
+            effect_event = players[target]["effect_event"]
+            for effect in list(effect_event.keys()):
+                stacks = effect_event[effect]
+                if EffectComp.trigger(msg_manager, effect, moment, target, stacks):
+                    del effect_event[effect]
         ModeComp.trigger(msg_manager, moment)
+        return
 
     # endregion
     # region 道具
@@ -104,19 +150,15 @@ class RegGameWork:
     # region action
     @classmethod
     def bullet(cls, msg_manager):  # 刷新子弹
-        game = msg_manager.val["game"]
-        data = game["data"]
+        _, data, reply, _, _, _, modify = RegGameWork.get_index(msg_manager)
         if data["ammo_live"] < 1:
             ammo_live, ammo_blank = cls.reload(msg_manager)
         else:
             ammo_live, ammo_blank = data["ammo_live"], data["ammo_blank"]
-
         ammo = ammo_live + ammo_blank
         data["bullet"] = random.randint(1, ammo) > ammo_blank
 
-        modify = data["modify"]
         ammo_reply = []
-
         t_value = {
             "tAmmoLiveCount": ammo_live,
             "tAmmoBlankCount": ammo_blank,
@@ -141,35 +183,49 @@ class RegGameWork:
         )
         if show_bullet:
             ammo_reply.append(show_bullet)
-        game["reply"]["note"]["ammo"] = "\n".join(ammo_reply)
+        reply["note"]["ammo"] = "\n".join(ammo_reply)
         return
 
     @classmethod
     def reload(cls, msg_manager):  # 装弹
-        game = msg_manager.val["game"]
-        data = game["data"]
+        _, data, reply, _, _, _, _ = RegGameWork.get_index(msg_manager)
         cls.handle_event(msg_manager, "reload")
         ammo_live, ammo_blank = random.randint(1, 4), random.randint(1, 4)
         data["ammo_live"], data["ammo_blank"] = ammo_live, ammo_blank
-        game["reply"]["info"].append(msg_manager.msg_format("strMrGameAmmoRanOut"))
+        reply["info"].append(msg_manager.msg_format("strMrGameAmmoRanOut"))
         return ammo_live, ammo_blank
 
     @classmethod
     def shoot(cls, msg_manager, target):  # 开枪
-        game = msg_manager.val["game"]
-        data, reply, tmp = game["data"], game["reply"], game["tmp"]
-        is_attack_me = target == data["shooter"]
-        cls.handle_event(msg_manager, "shoot", target=target, is_attack_me=is_attack_me)
-        target = tmp["target"]
-        pl_target, pl_shooter = (
-            data["players"][target],
-            data["players"][data["shooter"]],
+        _, data, reply, tmp, players, shooter, modify = RegGameWork.get_index(
+            msg_manager
         )
-        hp_before = pl_target["hp"]
+        is_attack_me = target == shooter
+        dmg_type = "shoot"
+        murderer = shooter
+        cls.handle_event(
+            msg_manager,
+            "shoot",
+            target=target,
+            dmg=modify["dmg"],
+            dmg_type=dmg_type,
+            is_attack_me=is_attack_me,
+            murderer=murderer,
+        )
+        target, dmg, is_attack_me, murderer = (
+            tmp["target"],
+            tmp["dmg"],
+            tmp["is_attack_me"],
+            tmp["murderer"],
+        )
+        pl_target, pl_shooter = (
+            players[target],
+            players[shooter],
+        )
         if data["bullet"]:
-            cls.damage(msg_manager, target, data["modify"]["dmg"])
-            hp_now = pl_target["hp"]
+            cls.damage(msg_manager, target, dmg, murderer)
             data["ammo_live"] -= 1
+            hp_before, hp_now = tmp["hp_before"], tmp["hp_now"]
             reply["info"].append(
                 msg_manager.msg_format(
                     "strMrGamblerWasAmmoLiveShot",
@@ -182,15 +238,15 @@ class RegGameWork:
             )
         else:
             data["ammo_blank"] -= 1
-            if tmp["is_attack_me"]:
+            if is_attack_me:
                 pl_shooter["actions"] += 1
             reply["info"].append(
                 msg_manager.msg_format(
                     "strMrGamblerWasAmmoBlankShot",
                     {
                         "tGamblerName": pl_target["name"],
-                        "tHpBefore": hp_before,
-                        "tHpNow": hp_before,
+                        "tHpBefore": pl_target["hp"],
+                        "tHpNow": pl_target["hp"],
                     },
                 )
             )
@@ -199,86 +255,101 @@ class RegGameWork:
         return
 
     @classmethod
-    def damage(cls, msg_manager, target, dmg):  # 受伤
-        game = msg_manager.val["game"]
-        data = game["data"]
-        cls.handle_event(msg_manager, "damage", target=target, dmg=dmg)
-        target, dmg = game["tmp"]["target"], game["tmp"]["dmg"]
-        pl_target = data["players"][target]
+    def damage(cls, msg_manager, target, dmg, murderer=None):  # 受伤
+        _, _, _, tmp, players, _, _ = RegGameWork.get_index(msg_manager)
+        dmg_type = tmp.get("dmg_type", "shoot")
+        cls.handle_event(
+            msg_manager,
+            "damage",
+            target=target,
+            dmg=dmg,
+            murderer=murderer,
+            dmg_type=dmg_type,
+        )
+        target, dmg, murderer, dmg_type = (
+            tmp["target"],
+            tmp["dmg"],
+            tmp["murderer"],
+            tmp["dmg_type"],
+        )
+        pl_target = players[target]
+        tmp["hp_before"] = pl_target["hp"]
         pl_target["hp"] -= dmg
+        tmp["hp_now"] = pl_target["hp"]
         if pl_target["hp"] <= 0:
-            cls.dead(msg_manager, target)
+            cls.dead(msg_manager, target, murderer)
         return
 
     @classmethod
-    def dead(cls, msg_manager, target):  # 死亡
-        game = msg_manager.val["game"]
-        data, reply = game["data"], game["reply"]
-        cls.handle_event(msg_manager, "dead", target=target,)
-        target = game["tmp"]["target"]
-        pl_target, pl_shooter = (
-            data["players"][target],
-            data["players"][data["shooter"]],
+    def dead(cls, msg_manager, target, murderer):  # 死亡
+        game, data, reply, tmp, players, shooter, _ = RegGameWork.get_index(msg_manager)
+        order = data["order"]
+        cls.handle_event(msg_manager, "dead", target=target, murderer=murderer)
+        target, murderer = tmp["target"], tmp["murderer"]
+        if not murderer:
+            murderer = shooter
+        pl_target, pl_murderer = (
+            players[target],
+            players[murderer],
         )
         name = pl_target["name"]
-        if game["tmp"]["is_attack_me"]:
+        if tmp["is_attack_me"]:
             pl_target["suicide"] = True
             reply["info"].append(
                 msg_manager.msg_format("strMrGamblerSuicide", {"tGamblerName": name})
             )
         else:
-            pl_shooter["kills"] += 1
+            pl_murderer["kills"] += 1
             pl_target["suicide"] = False
             reply["info"].append(
                 msg_manager.msg_format(
                     "strMrGamblerKilled",
-                    {"tGamblerName": name, "tMurdererName": pl_shooter["name"]},
+                    {"tGamblerName": name, "tMurdererName": pl_murderer["name"]},
                 )
             )
-        data["order"].remove(target)
+        order.remove(target)
+        if len(order) == 1:
+            reply["only"] = msg_manager.msg_format(
+                "strMrGameEnd", {"tWinnerName": cls.get_name(game, order[0])}
+            )
+            cls.over(msg_manager)
+        if len(order) < 1:
+            reply["only"] = msg_manager.msg_format("strMrGameTied")
+            cls.over(msg_manager)
+        return
 
     @classmethod
     def end_round(cls, msg_manager):  # 回合结束
-        game = msg_manager.val["game"]
-        data = game["data"]
-        order = data["order"]
-        if len(order) > 1:
-            cls.handle_event(msg_manager, "end_round")
-            pc_shooter = data["players"][data["shooter"]]
-            pc_shooter["actions"] -= 1
-            if pc_shooter["actions"] < 1:
-                cls.switch(msg_manager)
-        else:
-            game["reply"]["only"] = msg_manager.msg_format(
-                "strMrGameEnd", {"tWinnerName": cls.get_name(game, order[0])}
-            )
-            cls.over(game)
+        _, _, _, _, players, shooter, _ = RegGameWork.get_index(msg_manager)
+        cls.handle_event(msg_manager, "end_round")
+        pl_shooter = players[shooter]
+        pl_shooter["actions"] -= 1
+        if pl_shooter["actions"] < 1:
+            cls.switch(msg_manager)
         return
 
     @classmethod
     def switch(cls, msg_manager):  # 换人
-        game = msg_manager.val["game"]
-        data = game["data"]
-        order, shooter = data["order"], data["shooter"]
+        game, data, reply, _, players, shooter, _ = RegGameWork.get_index(msg_manager)
+        order = data["order"]
         for _ in range(game["seats"] * 10):
             shooter = order[(order.index(shooter) + 1) % len(order)]
-            pc_shooter = data["players"][shooter]
-            pc_shooter["actions"] += 1
-            if pc_shooter["actions"] > 0:
+            pl_shooter = players[shooter]
+            pl_shooter["actions"] += 1
+            if pl_shooter["actions"] > 0:
                 break
         if shooter != data["shooter"]:
             data["shooter"] = shooter
-            pc_shooter = data["players"][shooter]
-            game["reply"]["note"]["shooter"] = msg_manager.msg_format(
-                "strMrGamblerTurn", {"tGamblerName": pc_shooter["name"]}
+            pl_shooter = players[shooter]
+            reply["note"]["shooter"] = msg_manager.msg_format(
+                "strMrGamblerTurn", {"tGamblerName": pl_shooter["name"]}
             )
             cls.handle_event(msg_manager, "switch")
         return
 
     @classmethod
-    def over(cls, game):  # 结算
-        data = game["data"]
-        players = data["players"]
+    def over(cls, msg_manager):  # 结算
+        game, data, _, _, players, _, _ = RegGameWork.get_index(msg_manager)
         with DataBase(DB_PATH) as db:
             for pl in players.keys():
                 pl_target = players[pl]

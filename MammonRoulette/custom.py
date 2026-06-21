@@ -19,7 +19,7 @@ dictStrCustom = {
         "▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁\n"
         "排名 {tRankingPageHome}-{tRankingPageEnd}｜总计上榜恶魔 {tGamblerCount}"
     ),
-    "strMrLink": "、",
+    "strMrLink": ",",
     "strMrAmmoLive": "實彈",
     "strMrAmmoBlank": "空包彈",
     "strMrGamePrep": "{tGameMode}對局靜候惡魔[{tSeatsHas}/{tSeatsMax}].",
@@ -30,6 +30,7 @@ dictStrCustom = {
     "strMrGameRemain": "你已退出，剩余：{tSeatsHas}人.",
     "strMrGameAmmoRanOut": "彈藥耗盡，重新裝填中……",
     "strMrGameEnd": "{tWinnerName}用鮮血爲這場生死對局畫上句號.",
+    "strMrGameTied": "這場對局沒有贏家.",
     "strMrGamblerWasAmmoLiveShot": "“嘭！”{tGamblerName}被崩倒在地[hp {tHpBefore}->{tHpNow}].",
     "strMrGamblerWasAmmoBlankShot": "“咔哒——”是空彈……",
     "strMrGamblerKilled": "{tGamblerName}死於他手.",
@@ -38,10 +39,13 @@ dictStrCustom = {
     "strMrGamblerTurn": "現在是{tGamblerName}的回合.",
     "strMrGamblerNoProp": "你没有{tPropName}道具.",
     "strMrGamblerDrawnProps": "{tGamblerName}抽取: {tDrawnProps}.",
-    "strMrGamblerData": "〔{tGamblerIdx}〕 {tGamblerName}\n「hp: {tGamblerHp}」\n{tGamblerProps}\n",
+    "strMrGamblerData": "〔{tGamblerIdx}〕 {tGamblerName}\n「hp: {tGamblerHp}」{tGamblerEffect}\n{tGamblerProps}\n",
     "strMrPropOneNode": "{tPropName}",
     "strMrPropManyNode": "{tPropName}*{tPropCount}",
     "strMrPropNoneNode": "無道具",
+    "strMrEffectOneNode": "[{tEffectName}]",
+    "strMrEffectManyNode": "[{tEffectName}:{tEffectStacks}]",
+    "strMrEffectNoneNode": "",
     "strMrGameShooter": "\n槍手:〔{tGamblerIdx}〕{tGamblerName}",
     "strMrGameNowBulletShow": "\n當前子彈: {tNowBulletType}",
     "strMrGameNowBulletHide": "",
@@ -68,6 +72,7 @@ dictStrCustomNote = {
     "strMrGameRemain": "【退出】指令 退出游戏后的剩余人数显示.",
     "strMrGameAmmoRanOut": "实弹耗尽, 重新装弹时的显示.",
     "strMrGameEnd": "游戏结束时的显示.",
+    "strMrGameTied": "游戏平局时的显示.",
     "strMrGamblerWasAmmoLiveShot": "开枪 子弹为[AmmoLive]",
     "strMrGamblerWasAmmoBlankShot": "开枪 子弹为[AmmoBlank]",
     "strMrGamblerKilled": "玩家被其他玩家杀死时的显示.",
@@ -80,6 +85,9 @@ dictStrCustomNote = {
     "strMrPropOneNode": "道具列表 同名道具只有一个时的显示模板.",
     "strMrPropManyNode": "道具列表 同名道具有多个时的显示模板.",
     "strMrPropNoneNode": "道具列表 玩家没有道具时的显示模板.",
+    "strMrEffectOneNode": "效果列表 同名效果只有一个时的显示模板.",
+    "strMrEffectManyNode": "效果列表 同名效果有多个时的显示模板.",
+    "strMrEffectNoneNode": "效果列表 玩家没有效果时的显示模板.",
     "strMrGameShooter": "枪手 当前枪手的显示.",
     "strMrGameNowBulletShow": "子弹 显示当前子弹的类型.",
     "strMrGameNowBulletHide": "子弹 隐藏当前子弹时的显示.",
@@ -124,6 +132,10 @@ dictTValue = {
     "tPropCount": "N/A",  # 道具数量
     "tGamblerProps": "N/A",  # 赌徒持有的道具
     "tDrawnProps": "N/A",  # 玩家抽取的道具
+    # 效果相关
+    "tEffectName": "N/A",  # 效果名称
+    "tEffectStacks": "N/A",  # 效果层数
+    "tGamblerEffect": "N/A",  # 赌徒持有的效果
     # 子弹/弹药相关
     "tNowBulletType": "N/A",  # 当前子弹类型
     "tAmmoLiveCount": "N/A",  # 实弹数量

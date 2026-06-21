@@ -3,7 +3,7 @@ import string
 
 from ..main import commands
 from ..custom import dictHelpDoc
-from ..Core.cmop import ModeComp, PropComp
+from ..Core.cmop import ModeComp, PropComp, EffectComp
 from ..Core.work import RegGameWork
 
 
@@ -17,7 +17,7 @@ class BaseProp:
 
     @classmethod
     def apply(cls, msg_manager, target) -> bool | None:
-        return False
+        pass
 
     @classmethod
     def callback(cls, msg_manager, moment) -> bool | None:
@@ -68,11 +68,9 @@ class 锯子(PropComp, BaseProp):
 
     @classmethod
     def apply(cls, msg_manager, target):
-        game = msg_manager.val["game"]
-        data, reply = game["data"], game["reply"]
-        modify = data["modify"]
+        game, _, reply, _, _, _, modify = RegGameWork.get_index(msg_manager)
         if not modify.get("锯子", False):
-            RegGameWork.create_prop_event(game, "锯子", ("shoot", "damage"))
+            RegGameWork.create_prop_event(game, "锯子", "shoot")
             modify["锯子"] = True
             reply["info"].append("槍管被鋸斷.")
             return True
@@ -81,13 +79,10 @@ class 锯子(PropComp, BaseProp):
 
     @classmethod
     def callback(cls, msg_manager, moment):
-        game = msg_manager.val["game"]
-        data = game["data"]
-        modify = data["modify"]
+        game, _, _, tmp, _, _, modify = RegGameWork.get_index(msg_manager)
         if moment == "shoot":
             RegGameWork.create_prop_event(game, "锯子", "damage")
-        elif moment == "damage":
-            game["tmp"]["dmg"] = modify["dmg"] + 1
+            tmp["dmg"] = modify["dmg"] + 1
             modify["锯子"] = False
         return True
 
@@ -95,7 +90,7 @@ class 锯子(PropComp, BaseProp):
 class 邀请函(PropComp, BaseProp):
     name = "邀请函"
     brief = "使目标抽取 2 个道具, 并结束使用者回合."
-    pool = ("手铐", "锯子", "红牛", "放大镜", "口红", "牛奶")
+    pool = ("手铐", "锯子", "红牛", "放大镜", "口红", "牛奶", "止疼药")
 
     @classmethod
     def apply(cls, msg_manager, target):
@@ -492,5 +487,44 @@ class 金币(PropComp, BaseProp):
 
 class 止疼药(PropComp, BaseProp):
     name = "止疼药"
-    brief = "不能对目标重复使用止疼药. 使目标在其回合结束前受到和造成的伤害转变成等数值的[神经麻痹].\n[神经麻痹]:回合结束时失去所有[神经麻痹], 并失去等同值+1的HP."
-    effect = "神经麻痹"
+    brief = "使目标在其回合结束前受到的伤害转变为等值的[神经麻痹]. 对自身使用时, 效果延长到下回合结束.\n[神经麻痹]回合结束时失去所有[神经麻痹]并受到等值的神经麻痹伤害."
+
+    @classmethod
+    def apply(cls, msg_manager, target):
+        game, _, reply, _, _, shooter, modify = RegGameWork.get_index(msg_manager)
+        comp = modify.setdefault("止疼药", [])
+        if target in comp:
+            reply["info"].append(f"{RegGameWork.get_name(game, target)}已服用止疼药.")
+            return False
+        comp.append(target)
+        RegGameWork.create_prop_event(game, "止疼药", "damage")
+        if target == shooter:
+            RegGameWork.create_prop_event(game, "止疼药", "switch")
+        else:
+            RegGameWork.create_prop_event(game, "止疼药", "end_round")
+        reply["info"].append(f"{RegGameWork.get_name(game, target)}服用止疼药.")
+        return True
+
+    @classmethod
+    def callback(cls, msg_manager, moment):
+        game, _, reply, tmp, _, shooter, modify = RegGameWork.get_index(msg_manager)
+        comp = modify["止疼药"]
+        if moment == "damage":
+            target = tmp["target"]
+            if target in comp and tmp["dmg_type"] == "shoot":
+                dmg, tmp["dmg"] = tmp["dmg"], 0
+                stacks_before = RegGameWork.get_effect_stacks(game, "神经麻痹", target)
+                stacks_now = stacks_before + dmg
+                EffectComp.give(msg_manager, "神经麻痹", target, dmg)
+                modify["神经麻痹"][target]["final_attacker"] = tmp["murderer"]
+                reply["info"].append(
+                    f"{RegGameWork.get_name(game, target)}感到神经麻痹[{stacks_before}->{stacks_now}]."
+                )
+        elif moment == "end_round" and shooter in comp:
+            comp.remove(shooter)
+            RegGameWork.remove_prop_event(game, "止疼药", "damage")
+            return True
+        elif moment == "switch":
+            RegGameWork.create_prop_event(game, "止疼药", "end_round")
+            return True
+        return False

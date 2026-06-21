@@ -61,3 +61,15 @@ class PropComp(Registerable):
     @classmethod
     def trigger(cls, msg_manager, prop, moment):
         return cls.get(prop).callback(msg_manager, moment)
+
+
+class EffectComp(Registerable):
+    _register = {}
+
+    @classmethod
+    def give(cls, msg_manager, effect, target, stacks=1):
+        return cls.get(effect).apply(msg_manager, target, stacks)
+
+    @classmethod
+    def trigger(cls, msg_manager, effect, moment, target, stacks=1):
+        return cls.get(effect).callback(msg_manager, moment, target, stacks)

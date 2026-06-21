@@ -136,6 +136,7 @@ class 道具(ModeComp, BaseMode):
             "扑克",
             "转盘",
             "牛奶",
+            "止疼药",
         ]
         ban = []
         limit = 16
@@ -176,9 +177,8 @@ class 金币(ModeComp, BaseMode):
 
     @classmethod
     def start(cls, msg_manager):
-        RegGameWork.get_prop(
-            msg_manager, msg_manager.val["game"]["data"]["shooter"], "金币"
-        )
+        game = msg_manager.val["game"]
+        RegGameWork.draw_prop(msg_manager, game["data"]["shooter"], 1)
 
     @classmethod
     def join(cls, msg_manager, user_id):

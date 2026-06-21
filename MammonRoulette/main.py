@@ -185,7 +185,7 @@ def unity_reply(plugin_event, Proc, msg_manager):
         elif (
             state == "play"
             and msg_manager.user_id == game["data"]["shooter"]
-            and target_id in game["order"]
+            and target_id in game["data"]["order"]
         ):
             msg = f"开枪{target_id}"
     if not msg:

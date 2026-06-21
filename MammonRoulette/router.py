@@ -283,6 +283,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
             "suicide": False,
             "surrender": False,
             "points_mult": 0,
+            "effect_event": {},
         }
         mode_cfg.join(msg_manager, user_id)
     # endregion
@@ -444,6 +445,14 @@ def situation(plugin_event, Proc, msg_manager, groups):
                     {"tPropName": prop, "tPropCount": count},
                 )
             )
+        effects = []
+        for effect, stacks in pl["effect_event"].items():
+            effects.append(
+                msg_manager.msg_format(
+                    "strMrEffectOneNode" if stacks == 1 else "strMrEffectManyNode",
+                    {"tEffectName": effect, "tEffectStacks": stacks},
+                )
+            )
         pl_data = {
             "tGamblerIdx": idx + 1,
             "tGamblerName": pl["name"],
@@ -452,6 +461,11 @@ def situation(plugin_event, Proc, msg_manager, groups):
                 link.join(props)
                 if pl["props"]
                 else msg_manager.msg_format("strMrPropNoneNode")
+            ),
+            "tGamblerEffect": (
+                link.join(effects)
+                if effects
+                else msg_manager.msg_format("strMrEffectNoneNode")
             ),
             "tGamblerActions": pl["actions"],
             "tGamblerKills": pl["kills"],
