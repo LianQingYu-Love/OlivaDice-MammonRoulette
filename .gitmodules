@@ -1,0 +1,3 @@
+[submodule "AmorLib"]
+	path = AmorLib
+	url = https://github.com/LianQingYu-Love/OlivOS-AmorLib.git
