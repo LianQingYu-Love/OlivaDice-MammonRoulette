@@ -258,8 +258,8 @@ def match_game(plugin_event, Proc, msg_manager, groups):
                 "reply": {
                     "info": [],
                     "note": {
-                        "ammo": "",
-                        "shooter": "",
+                        "ammo": False,
+                        "shooter": False,
                     },
                     "only": "",
                 },
@@ -312,8 +312,8 @@ def match_game(plugin_event, Proc, msg_manager, groups):
             {
                 "info": [],
                 "note": {
-                    "ammo": "",
-                    "shooter": "",
+                    "ammo": False,
+                    "shooter": False,
                 },
                 "only": "",
             }
@@ -363,39 +363,42 @@ def exit_game(plugin_event, Proc, msg_manager, groups):
 # region 对局操作
 @commands.route("play", "^(吞|开|開)[槍|枪] *(\\d*)$")
 def shoot(plugin_event, Proc, msg_manager, groups):
-    user_id, game = msg_manager.user_id, msg_manager.val["game"]
-    shooter = game["data"]["shooter"]
+    user_id = msg_manager.user_id
+    game, data, reply, tmp, modify, players, order, shooter, bullet = (
+        RegGameWork.get_index(msg_manager)
+    )
     if user_id != shooter:
-        reply = msg_manager.msg_format(
+        msg_reply = msg_manager.msg_format(
             "strMrGamblerTurn", {"tGamblerName": RegGameWork.get_name(game, shooter)}
         )
-        plugin_event.reply(reply)
+        plugin_event.reply(msg_reply)
         return
     if groups[0] == "吞":
         target = user_id
     elif not (target := get_target(game, groups[1])):
         return
     RegGameWork.shoot(msg_manager, target)
-    reply = RegGameWork.format_reply(game)
-    plugin_event.reply(reply)
+    msg_reply = RegGameWork.format_reply(msg_manager)
+    plugin_event.reply(msg_reply)
     return
 
 
 @commands.route("play", f"^(?:使用|) *({'|'.join(PropComp.list())}) *(\\d*)$")
 def use_prop(plugin_event, Proc, msg_manager, groups):
     user_id, game = msg_manager.user_id, msg_manager.val["game"]
-    data = game["data"]
-    shooter = data["shooter"]
+    game, data, reply, tmp, modify, players, order, shooter, bullet = (
+        RegGameWork.get_index(msg_manager)
+    )
     if user_id != shooter:
-        reply = msg_manager.msg_format(
+        msg_reply = msg_manager.msg_format(
             "strMrGamblerTurn", {"tGamblerName": RegGameWork.get_name(game, shooter)}
         )
-        plugin_event.reply(reply)
+        plugin_event.reply(msg_reply)
         return
     prop, target = groups[0], groups[1]
-    if prop not in data["players"][user_id]["props"]:
-        reply = msg_manager.msg_format("strMrGamblerNoProp", {"tPropName": prop})
-        plugin_event.reply(reply)
+    if prop not in players[user_id]["props"]:
+        msg_reply = msg_manager.msg_format("strMrGamblerNoProp", {"tPropName": prop})
+        plugin_event.reply(msg_reply)
         return
     if not target:
         target = user_id
@@ -403,29 +406,30 @@ def use_prop(plugin_event, Proc, msg_manager, groups):
         return
     if PropComp.use(msg_manager, prop, target):
         RegGameWork.remove_prop(game, user_id, prop)
-        reply = RegGameWork.format_reply(game)
-        plugin_event.reply(reply)
+        msg_reply = RegGameWork.format_reply(msg_manager)
+        plugin_event.reply(msg_reply)
         return
     return
 
 
 @commands.route("play", "^投降$")
 def surrender(plugin_event, Proc, msg_manager, groups):
-    user_id, game = msg_manager.user_id, msg_manager.val["game"]
-    data = game["data"]
-    order = data["order"]
+    user_id = msg_manager.user_id
+    game, data, reply, tmp, modify, players, order, shooter, bullet = (
+        RegGameWork.get_index(msg_manager)
+    )
     order.remove(user_id)
-    data["players"][user_id]["surrender"] = True
+    players[user_id]["surrender"] = True
     if len(order) <= 1:
         RegGameWork.end_round(msg_manager)
-    game["reply"]["info"].append(
+    reply["info"].append(
         msg_manager.msg_format(
             "strMrGamblerSurrender",
             {"tGamblerName": RegGameWork.get_name(game, user_id)},
         )
     )
-    reply = RegGameWork.format_reply(game)
-    plugin_event.reply(reply)
+    msg_reply = RegGameWork.format_reply(msg_manager)
+    plugin_event.reply(msg_reply)
     return
 
 
@@ -434,12 +438,8 @@ def situation(plugin_event, Proc, msg_manager, groups):
     game = msg_manager.val["game"]
     if not game.get("start"):
         return
-    data = game["data"]
-    order, players, shooter, modify = (
-        data["order"],
-        data["players"],
-        data["shooter"],
-        data["modify"],
+    game, data, reply, tmp, modify, players, order, shooter, bullet = (
+        RegGameWork.get_index(msg_manager)
     )
     t_value = {}
     link = msg_manager.msg_format("strMrLink")
@@ -498,7 +498,7 @@ def situation(plugin_event, Proc, msg_manager, groups):
     t_value.update(
         {
             "tNowBulletType": msg_manager.msg_format(
-                "strMrAmmoLive" if data["bullet"] else "strMrAmmoBlank"
+                "strMrAmmoLive" if bullet else "strMrAmmoBlank"
             )
         }
     )
@@ -542,8 +542,8 @@ def situation(plugin_event, Proc, msg_manager, groups):
         }
     )
 
-    reply = msg_manager.msg_format("strMrSituationResult", t_value)
-    plugin_event.reply(reply)
+    msg_reply = msg_manager.msg_format("strMrSituationResult", t_value)
+    plugin_event.reply(msg_reply)
     return
 
 

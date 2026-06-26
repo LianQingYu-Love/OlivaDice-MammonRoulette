@@ -4,8 +4,8 @@
     "namespace": "MammonRoulette",
     "info": "權衡風險與收益：是孤注一擲，還是步步爲營? 生死之間唯有膽識與策略並存的惡鬼得以幸存.",
     "priority": 50000,
-    "svn": 38,
-    "version": "2.14",
+    "svn": 39,
+    "version": "2.14.1",
     "compatible_svn": 201,
     "message_mode": "old_string",
     "support": [

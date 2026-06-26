@@ -36,7 +36,7 @@ class BaseProp:
 
 class 手铐(PropComp, BaseProp):
     name = "手铐"
-    brief = "使用者不可作为目标. 束缚目标行动 1 回合, 且在目标恢复行动前无法再次将其选为目标."
+    brief = "不能将枪手选为目标. 束缚目标行动 1 回合, 且在目标恢复行动前无法将其再次选为目标."
 
     @staticmethod
     def reply():
@@ -44,13 +44,13 @@ class 手铐(PropComp, BaseProp):
 
     @classmethod
     def apply(cls, msg_manager, target):
-        game = msg_manager.val["game"]
-        data, reply = game["data"], game["reply"]
-        if target == data["shooter"]:
-            order = data["order"]
-            target = order[(order.index(data["shooter"]) + 1) % len(order)]
-        comp = data["modify"].setdefault("手铐", [])
-        pl_target = data["players"][target]
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
+        if target == shooter:
+            target = order[(order.index(shooter) + 1) % len(order)]
+        comp = modify.setdefault("手铐", [])
+        pl_target = players[target]
         if target not in comp:
             comp.append(target)
             pl_target["actions"] -= 1
@@ -62,10 +62,10 @@ class 手铐(PropComp, BaseProp):
 
     @classmethod
     def callback(cls, msg_manager, moment):
-        game = msg_manager.val["game"]
-        data = game["data"]
-        comp = data["modify"]["手铐"]
-        shooter = data["shooter"]
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
+        comp = modify["手铐"]
         if shooter in comp:
             comp.remove(shooter)
             return True
@@ -74,11 +74,13 @@ class 手铐(PropComp, BaseProp):
 
 class 锯子(PropComp, BaseProp):
     name = "锯子"
-    brief = "这个道具在开枪前只能使用 1 次. 使下次开枪为实弹时伤害 +1."
+    brief = "每次开枪前只能使用 1 次. 下一发子弹若为实弹则伤害 +1."
 
     @classmethod
     def apply(cls, msg_manager, target):
-        game, _, reply, _, _, _, modify = RegGameWork.get_index(msg_manager)
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
         if not modify.get("锯子", False):
             RegGameWork.create_prop_event(game, "锯子", "shoot")
             modify["锯子"] = True
@@ -89,7 +91,9 @@ class 锯子(PropComp, BaseProp):
 
     @classmethod
     def callback(cls, msg_manager, moment):
-        game, _, _, tmp, _, _, modify = RegGameWork.get_index(msg_manager)
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
         if moment == "shoot":
             RegGameWork.create_prop_event(game, "锯子", "damage")
             tmp["dmg"] = modify["dmg"] + 1
@@ -99,14 +103,14 @@ class 锯子(PropComp, BaseProp):
 
 class 邀请函(PropComp, BaseProp):
     name = "邀请函"
-    brief = "使目标抽取 2 个道具, 并结束使用者回合."
+    brief = "在特定道具池中, 使目标抽取 2 个道具, 并结束枪手回合."
     pool = ("手铐", "锯子", "红牛", "放大镜", "口红", "牛奶", "止疼药")
 
     @classmethod
     def apply(cls, msg_manager, target):
-        game = msg_manager.val["game"]
-        data, reply = game["data"], game["reply"]
-        shooter = data["shooter"]
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
         RegGameWork.draw_prop(msg_manager, target, 2, cls.pool)
         RegGameWork.end_round(msg_manager)
         name = RegGameWork.get_name(game)
@@ -121,21 +125,23 @@ class 邀请函(PropComp, BaseProp):
 
 class 花生(PropComp, BaseProp):
     name = "花生"
-    brief = "装填 1 发空包弹, 并重新上膛."
+    brief = "装填 1 发空包弹, 然后重新上膛."
 
     @classmethod
     def apply(cls, msg_manager, target):
-        game = msg_manager.val["game"]
-        game["data"]["ammo_blank"] += 1
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
+        data["ammo_blank"] += 1
         RegGameWork.bullet(msg_manager)
         name = RegGameWork.get_name(game)
-        game["reply"]["info"].append(f"{name}裝入1发空包彈.")
+        reply["info"].append(f"{name}裝入1发空包彈.")
         return True
 
 
 class 巧克力(PropComp, BaseProp):
     name = "巧克力"
-    brief = "装填 1 发实弹, 并重新上膛."
+    brief = "装填 1 发实弹, 然后重新上膛."
 
     @staticmethod
     def reply():
@@ -158,21 +164,24 @@ class 巧克力(PropComp, BaseProp):
 
     @classmethod
     def apply(cls, msg_manager, target):
-        game = msg_manager.val["game"]
-        game["data"]["ammo_live"] += 1
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
+        data["ammo_live"] += 1
         RegGameWork.bullet(msg_manager)
-        game["reply"]["info"].append(f"{cls.reply()}巧克力被塞進彈倉.")
+        reply["info"].append(f"{cls.reply()}巧克力被塞進彈倉.")
         return True
 
 
 class 香烟(PropComp, BaseProp):
     name = "香烟"
-    brief = "取出 1 发空包弹, 并重新上膛. 若弹仓内只有实弹, 则取出 1 发实弹."
+    brief = "取出 1 发空包弹, 然后重新上膛. 若弹仓内只有实弹, 则取出 1 发实弹."
 
     @classmethod
     def apply(cls, msg_manager, target):
-        game = msg_manager.val["game"]
-        data = game["data"]
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
         if data["ammo_blank"] > 0:
             data["ammo_blank"] -= 1
             bullet = "空包彈"
@@ -180,15 +189,13 @@ class 香烟(PropComp, BaseProp):
             data["ammo_live"] -= 1
             bullet = "實彈"
         RegGameWork.bullet(msg_manager)
-        game["reply"]["info"].append(
-            f"{RegGameWork.get_name(game)}扔掉香煙, 取出一發{bullet}."
-        )
+        reply["info"].append(f"{RegGameWork.get_name(game)}扔掉香煙, 取出一發{bullet}.")
         return True
 
 
 class 红牛(PropComp, BaseProp):
     name = "红牛"
-    brief = "恢复目标 1 点HP."
+    brief = "使目标HP+1."
 
     @staticmethod
     def reply():
@@ -196,11 +203,12 @@ class 红牛(PropComp, BaseProp):
 
     @classmethod
     def apply(cls, msg_manager, target):
-        game = msg_manager.val["game"]
-        data, reply = game["data"], game["reply"]
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
         RegGameWork.damage(msg_manager, target, -1)
         name = RegGameWork.get_name(game)
-        if target == data["shooter"]:
+        if target == shooter:
             reply["info"].append(f"{name}將混著{cls.reply()}的紅牛將其一飲而盡.")
         else:
             reply["info"].append(
@@ -211,20 +219,20 @@ class 红牛(PropComp, BaseProp):
 
 class 放大镜(PropComp, BaseProp):
     name = "放大镜"
-    brief = "这个道具在开枪前只能使用 1 次. 在开枪前持续显示下一发子弹的虚实."
+    brief = "每次开枪前只能使用 1 次. 在开枪前持续显示下一发子弹的虚实."
 
     @classmethod
     def apply(cls, msg_manager, target):
-        game = msg_manager.val["game"]
-        data, reply = game["data"], game["reply"]
-        modify = data["modify"]
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
         if not modify.get("放大镜"):
             modify["放大镜"] = True
             modify["ammo_show"] = True
             modify["bullet_show"] = True
             RegGameWork.create_prop_event(game, "放大镜", "shoot")
             reply["info"].append(
-                f"{RegGameWork.get_name(game)}砸碎放大鏡, 發現槍膛裏是{'實彈' if data['bullet'] else '空包彈'}."
+                f"{RegGameWork.get_name(game)}砸碎放大鏡, 發現槍膛裏是{'實彈' if bullet else '空包彈'}."
             )
             return True
         reply["info"].append("已用放大镜, 开枪前可查看子弹虚实.")
@@ -232,8 +240,9 @@ class 放大镜(PropComp, BaseProp):
 
     @classmethod
     def callback(cls, msg_manager, moment):
-        game = msg_manager.val["game"]
-        modify = game["data"]["modify"]
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
         modify["放大镜"] = False
         modify["ammo_show"] = ModeComp.get(game["mode"]["name"]).modify.ammo_show
         modify["bullet_show"] = ModeComp.get(game["mode"]["name"]).modify.bullet_show
@@ -285,9 +294,9 @@ class 口红(PropComp, BaseProp):
 
     @classmethod
     def apply(cls, msg_manager, target):
-        game = msg_manager.val["game"]
-        data, reply = game["data"], game["reply"]
-        shooter = data["shooter"]
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
         name = RegGameWork.get_name(game)
         props_list = [
             prop
@@ -323,14 +332,12 @@ class 扑克(PropComp, BaseProp):
 
     @classmethod
     def apply(cls, msg_manager, target):
-        game = msg_manager.val["game"]
-        data, reply = game["data"], game["reply"]
-        modify = data["modify"]
-        prop_event = data["prop_event"]
-        if "扑克" not in prop_event["shoot"] + prop_event["reload"]:
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
+        if not modify.get("扑克"):
             RegGameWork.create_prop_event(game, "扑克", ("shoot", "reload"))
-        bullet = not data["bullet"]
-        data["bullet"] = bullet
+        data["bullet"] = not bullet
         if bullet:
             data["ammo_blank"] -= 1
             data["ammo_live"] += 1
@@ -344,15 +351,15 @@ class 扑克(PropComp, BaseProp):
 
     @classmethod
     def callback(cls, msg_manager, moment):
-        game = msg_manager.val["game"]
-        data = game["data"]
-        modify = data["modify"]
-        prop_event = data["prop_event"]
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
         if moment == "shoot":
-            prop_event["reload"].remove("扑克")
+            RegGameWork.remove_prop_event(game, "扑克", "reload")
         elif moment == "reload":
-            prop_event["shoot"].remove("扑克")
-            game["reply"]["info"].append("迷霧被驅散了.")
+            RegGameWork.remove_prop_event(game, "扑克", "shoot")
+            reply["info"].append("迷霧被驅散了.")
+        modify["扑克"] = False
         modify["ammo_show"] = ModeComp.get(game["mode"]["name"]).modify.ammo_show
         return True
 
@@ -370,21 +377,22 @@ class 转盘(PropComp, BaseProp):
 
     @classmethod
     def apply(cls, msg_manager, target):
-        game = msg_manager.val["game"]
-        data, reply = game["data"], game["reply"]
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
         ammo = random.randint(1, 6)
         ammo_blank = ammo - random.randint(1, ammo)
         ammo_live = ammo - ammo_blank
         data["ammo_live"], data["ammo_blank"] = ammo_live, ammo_blank
         RegGameWork.bullet(msg_manager)
         reply["info"].append(f"鏽迹斑斑的轉盤開始變換……現在是世界線[{cls.reply()}]")
-        game["reply"]["note"]["ammo"] = f"彈仓: {ammo_live} / {ammo}"
+        reply["note"]["ammo"] = True
         return True
 
 
 class 牛奶(PropComp, BaseProp):
     name = "牛奶"
-    brief = "使目标抽取 2 个道具, 其余赌徒抽取 1 个道具."
+    brief = "在特定道具池中, 使目标抽取 2 个道具, 其余赌徒抽取 1 个道具."
     pool = (
         "手铐",
         "锯子",
@@ -422,14 +430,15 @@ class 牛奶(PropComp, BaseProp):
 
     @classmethod
     def apply(cls, msg_manager, target):
-        game = msg_manager.val["game"]
-        data, reply = game["data"], game["reply"]
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
         RegGameWork.draw_prop(msg_manager, target, 2, cls.pool)
-        for pl in data["order"]:
+        for pl in order:
             if pl != target:
                 RegGameWork.draw_prop(msg_manager, pl, 1, cls.pool)
         name = RegGameWork.get_name(game)
-        if target == data["shooter"]:
+        if target == shooter:
             reply["info"].append(f"{name}飲下{cls.reply()}")
         else:
             reply["info"].append(
@@ -440,7 +449,7 @@ class 牛奶(PropComp, BaseProp):
 
 class 金币(PropComp, BaseProp):
     name = "金币"
-    brief = "兑换任意 1 个未被ban的道具.\n#增加指令\n购买(道具名) //使用金币兑换道具."
+    brief = "兑换任意 1 个未被ban的道具. 增加指令: 购买(道具名)."
 
     @classmethod
     def init(cls):
@@ -449,25 +458,26 @@ class 金币(PropComp, BaseProp):
 
         @commands.route("play", f"^(?:购买|購買) *({'|'.join(prop_list)})$")
         def purchase(plugin_event, Proc, msg_manager, groups):
-            user_id, game = msg_manager.user_id, msg_manager.val["game"]
-            data = game["data"]
-            shooter = data["shooter"]
+            user_id = msg_manager.user_id
+            game, data, reply, tmp, modify, players, order, shooter, bullet = (
+                RegGameWork.get_index(msg_manager)
+            )
             if user_id != shooter:
-                reply = msg_manager.msg_format(
+                msg_reply = msg_manager.msg_format(
                     "strMrGamblerTurn",
                     {"tGamblerName": RegGameWork.get_name(game, shooter)},
                 )
-                plugin_event.reply(reply)
+                plugin_event.reply(msg_reply)
                 return
-            if "金币" not in data["players"][user_id]["props"]:
-                reply = msg_manager.msg_format(
+            if "金币" not in players[user_id]["props"]:
+                msg_reply = msg_manager.msg_format(
                     "strMrGamblerNoProp", {"tPropName": "金币"}
                 )
-                plugin_event.reply(reply)
+                plugin_event.reply(msg_reply)
                 return
-            cls.purchase(game, user_id, groups[0])
-            reply = RegGameWork.format_reply(game)
-            plugin_event.reply(reply)
+            cls.purchase(msg_manager, user_id, groups[0])
+            msg_reply = RegGameWork.format_reply(msg_manager)
+            plugin_event.reply(msg_reply)
             return
 
     @staticmethod
@@ -477,31 +487,37 @@ class 金币(PropComp, BaseProp):
         )
 
     @classmethod
-    def purchase(cls, game, user_id, prop):
-        data = game["data"]
+    def purchase(cls, msg_manager, user_id, prop):
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
         if prop in game["mode"]["props"]["ban"]:
-            game["reply"]["info"].append(f"{prop}被禁售了.")
+            reply["info"].append(f"{prop}被禁售了.")
             return
-        pl_user = data["players"][user_id]
+        pl_user = players[user_id]
         props = pl_user["props"]
         props[props.index("金币")] = prop
         name = pl_user["name"]
-        reply = f"{name}向自動販賣機投入一枚{cls.reply()}的金幣, " + (
-            f"結果沒有任何反應, {name}將其砸爛，取出{prop}."
-            if random.randint(1, 4) == 1
-            else f"自動販賣機吐出{prop}."
+        reply["info"].append(
+            f"{name}向自動販賣機投入一枚{cls.reply()}的金幣, "
+            + (
+                f"結果沒有任何反應, {name}將其砸爛，取出{prop}."
+                if random.randint(1, 4) == 1
+                else f"自動販賣機吐出{prop}."
+            )
         )
-        game["reply"]["info"].append(reply)
         return
 
 
 class 止疼药(PropComp, BaseProp):
     name = "止疼药"
-    brief = "使目标在其回合结束前受到的伤害转变为等值的[神经麻痹]. 对自身使用时, 效果延长到下回合结束.\n[神经麻痹]回合结束时失去所有[神经麻痹]并受到等值的神经麻痹伤害."
+    brief = "使目标在其回合结束前受到的枪击伤害转变为等值的神经麻痹. 对自身使用时, 效果延长到下回合结束."
 
     @classmethod
     def apply(cls, msg_manager, target):
-        game, _, reply, _, _, shooter, modify = RegGameWork.get_index(msg_manager)
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
         comp = modify.setdefault("止疼药", [])
         if target in comp:
             reply["info"].append(f"{RegGameWork.get_name(game, target)}已服用止疼药.")
@@ -517,7 +533,9 @@ class 止疼药(PropComp, BaseProp):
 
     @classmethod
     def callback(cls, msg_manager, moment):
-        game, _, reply, tmp, _, shooter, modify = RegGameWork.get_index(msg_manager)
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
         comp = modify["止疼药"]
         if moment == "damage":
             target = tmp["target"]

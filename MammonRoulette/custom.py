@@ -57,13 +57,15 @@ dictStrCustom = {
     "strMrEffectManyNode": "[{tEffectName}:{tEffectStacks}]",
     "strMrEffectNoneNode": "",
     "strMrGameShooter": "\n槍手:〔{tGamblerIdx}〕{tGamblerName}",
-    "strMrGameNowBulletShow": "\n當前子彈: {tNowBulletType}",
+    "strMrGameNowBulletShow": " 當前子彈: {tNowBulletType}",
     "strMrGameNowBulletHide": "",
     "strMrGameAmmoShow": "\n彈仓: {tAmmoLiveCount} / {tAmmoCount}",
     "strMrGameAmmoHide": "\n霰彈槍隱匿于迷霧之中.",
     "strMrGameDeadList": "\n滅亡: {tDeadList}",
     "strMrGameDeadNone": "",
-    "strMrSituationResult": "{tGamblerData}▁▁▁▁▁▁▁▁▁▁▁▁▁▁{tShooter}{tGameNowBullet}{tGameAmmo}{tGameDeadList}",
+    "strGameReplyInfo": "{tInfo}",
+    "strGameReplyNote": "▁▁▁▁▁▁▁▁▁▁▁▁▁▁{tShooter}{tGameAmmo}{tGameNowBullet}",
+    "strMrSituationResult": "{tGamblerData}▁▁▁▁▁▁▁▁▁▁▁▁▁▁{tShooter}{tGameAmmo}{tGameNowBullet}{tGameDeadList}",
 }
 dictStrCustomNote = {
     "strMrSignedResult": "【签署生死状】指令 注册或修改名称.",
@@ -115,16 +117,16 @@ dictTValue = {
     "tGamblerName": "",  # 赌徒名称
     "tGamblerIdx": "N/A",  # 赌徒索引
     "tGamblerRanking": "N/A",  # 赌徒排名
-    "tGamblerPoints": "0",  # 赌徒积分/赏金
+    "tGamblerPoints": "N/A",  # 赌徒积分/赏金
     "tGamblerRecord": "N/A",  # 赌徒战绩
     "tGamblerHp": "N/A",  # 赌徒血量
     # 赌徒战绩统计
-    "tGamblerKills": "0",  # 击杀数
-    "tGamblerSuicide": "从未",  # 自杀次数
-    "tGamblerSurrender": "从不",  # 投降次数
-    "tGamblerWins": "0",  # 胜利次数
-    "tGamblerLosses": "0",  # 失败次数
-    "tGamblerWinRate": "0",  # 胜率
+    "tGamblerKills": "N/A",  # 击杀数
+    "tGamblerSuicide": "N/A",  # 自杀次数
+    "tGamblerSurrender": "N/A",  # 投降次数
+    "tGamblerWins": "N/A",  # 胜利次数
+    "tGamblerLosses": "N/A",  # 失败次数
+    "tGamblerWinRate": "N/A",  # 胜率
     # 排行榜相关
     "tLeaderboardType": "N/A",  # 排行榜类型
     "tGamblerTopList": "N/A",  # 赌徒上榜列表
@@ -138,12 +140,12 @@ dictTValue = {
     "tSeatsMin": "N/A",  # 最小座位数
     "tSeatsDef": "N/A",  # 默认座位数
     # 道具相关
-    "tPropName": "N/A",  # 道具名称
+    "tPropName": "",  # 道具名称
     "tPropCount": "N/A",  # 道具数量
     "tGamblerProps": "N/A",  # 赌徒持有的道具
     "tDrawnProps": "N/A",  # 玩家抽取的道具
     # 效果相关
-    "tEffectName": "N/A",  # 效果名称
+    "tEffectName": "",  # 效果名称
     "tEffectStacks": "N/A",  # 效果层数
     "tGamblerEffect": "N/A",  # 赌徒持有的效果
     # 子弹/弹药相关
@@ -154,7 +156,7 @@ dictTValue = {
     # 回复相关
     "tDeadList": "N/A",  # 死亡列表
     "tGamblerData": "N/A",  # 赌徒数据
-    "tShooter": "N/A",  # 枪手信息
+    "tShooter": "",  # 枪手信息
     "tGameNowBullet": "N/A",  # 回复-当前子弹
     "tGameAmmo": "N/A",  # 回复-弹药信息
     "tGameDeadList": "N/A",  # 回复-死亡列表

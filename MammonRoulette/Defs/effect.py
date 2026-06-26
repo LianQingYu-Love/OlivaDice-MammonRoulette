@@ -41,11 +41,13 @@ class 神经麻痹(EffectComp, BaseEffect):
     """
 
     name = "神经麻痹"
-    brief = "回合结束时失去所有[神经麻痹], 并失去等同值+1的HP."
+    brief = "回合结束时失去所有[神经麻痹], 并失去等值的HP."
 
     @classmethod
     def apply(cls, msg_manager, target, stacks):
-        game, _, _, _, players, _, modify = RegGameWork.get_index(msg_manager)
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
         RegGameWork.create_effect_event(game, "神经麻痹", target, stacks)
         comp = modify.setdefault("神经麻痹", {})
         comp.setdefault(target, {"final_attacker": ""})
@@ -53,7 +55,9 @@ class 神经麻痹(EffectComp, BaseEffect):
 
     @classmethod
     def callback(cls, msg_manager, moment, target, stacks):
-        game, _, reply, tmp, _, shooter, modify = RegGameWork.get_index(msg_manager)
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
         if moment != "end_round" or target != shooter:
             return False
         comp = modify["神经麻痹"]
