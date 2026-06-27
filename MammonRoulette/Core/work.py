@@ -259,9 +259,10 @@ class RegGameWork:
             is_attack_me=is_attack_me,
             murderer=murderer,
         )
-        target, dmg, is_attack_me, murderer = (
+        target, dmg, dmg_type, is_attack_me, murderer = (
             tmp["target"],
             tmp["dmg"],
+            tmp["dmg_type"],
             tmp["is_attack_me"],
             tmp["murderer"],
         )
