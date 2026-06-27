@@ -86,8 +86,8 @@ def signed(plugin_event, Proc, msg_manager, groups):
                     "losses": 0,
                 },
             )
-    reply = msg_manager.msg_format("strMrSignedResult", {"tGamblerName": name})
-    plugin_event.reply(reply)
+    msg_reply = msg_manager.msg_format("strMrSignedResult", {"tGamblerName": name})
+    plugin_event.reply(msg_reply)
     return
 
 
@@ -98,8 +98,8 @@ def card(plugin_event, Proc, msg_manager, groups):
     with DataBase(DB_PATH) as db:
         gambler_info = db.select("gambler", "*", "user_id = ?", target)
         if not gambler_info:
-            reply = msg_manager.msg_format("strMrCardNone")
-            plugin_event.reply(reply)
+            msg_reply = msg_manager.msg_format("strMrCardNone")
+            plugin_event.reply(msg_reply)
             return
         gambler_info = gambler_info[0]
         gambler_ranking = db.select(
@@ -108,7 +108,7 @@ def card(plugin_event, Proc, msg_manager, groups):
     wins, losses = int(gambler_info["wins"]), int(gambler_info["losses"])
     total = wins + losses
     win_rate = f"{ round(wins/total*100 ,2) } %" if total > 0 else "未參與過輪盤"
-    reply = msg_manager.msg_format(
+    msg_reply = msg_manager.msg_format(
         "strMrCardHas",
         {
             "tGamblerName": gambler_info["name"],
@@ -122,7 +122,7 @@ def card(plugin_event, Proc, msg_manager, groups):
             "tGamblerWinRate": win_rate,
         },
     )
-    plugin_event.reply(reply)
+    plugin_event.reply(msg_reply)
     return
 
 
@@ -162,7 +162,7 @@ def leaderboard(plugin_event, Proc, msg_manager, groups):
         )
         for idx, gambler_info in enumerate(gambler_list)
     )
-    reply = msg_manager.msg_format(
+    msg_reply = msg_manager.msg_format(
         "strMrLeaderboardResult",
         {
             "tLeaderboardType": ranking_type,
@@ -172,7 +172,7 @@ def leaderboard(plugin_event, Proc, msg_manager, groups):
             "tGamblerCount": gambler_total[0][0],
         },
     )
-    plugin_event.reply(reply)
+    plugin_event.reply(msg_reply)
     return
 
 
@@ -198,7 +198,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
     )
     seats = int(seats) if seats else seats_def
     if not (seats_min <= seats <= seats_max):
-        reply = msg_manager.msg_format(
+        msg_reply = msg_manager.msg_format(
             "strMrGameSeatsError",
             {
                 "tGameMode": mode_name,
@@ -207,7 +207,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
                 "tSeatsDef": seats_def,
             },
         )
-        plugin_event.reply(reply)
+        plugin_event.reply(msg_reply)
         return
     # endregion
     game_start = game.get("start", False)
@@ -267,14 +267,14 @@ def match_game(plugin_event, Proc, msg_manager, groups):
             }
         )
     elif game_start:
-        reply = msg_manager.msg_format("strMrGameStarted")
-        plugin_event.reply(reply)
+        msg_reply = msg_manager.msg_format("strMrGameStarted")
+        plugin_event.reply(msg_reply)
         return
     elif mode_name != game["mode"]["name"]:
-        reply = msg_manager.msg_format(
+        msg_reply = msg_manager.msg_format(
             "strMrGameModeError", {"tGameMode": game["mode"]["name"]}
         )
-        plugin_event.reply(reply)
+        plugin_event.reply(msg_reply)
         return
     # endregion
     data = game["data"]
@@ -320,7 +320,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
         )
         situation(plugin_event, Proc, msg_manager, None)
     else:
-        reply = msg_manager.msg_format(
+        msg_reply = msg_manager.msg_format(
             "strMrGamePrep",
             {
                 "tGameMode": mode_name,
@@ -328,7 +328,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
                 "tSeatsMax": seats,
             },
         )
-        plugin_event.reply(reply)
+        plugin_event.reply(msg_reply)
         return
     # endregion
 
@@ -352,10 +352,10 @@ def exit_game(plugin_event, Proc, msg_manager, groups):
     del data["players"][user_id]
     if not order:
         game.clear()
-        reply = msg_manager.msg_format("strMrGameDismiss")
+        msg_reply = msg_manager.msg_format("strMrGameDismiss")
     else:
-        reply = msg_manager.msg_format("strMrGameRemain", {"tSeatsHas": len(order)})
-    plugin_event.reply(reply)
+        msg_reply = msg_manager.msg_format("strMrGameRemain", {"tSeatsHas": len(order)})
+    plugin_event.reply(msg_reply)
     return
 
 
