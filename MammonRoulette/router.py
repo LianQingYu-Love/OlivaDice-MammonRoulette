@@ -259,7 +259,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
                     "info": [],
                     "note": {
                         "ammo": False,
-                        "shooter": False,
+                        "round": False,
                     },
                     "only": "",
                 },

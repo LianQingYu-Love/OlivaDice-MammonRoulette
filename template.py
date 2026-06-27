@@ -50,7 +50,7 @@ game = {
         "info": [],  # 常规信息
         "note": {
             "ammo": bool,  # 弹药消息刷新
-            "shooter": str, # 枪手信息刷新
+            "round": bool,  # 轮次信息刷新
         },  # 分割线以下的消息
         "only": "",  # 会覆盖其他消息
     },

@@ -86,7 +86,7 @@ class RegGameWork:
                         )
                     }
                 )
-            if note["shooter"]:
+            if note["round"]:
                 # 枪手
                 t_value.update(
                     {
@@ -100,7 +100,7 @@ class RegGameWork:
                     }
                 )
             msg_reply = msg_manager.msg_format("strGameReplyInfo", t_value)
-            if note["ammo"] or note["shooter"]:
+            if note["ammo"] or note["round"]:
                 msg_reply += "\n" + msg_manager.msg_format("strGameReplyNote", t_value)
         else:
             msg_reply = reply["only"]
@@ -394,7 +394,7 @@ class RegGameWork:
         if shooter != data["shooter"]:
             data["shooter"] = shooter
             pl_shooter = players[shooter]
-            reply["note"]["shooter"] = True
+            reply["note"]["round"] = True
             cls.handle_event(msg_manager, "switch")
         return
 
