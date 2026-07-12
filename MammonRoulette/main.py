@@ -53,14 +53,15 @@ class Event(object):
                     game_data = json.load(f)
             else:
                 Proc.log(
-                    1, "[恶魔轮盘] - (数据) -> 对局数据存储文件不存在, 尝试创建中……"
+                    1,
+                    "[unity] - [恶魔轮盘] - <game_data> - 本地对局数据存储文件不存在, 尝试创建.",
                 )
                 with open(GAME_PATH, "w", encoding="utf-8") as f:
                     json.dump({}, f)
         except Exception as e:
             Proc.log(
                 3,
-                f"[恶魔轮盘] - (数据) -> 对局数据存储文件丢失, 对局数据清空!\n错误原因:{str(e)}",
+                f"[unity] - [恶魔轮盘] - <game_data> - 本地对局数据存储文件丢失, 对局数据清空!\n{str(e)}",
             )
         # endregion
         ModeComp.init_after()
@@ -79,14 +80,18 @@ class Event(object):
                 main_enabled = 1 if not unity_enabled("MrMainEnabled") else -1
                 setConsoleSwitchByHash("MrMainEnabled", main_enabled)
                 Proc.log(
-                    2, "[恶魔轮盘] - {unity} - (总开关) -> " + str(main_enabled == 1)
+                    2,
+                    "[unity] - [恶魔轮盘] - <MammonRoulette_Menu_main_enabled> - "
+                    + str(main_enabled == 1),
                 )
             # poke开关
             elif plugin_event.data.event == "MammonRoulette_Menu_poke_enabled":  # type: ignore
                 poke_enabled = 1 if not unity_enabled("MrPokeEnabled") else -1
                 setConsoleSwitchByHash("MrPokeEnabled", poke_enabled)
                 Proc.log(
-                    2, "[恶魔轮盘] - {unity} - (poke开关) -> " + str(poke_enabled == 1)
+                    2,
+                    "[unity] - [恶魔轮盘] - <MammonRoulette_Menu_poke_enabled> - "
+                    + str(poke_enabled == 1),
                 )
             # debug
             elif plugin_event.data.event == "MammonRoulette_Menu_debug":  # type: ignore
@@ -94,7 +99,8 @@ class Event(object):
                 setConsoleSwitchByHash("MrDebugEnabled", debug_enabled)
                 Proc.log(
                     2,
-                    "[恶魔轮盘] - {unity} - (debug开关) -> " + str(debug_enabled == 1),
+                    "[unity] - [恶魔轮盘] - <MammonRoulette_Menu_debug> - "
+                    + str(debug_enabled == 1),
                 )
             # 开关重置
             elif plugin_event.data.event == "MammonRoulette_Menu_reset":  # type: ignore
@@ -103,14 +109,17 @@ class Event(object):
                 setConsoleSwitchByHash("MrDebugEnabled", -1)
                 Proc.log(
                     2,
-                    "[恶魔轮盘] - (开关) -> 总开关: true; poke开关: true; debug开关: false.",
+                    "[unity] - [恶魔轮盘] - 全局开关重置."
+                    "<MammonRoulette_Menu_main_enabled> - true"
+                    "<MammonRoulette_Menu_poke_enabled> - true"
+                    "<MammonRoulette_Menu_debug> - false",
                 )
             # 数据重加载
             elif plugin_event.data.event == "MammonRoulette_Menu_clear_cache":  # type: ignore
                 with open(GAME_PATH, "w", encoding="utf-8") as f:
                     json.dump({}, f)
                 game_data.clear()
-                Proc.log(2, "[恶魔轮盘] - (数据) -> 清除缓存.")
+                Proc.log(2, "[unity] - [恶魔轮盘] - <game_data> - None")
 
     # region reply
     def group_message(plugin_event, Proc):  # type: ignore
@@ -210,4 +219,4 @@ def unity_reply(plugin_event, Proc, msg_manager):
     if debug:
         with open(GAME_PATH, "w", encoding="utf-8") as f:
             json.dump(game_data, f, ensure_ascii=False, indent=4)
-        Proc.log(0, f"[恶魔轮盘] - (debug) -> state: {state}; msg: {msg}.")
+        Proc.log(0, f"[unity] - [恶魔轮盘] - [debug] - commands(state, msg).")
