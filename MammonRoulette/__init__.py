@@ -14,5 +14,5 @@ from . import Core
 from . import Defs
 
 from . import main
-from . import custom
-from . import router
+from . import msgCustom
+from . import msgReply

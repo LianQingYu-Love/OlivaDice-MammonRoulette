@@ -12,7 +12,7 @@ import random
 import string
 
 from ..main import commands
-from ..custom import dictHelpDoc
+from ..msgCustom import dictHelpDoc
 from ..Core.cmop import ModeComp, PropComp, EffectComp
 from ..Core.work import RegGameWork
 

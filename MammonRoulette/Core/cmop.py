@@ -8,7 +8,7 @@
 @Desc      :    None
 """
 
-from ..custom import dictHelpDoc
+from ..msgCustom import dictHelpDoc
 
 
 def _():

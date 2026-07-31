@@ -158,7 +158,7 @@ def unity_enabled(switchKey, bot_hash="unity"):
     if switchValue == 0 and bot_hash != "unity":
         switchValue = OlivaDiceCore.console.getConsoleSwitchByHash(switchKey)
     if switchValue == 0:
-        switchValue = MammonRoulette.custom.dictConsoleSwitch[switchKey]
+        switchValue = MammonRoulette.msgCustom.dictConsoleSwitch[switchKey]
     return switchValue == 1
 
 
