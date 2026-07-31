@@ -40,6 +40,11 @@ class RegGameWork:
         return game, data, reply, tmp, modify, players, order, shooter, bullet
 
     @staticmethod
+    def reply_info(msg_manager, info: str):
+        reply = msg_manager.val["game"]["reply"]
+        reply["info"].append(info)
+
+    @staticmethod
     def format_reply(msg_manager) -> str:  # 格式化回复消息
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
@@ -119,27 +124,48 @@ class RegGameWork:
     # endregion
     # region 事件
     @staticmethod
-    def get_effect_stacks(game, effect, target):
+    def get_prop_data(game, prop: str):
+        prop_event = game["data"]["prop_event"]
+        for prop_data in prop_event:
+            if prop_data["name"] == prop:
+                return prop_data
+        return {}
+
+    @staticmethod
+    def get_effect_stacks(game, effect: str, target: str):
         return game["data"]["players"][target]["effect_event"].get(effect, 0)
 
-    @staticmethod
-    def create_prop_event(game, prop, moments: STRING_ROW | str):
-        moments = (moments,) if type(moments) == str else moments
-        for moment in moments:
-            game["data"]["prop_event"][moment].append(prop)
-        return
+    # @staticmethod
+    # def create_prop_event(game, prop, moments: STRING_ROW | str):
+    #     moments = (moments,) if type(moments) == str else moments
+    #     for moment in moments:
+    #         game["data"]["prop_event"][moment].append(prop)
+    #     return
 
     @staticmethod
-    def create_effect_event(game, effect, target, stacks: int = 1):
+    def create_prop_event(game, prop_data: dict):
+        prop_event = game["data"]["prop_event"]
+        prop_event.append(prop_data)
+
+    @staticmethod
+    def create_effect_event(game, effect_data: dict, target: str):
         effect_event = game["data"]["players"][target]["effect_event"]
-        effect_event[effect] = effect_event.get(effect, 0) + stacks
+        effect_event[effect_data["name"]] = effect_data
         return
 
+    # @staticmethod
+    # def remove_prop_event(game, prop, moment: STRING_ROW | str):
+    #     moments = (moment,) if type(moment) == str else moment
+    #     for moment in moments:
+    #         game["data"]["prop_event"][moment].remove(prop)
+    #     return
     @staticmethod
-    def remove_prop_event(game, prop, moment: STRING_ROW | str):
-        moments = (moment,) if type(moment) == str else moment
-        for moment in moments:
-            game["data"]["prop_event"][moment].remove(prop)
+    def remove_prop_event(game, prop):
+        prop_event = game["data"]["prop_event"]
+        for prop_data in prop_event:
+            if prop_data["name"] == prop:
+                prop_event.remove(prop_data)
+                break
         return
 
     @staticmethod
@@ -150,21 +176,21 @@ class RegGameWork:
             del effect_event[effect]
         return
 
-    @staticmethod
-    def handle_event(msg_manager, moment, **kwargs):
+    @classmethod
+    def handle_event(cls, msg_manager, moment, **kwargs):
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
         tmp.update(kwargs)
-        prop_event = data["prop_event"][moment]
-        for prop in reversed(prop_event):
+        prop_event = data["prop_event"]
+        for prop_data in reversed(prop_event):
+            prop = prop_data["name"]
             if PropComp.trigger(msg_manager, prop, moment):
-                prop_event.remove(prop)
+                cls.remove_prop_event(game, prop)
         for target in players:
             effect_event = players[target]["effect_event"]
             for effect in list(effect_event.keys()):
-                stacks = effect_event[effect]
-                if EffectComp.trigger(msg_manager, effect, moment, target, stacks):
+                if EffectComp.trigger(msg_manager, effect, moment, target):
                     del effect_event[effect]
         ModeComp.trigger(msg_manager, moment)
         return
@@ -204,14 +230,15 @@ class RegGameWork:
             draw_props.append(prop)
         if draw_props:
             link = msg_manager.msg_format("strMrLink")
-            reply["info"].append(
+            cls.reply_info(
+                msg_manager,
                 msg_manager.msg_format(
                     "strMrGamblerDrawnProps",
                     {
                         "tGamblerName": cls.get_name(game, user_id),
                         "tDrawnProps": link.join(draw_props),
                     },
-                )
+                ),
             )
         return
 
@@ -239,7 +266,7 @@ class RegGameWork:
         cls.handle_event(msg_manager, "reload")
         ammo_live, ammo_blank = random.randint(1, 4), random.randint(1, 4)
         data["ammo_live"], data["ammo_blank"] = ammo_live, ammo_blank
-        reply["info"].append(msg_manager.msg_format("strMrGameAmmoRanOut"))
+        cls.reply_info(msg_manager, msg_manager.msg_format("strMrGameAmmoRanOut"))
         return ammo_live, ammo_blank
 
     @classmethod
@@ -248,7 +275,7 @@ class RegGameWork:
             RegGameWork.get_index(msg_manager)
         )
         is_attack_me = target == shooter
-        dmg_type = "shoot"
+        dmg_type = ""
         murderer = shooter
         cls.handle_event(
             msg_manager,
@@ -274,7 +301,8 @@ class RegGameWork:
             cls.damage(msg_manager, target, dmg, murderer)
             data["ammo_live"] -= 1
             hp_before, hp_now = tmp["hp_before"], tmp["hp_now"]
-            reply["info"].append(
+            cls.reply_info(
+                msg_manager,
                 msg_manager.msg_format(
                     "strMrGamblerWasAmmoLiveShot",
                     {
@@ -282,13 +310,14 @@ class RegGameWork:
                         "tHpBefore": hp_before,
                         "tHpNow": hp_now,
                     },
-                )
+                ),
             )
         else:
             data["ammo_blank"] -= 1
             if is_attack_me:
                 pl_shooter["actions"] += 1
-            reply["info"].append(
+            cls.reply_info(
+                msg_manager,
                 msg_manager.msg_format(
                     "strMrGamblerWasAmmoBlankShot",
                     {
@@ -296,7 +325,7 @@ class RegGameWork:
                         "tHpBefore": pl_target["hp"],
                         "tHpNow": pl_target["hp"],
                     },
-                )
+                ),
             )
         cls.bullet(msg_manager)
         cls.end_round(msg_manager)
@@ -307,7 +336,7 @@ class RegGameWork:
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
-        dmg_type = tmp.get("dmg_type", "shoot")
+        dmg_type = tmp.get("dmg_type", "")
         cls.handle_event(
             msg_manager,
             "damage",
@@ -326,7 +355,7 @@ class RegGameWork:
         tmp["hp_before"] = pl_target["hp"]
         pl_target["hp"] -= dmg
         tmp["hp_now"] = pl_target["hp"]
-        if pl_target["hp"] <= 0:
+        if pl_target["hp"] <= 0 and target in order:
             cls.dead(msg_manager, target, murderer)
         return
 
@@ -346,17 +375,19 @@ class RegGameWork:
         name = pl_target["name"]
         if tmp["is_attack_me"]:
             pl_target["suicide"] = True
-            reply["info"].append(
-                msg_manager.msg_format("strMrGamblerSuicide", {"tGamblerName": name})
+            cls.reply_info(
+                msg_manager,
+                msg_manager.msg_format("strMrGamblerSuicide", {"tGamblerName": name}),
             )
         else:
             pl_murderer["kills"] += 1
             pl_target["suicide"] = False
-            reply["info"].append(
+            cls.reply_info(
+                msg_manager,
                 msg_manager.msg_format(
                     "strMrGamblerKilled",
                     {"tGamblerName": name, "tMurdererName": pl_murderer["name"]},
-                )
+                ),
             )
         order.remove(target)
         if len(order) == 1:

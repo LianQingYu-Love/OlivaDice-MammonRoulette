@@ -246,14 +246,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
                         "ammo_show": mode_cfg.modify.ammo_show,
                         "bullet_show": mode_cfg.modify.bullet_show,
                     },
-                    "prop_event": {
-                        "shoot": [],
-                        "damage": [],
-                        "dead": [],
-                        "end_round": [],
-                        "switch": [],
-                        "reload": [],
-                    },
+                    "prop_event": [],
                 },
                 "reply": {
                     "info": [],
@@ -422,11 +415,12 @@ def surrender(plugin_event, Proc, msg_manager, groups):
     players[user_id]["surrender"] = True
     if len(order) <= 1:
         RegGameWork.end_round(msg_manager)
-    reply["info"].append(
+    RegGameWork.reply_info(
+        msg_manager,
         msg_manager.msg_format(
             "strMrGamblerSurrender",
             {"tGamblerName": RegGameWork.get_name(game, user_id)},
-        )
+        ),
     )
     msg_reply = RegGameWork.format_reply(msg_manager)
     plugin_event.reply(msg_reply)

@@ -211,12 +211,14 @@ class 金币(ModeComp, BaseMode):
         comp = modify.setdefault("金币", [])
         if target not in comp and players[target]["hp"] - dmg <= 2:
             if RegGameWork.get_prop(game, target, "金币"):
-                reply["info"].append(
-                    f"金光乍現！一枚金幣落入{RegGameWork.get_name(game,target)}手中."
+                RegGameWork.reply_info(
+                    msg_manager,
+                    f"金光乍現！一枚金幣落入{RegGameWork.get_name(game,target)}手中.",
                 )
             else:
-                reply["info"].append(
-                    f"金光乍現！一枚金幣落入{RegGameWork.get_name(game,target)}手中, 但不慎滑落."
+                RegGameWork.reply_info(
+                    msg_manager,
+                    f"金光乍現！一枚金幣落入{RegGameWork.get_name(game,target)}手中, 但不慎滑落.",
                 )
             comp.append(target)
 
@@ -275,7 +277,7 @@ class 勇者(ModeComp, BaseMode):
         )
         if bullet and random.randint(1, 3) == 1:
             tmp["dmg"] += 1
-            reply["info"].append(f"伴隨七彩光芒，魔彈發射.")
+            RegGameWork.reply_info(msg_manager, f"伴隨七彩光芒，魔彈發射.")
         target, is_attack_me = tmp["target"], tmp["is_attack_me"]
         if is_attack_me and not bullet:
             RegGameWork.draw_prop(msg_manager, target, 2)
@@ -349,7 +351,8 @@ class 赌徒(ModeComp, BaseMode):
             data["bullet"] = not bullet
             data["ammo_blank"] += -1 if bullet else 1
             data["ammo_live"] += 1 if bullet else -1
-            reply["info"].append(f"子彈擊穿突然出現的{cls.reply()}.")
+            RegGameWork.reply_info(msg_manager, f"子彈擊穿突然出現的{cls.reply()}.")
         if data["bullet"] and random.randint(1, 3) == 1:
             tmp["dmg"] += 1
-            reply["info"].append(f"伴隨七彩光芒，魔彈發射.")
+            RegGameWork.reply_info(
+                msg_manager, f"伴隨七彩光芒，魔彈發射.")

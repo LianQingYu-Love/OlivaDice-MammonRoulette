@@ -81,5 +81,5 @@ class EffectComp(Registerable):
         return cls.get(effect).apply(msg_manager, target, stacks)
 
     @classmethod
-    def trigger(cls, msg_manager, effect, moment, target, stacks=1):
-        return cls.get(effect).callback(msg_manager, moment, target, stacks)
+    def trigger(cls, msg_manager, effect, moment, target):
+        return cls.get(effect).callback(msg_manager, moment, target)

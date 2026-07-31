@@ -37,14 +37,7 @@ game = {
             "ammo_show": bool,  # 显示弹药
             "bullet_show": bool,  # 显示子弹
         },
-        "prop_event": {
-            "shoot": [],
-            "damage": [],
-            "dead": [],
-            "end_round": [],
-            "switch": [],
-            "reload": [],
-        },
+        "prop_event": [],  # 道具事件
     },
     "reply": {
         "info": [],  # 常规信息
@@ -56,3 +49,19 @@ game = {
     },
     "tmp": {},
 }
+
+moment = [
+    "shoot",
+    "damage",
+    "dead",
+    "end_round",
+    "switch",
+    "reload",
+]
+
+prop_data = {
+    "name": str,  # 道具名称
+    "data": {},  # 道具数据
+}
+key = "effect"
+effect_data = {"stacks": int, "data": {}}
