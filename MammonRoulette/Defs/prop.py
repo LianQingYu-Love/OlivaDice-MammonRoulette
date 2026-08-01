@@ -589,7 +589,7 @@ class 烟花(PropComp, BaseProp):
             for pl in order:
                 RegGameWork.draw_prop(msg_manager, pl, draws)
         else:
-            reply["only"] += msg_reply + situation_str
+            reply["only"] += "\n" + msg_reply + situation_str
         return True
 
     @classmethod

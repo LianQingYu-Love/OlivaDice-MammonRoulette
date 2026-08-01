@@ -301,7 +301,6 @@ class RegGameWork:
             tmp["consume_action"],
         )
         pl_target = players[target]
-
         if data["bullet"]:
             if consume_action is None:
                 consume_action = 1
@@ -322,6 +321,9 @@ class RegGameWork:
             )
         else:
             data["ammo_blank"] -= 1
+            if consume_action is None:
+                consume_action = 0 if is_attack_me else 1
+            tmp["consume_action"] = consume_action
             cls.reply_info(
                 msg_manager,
                 msg_manager.msg_format(
@@ -429,7 +431,7 @@ class RegGameWork:
             RegGameWork.get_index(msg_manager)
         )
         cls.handle_event(msg_manager, "end_round")
-        consume_action = tmp.get("consume_action") or 1
+        consume_action = tmp.get("consume_action") or 0
         pl_shooter = players[shooter]
         pl_shooter["actions"] -= consume_action
         if pl_shooter["actions"] < 1:

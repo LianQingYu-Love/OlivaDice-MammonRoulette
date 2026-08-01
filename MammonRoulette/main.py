@@ -212,6 +212,7 @@ def unity_reply(plugin_event, Proc, msg_manager):
     # endregion
     forward = commands.search(state, msg, commands.SearchMode.ANY)
     if forward:
+        game["tmp"] = {}
         handler, groups = forward[0]
         handler(plugin_event, Proc, msg_manager, groups)
         if game.get("over", False):
