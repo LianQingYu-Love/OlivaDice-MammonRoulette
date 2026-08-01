@@ -246,14 +246,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
                         "ammo_show": mode_cfg.modify.ammo_show,
                         "bullet_show": mode_cfg.modify.bullet_show,
                     },
-                    "prop_event": {
-                        "shoot": [],
-                        "damage": [],
-                        "dead": [],
-                        "end_round": [],
-                        "switch": [],
-                        "reload": [],
-                    },
+                    "prop_event": [],
                 },
                 "reply": {
                     "info": [],
@@ -313,7 +306,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
                 "info": [],
                 "note": {
                     "ammo": False,
-                    "shooter": False,
+                    "round": False,
                 },
                 "only": "",
             }
@@ -406,9 +399,8 @@ def use_prop(plugin_event, Proc, msg_manager, groups):
         return
     if PropComp.use(msg_manager, prop, target):
         RegGameWork.remove_prop(game, user_id, prop)
-        msg_reply = RegGameWork.format_reply(msg_manager)
-        plugin_event.reply(msg_reply)
-        return
+    msg_reply = RegGameWork.format_reply(msg_manager)
+    plugin_event.reply(msg_reply)
     return
 
 
@@ -422,11 +414,12 @@ def surrender(plugin_event, Proc, msg_manager, groups):
     players[user_id]["surrender"] = True
     if len(order) <= 1:
         RegGameWork.end_round(msg_manager)
-    reply["info"].append(
+    RegGameWork.reply_info(
+        msg_manager,
         msg_manager.msg_format(
             "strMrGamblerSurrender",
             {"tGamblerName": RegGameWork.get_name(game, user_id)},
-        )
+        ),
     )
     msg_reply = RegGameWork.format_reply(msg_manager)
     plugin_event.reply(msg_reply)
@@ -456,7 +449,8 @@ def situation(plugin_event, Proc, msg_manager, groups):
                 )
             )
         effects = []
-        for effect, stacks in pl["effect_event"].items():
+        for effect, effect_data in pl["effect_event"].items():
+            stacks = effect_data["stacks"]
             effects.append(
                 msg_manager.msg_format(
                     "strMrEffectOneNode" if stacks == 1 else "strMrEffectManyNode",
@@ -474,7 +468,7 @@ def situation(plugin_event, Proc, msg_manager, groups):
             ),
             "tGamblerEffect": (
                 link.join(effects)
-                if effects
+                if pl["effect_event"]
                 else msg_manager.msg_format("strMrEffectNoneNode")
             ),
             "tGamblerActions": pl["actions"],

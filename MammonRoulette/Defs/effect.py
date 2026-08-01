@@ -25,21 +25,38 @@ class BaseEffect:
         pass
 
     @classmethod
-    def callback(cls, msg_manager, moment, target, stacks) -> bool | None:
+    def callback(cls, msg_manager, moment, target) -> bool | None:
+        pass
+
+    @classmethod
+    def unapply(cls, msg_manager) -> bool | None:
         pass
 
 
-class 神经麻痹(EffectComp, BaseEffect):
-    """
-    "modify":{
-        "神经麻痹":{
-            "user_id":{
-                "final_attacker": str,
-            }
-        }
-    }
-    """
+class 束缚(EffectComp, BaseEffect):
+    name = "束缚"
+    brief = ""
 
+    @classmethod
+    def apply(cls, msg_manager, target, stacks):
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
+        effect_data = {"stacks": 1}
+        RegGameWork.create_effect_event(game, cls.name, effect_data, target)
+        return True
+
+    @classmethod
+    def callback(cls, msg_manager, moment, target):
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
+        if moment != "switch" or target != shooter:
+            return False
+        return True
+
+
+class 神经麻痹(EffectComp, BaseEffect):
     name = "神经麻痹"
     brief = "回合结束时失去所有[神经麻痹], 并失去等值的HP."
 
@@ -48,25 +65,44 @@ class 神经麻痹(EffectComp, BaseEffect):
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
-        RegGameWork.create_effect_event(game, "神经麻痹", target, stacks)
-        comp = modify.setdefault("神经麻痹", {})
-        comp.setdefault(target, {"final_attacker": ""})
+        if cls.name not in players[target]["effect_event"]:
+            expired = False if target == shooter else True
+            players[target]["effect_event"][cls.name] = {
+                "stacks": 0,
+                "data": [],
+                "expired": expired,
+            }
+        comp = players[target]["effect_event"][cls.name]
+        comp["stacks"] += stacks
+        comp["data"].append({"dmg": stacks, "murderer": tmp["murderer"]})
         return True
 
     @classmethod
-    def callback(cls, msg_manager, moment, target, stacks):
+    def callback(cls, msg_manager, moment, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
-        if moment != "end_round" or target != shooter:
+        if moment == "damage" and target == tmp["target"] and tmp["dmg_type"] == "":
+            comp = players[target]["effect_event"][cls.name]
+            stacks_before = comp["stacks"]
+            dmg, tmp["dmg"] = tmp["dmg"], 0
+            EffectComp.give(msg_manager, cls.name, target, dmg)
+            RegGameWork.reply_info(
+                msg_manager,
+                f"{RegGameWork.get_name(game, target)}感到神经麻痹[{stacks_before}->{stacks_before+dmg}].",
+            )
             return False
-        comp = modify["神经麻痹"]
-        murderer = comp[target]["final_attacker"]
-        del comp[target]
-        tmp["dmg_type"] = "神经麻痹"
-        tmp["is_attack_me"] = target == murderer
-        RegGameWork.damage(msg_manager, target, stacks, murderer)
-        reply["info"].append(
-            f"{RegGameWork.get_name(game, target)}感到神经絮乱[hp{tmp['hp_before']}->{tmp['hp_now']}]."
-        )
-        return True
+        elif moment == "end_round" and target == shooter:
+            comp = players[target]["effect_event"][cls.name]
+            if not comp["expired"]:
+                comp["expired"] = True
+                return False
+            tmp["dmg_type"] = cls.name
+            hp_before = players[target]["hp"]
+            for data in comp["data"]:
+                RegGameWork.damage(msg_manager, target, data["dmg"], data["murderer"])
+            RegGameWork.reply_info(
+                msg_manager,
+                f"{RegGameWork.get_name(game, target)}感到神经絮乱[hp{hp_before}->{tmp['hp_now']}].",
+            )
+            return True
