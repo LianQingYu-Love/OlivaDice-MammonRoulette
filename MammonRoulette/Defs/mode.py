@@ -10,7 +10,7 @@
 
 import random
 
-from ..Core.cmop import ModeComp
+from ..Core.comp import ModeComp
 from ..Core.work import RegGameWork
 
 
@@ -354,5 +354,4 @@ class 赌徒(ModeComp, BaseMode):
             RegGameWork.reply_info(msg_manager, f"子彈擊穿突然出現的{cls.reply()}.")
         if data["bullet"] and random.randint(1, 3) == 1:
             tmp["dmg"] += 1
-            RegGameWork.reply_info(
-                msg_manager, f"伴隨七彩光芒，魔彈發射.")
+            RegGameWork.reply_info(msg_manager, f"伴隨七彩光芒，魔彈發射.")

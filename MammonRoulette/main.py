@@ -17,7 +17,7 @@ import os
 from AmorLib import DataBase, FsmRouter, MsgManager, init_msgCustom
 
 from . import DB_PATH
-from .Core.cmop import ModeComp, PropComp
+from .Core.comp import ModeComp, PropComp
 
 GAME_PATH = "plugin/tmp/MammonRoulette_data.json"
 COMMON_CMD = ("priv", "ob", "prep", "play")

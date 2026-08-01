@@ -8,7 +8,7 @@
 @Desc      :    None
 """
 
-from ..Core.cmop import EffectComp
+from ..Core.comp import EffectComp
 from ..Core.work import RegGameWork
 
 

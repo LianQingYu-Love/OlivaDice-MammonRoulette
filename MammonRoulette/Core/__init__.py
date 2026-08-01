@@ -8,5 +8,5 @@
 @Desc      :    None
 """
 
-from . import cmop
+from . import comp
 from . import work
