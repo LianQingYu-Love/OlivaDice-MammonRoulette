@@ -58,6 +58,9 @@ moment = [
     "switch",
     "reload",
 ]
+# 特殊事件
+remove_prop_event = "remove"
+remove_effect_event = "remove"
 
 prop_data = {
     "name": str,  # 道具名称

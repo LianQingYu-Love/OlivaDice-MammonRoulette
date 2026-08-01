@@ -28,6 +28,10 @@ class BaseEffect:
     def callback(cls, msg_manager, moment, target) -> bool | None:
         pass
 
+    @classmethod
+    def unapply(cls, msg_manager) -> bool | None:
+        pass
+
 
 class 束缚(EffectComp, BaseEffect):
     name = "束缚"
@@ -39,7 +43,7 @@ class 束缚(EffectComp, BaseEffect):
             RegGameWork.get_index(msg_manager)
         )
         effect_data = {"stacks": 1}
-        RegGameWork.create_effect_event(game, effect_data, target)
+        RegGameWork.create_effect_event(game, cls.name, effect_data, target)
         return True
 
     @classmethod
@@ -62,7 +66,12 @@ class 神经麻痹(EffectComp, BaseEffect):
             RegGameWork.get_index(msg_manager)
         )
         if cls.name not in players[target]["effect_event"]:
-            players[target]["effect_event"][cls.name] = {"stacks": 0, "data": []}
+            expired = False if target == shooter else True
+            players[target]["effect_event"][cls.name] = {
+                "stacks": 0,
+                "data": [],
+                "expired": expired,
+            }
         comp = players[target]["effect_event"][cls.name]
         comp["stacks"] += stacks
         comp["data"].append({"dmg": stacks, "murderer": tmp["murderer"]})
@@ -73,7 +82,7 @@ class 神经麻痹(EffectComp, BaseEffect):
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
-        if moment == "damage" and target == tmp["target"]:
+        if moment == "damage" and target == tmp["target"] and tmp["dmg_type"] == "":
             comp = players[target]["effect_event"][cls.name]
             stacks_before = comp["stacks"]
             dmg, tmp["dmg"] = tmp["dmg"], 0
@@ -85,11 +94,15 @@ class 神经麻痹(EffectComp, BaseEffect):
             return False
         elif moment == "end_round" and target == shooter:
             comp = players[target]["effect_event"][cls.name]
+            if not comp["expired"]:
+                comp["expired"] = True
+                return False
             tmp["dmg_type"] = cls.name
-            for dmg, murderer in comp["data"]:
-                RegGameWork.damage(msg_manager, target, dmg, murderer)
+            hp_before = players[target]["hp"]
+            for data in comp["data"]:
+                RegGameWork.damage(msg_manager, target, data["dmg"], data["murderer"])
             RegGameWork.reply_info(
                 msg_manager,
-                f"{RegGameWork.get_name(game, target)}感到神经絮乱[hp{tmp['hp_before']}->{tmp['hp_now']}].",
+                f"{RegGameWork.get_name(game, target)}感到神经絮乱[hp{hp_before}->{tmp['hp_now']}].",
             )
             return True

@@ -154,15 +154,15 @@ dictTValue = {
     "tAmmoBlankCount": "N/A",  # 空包弹数量
     "tAmmoCount": "N/A",  # 总弹药数
     # 回复相关
-    "tDeadList": "N/A",  # 死亡列表
-    "tGamblerData": "N/A",  # 赌徒数据
+    "tDeadList": "",  # 死亡列表
+    "tGamblerData": "",  # 赌徒数据
     "tShooter": "",  # 枪手信息
-    "tGameNowBullet": "N/A",  # 回复-当前子弹
-    "tGameAmmo": "N/A",  # 回复-弹药信息
-    "tGameDeadList": "N/A",  # 回复-死亡列表
+    "tGameNowBullet": "",  # 回复-当前子弹
+    "tGameAmmo": "",  # 回复-弹药信息
+    "tGameDeadList": "",  # 回复-死亡列表
     "tHpBefore": "N/A",  # 玩家血量-受伤前
     "tHpNow": "N/A",  # 玩家血量-受伤后
-    "tWinnerName": "N/A",  # 胜利者名称
+    "tWinnerName": "",  # 胜利者名称
 }
 
 dictHelpDoc = {}

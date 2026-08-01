@@ -113,8 +113,8 @@ class RegGameWork:
             {
                 "info": [],
                 "note": {
-                    "ammo": False,
-                    "shooter": False,
+                    "ammo": modify["ammo_show"] or modify["bullet_show"],
+                    "round": False,
                 },
                 "only": "",
             }
@@ -143,15 +143,14 @@ class RegGameWork:
     #     return
 
     @staticmethod
-    def create_prop_event(game, prop_data: dict):
-        prop_event = game["data"]["prop_event"]
-        prop_event.append(prop_data)
+    def create_prop_event(msg_manager, prop_data: dict):
+        msg_manager.val["game"]["data"]["prop_event"].append(prop_data)
 
     @staticmethod
-    def create_effect_event(game, effect_data: dict, target: str):
-        effect_event = game["data"]["players"][target]["effect_event"]
-        effect_event[effect_data["name"]] = effect_data
-        return
+    def create_effect_event(msg_manager, effect: str, effect_data: dict, target: str):
+        msg_manager.val["game"]["data"]["players"][target]["effect_event"][
+            effect
+        ] = effect_data
 
     # @staticmethod
     # def remove_prop_event(game, prop, moment: STRING_ROW | str):
@@ -160,19 +159,24 @@ class RegGameWork:
     #         game["data"]["prop_event"][moment].remove(prop)
     #     return
     @staticmethod
-    def remove_prop_event(game, prop):
-        prop_event = game["data"]["prop_event"]
+    def remove_prop_event(msg_manager, prop):
+        prop_event = msg_manager.val["game"]["data"]["prop_event"]
         for prop_data in prop_event:
             if prop_data["name"] == prop:
+                PropComp.uninstall(msg_manager, prop)
                 prop_event.remove(prop_data)
                 break
         return
 
     @staticmethod
-    def remove_effect_event(game, effect, target, stacks: int = 1):
-        effect_event = game["data"]["players"][target]["effect_event"]
-        effect_event[effect] -= stacks
-        if effect_event[effect] <= 0:
+    def remove_effect_event(msg_manager, effect, target, stacks: int = 0):
+        effect_event = msg_manager.val["game"]["data"]["players"][target][
+            "effect_event"
+        ]
+        effect_data = effect_event[effect]
+        effect_data["stacks"] -= stacks
+        if effect_data["stacks"] <= 0 or stacks == 0:
+            EffectComp.uninstall(msg_manager, effect)
             del effect_event[effect]
         return
 
@@ -186,12 +190,12 @@ class RegGameWork:
         for prop_data in reversed(prop_event):
             prop = prop_data["name"]
             if PropComp.trigger(msg_manager, prop, moment):
-                cls.remove_prop_event(game, prop)
+                cls.remove_prop_event(msg_manager, prop)
         for target in players:
             effect_event = players[target]["effect_event"]
             for effect in list(effect_event.keys()):
                 if EffectComp.trigger(msg_manager, effect, moment, target):
-                    del effect_event[effect]
+                    cls.remove_effect_event(msg_manager, effect, target, 0)
         ModeComp.trigger(msg_manager, moment)
         return
 

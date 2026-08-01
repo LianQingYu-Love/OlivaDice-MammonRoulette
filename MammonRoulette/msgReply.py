@@ -306,7 +306,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
                 "info": [],
                 "note": {
                     "ammo": False,
-                    "shooter": False,
+                    "round": False,
                 },
                 "only": "",
             }
@@ -399,9 +399,8 @@ def use_prop(plugin_event, Proc, msg_manager, groups):
         return
     if PropComp.use(msg_manager, prop, target):
         RegGameWork.remove_prop(game, user_id, prop)
-        msg_reply = RegGameWork.format_reply(msg_manager)
-        plugin_event.reply(msg_reply)
-        return
+    msg_reply = RegGameWork.format_reply(msg_manager)
+    plugin_event.reply(msg_reply)
     return
 
 
@@ -450,7 +449,8 @@ def situation(plugin_event, Proc, msg_manager, groups):
                 )
             )
         effects = []
-        for effect, stacks in pl["effect_event"].items():
+        for effect, effect_data in pl["effect_event"].items():
+            stacks = effect_data["stacks"]
             effects.append(
                 msg_manager.msg_format(
                     "strMrEffectOneNode" if stacks == 1 else "strMrEffectManyNode",
@@ -468,7 +468,7 @@ def situation(plugin_event, Proc, msg_manager, groups):
             ),
             "tGamblerEffect": (
                 link.join(effects)
-                if effects
+                if pl["effect_event"]
                 else msg_manager.msg_format("strMrEffectNoneNode")
             ),
             "tGamblerActions": pl["actions"],

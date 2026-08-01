@@ -33,6 +33,10 @@ class BaseProp:
     def callback(cls, msg_manager, moment) -> bool | None:
         pass
 
+    @classmethod
+    def unapply(cls, msg_manager) -> bool | None:
+        pass
+
 
 class 手铐(PropComp, BaseProp):
     name = "手铐"
@@ -51,7 +55,7 @@ class 手铐(PropComp, BaseProp):
         if target == shooter:
             target = order[(order.index(shooter) + 1) % len(order)]
         pl_target = players[target]
-        if not RegGameWork.get_effect_stacks(game, cls.name, target):
+        if not RegGameWork.get_effect_stacks(game, "束缚", target):
             pl_target["actions"] -= 1
             EffectComp.give(msg_manager, "束缚", target)
             RegGameWork.reply_info(
@@ -59,17 +63,6 @@ class 手铐(PropComp, BaseProp):
             )
             return True
         RegGameWork.reply_info(msg_manager, f"{pl_target['name']}已經被铐住了.")
-        return False
-
-    @classmethod
-    def callback(cls, msg_manager, moment):
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
-        comp = modify["手铐"]
-        if shooter in comp:
-            comp.remove(shooter)
-            return True
         return False
 
 
@@ -112,9 +105,9 @@ class 邀请函(PropComp, BaseProp):
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
+        name = RegGameWork.get_name(game)
         RegGameWork.draw_prop(msg_manager, target, 2, cls.pool)
         RegGameWork.end_round(msg_manager)
-        name = RegGameWork.get_name(game)
         if target == shooter:
             RegGameWork.reply_info(msg_manager, f"{name}將邀請函撕碎.")
         else:
@@ -213,12 +206,13 @@ class 红牛(PropComp, BaseProp):
         name = RegGameWork.get_name(game)
         if target == shooter:
             RegGameWork.reply_info(
-                msg_manager, f"{name}將混著{cls.reply()}的紅牛將其一飲而盡."
+                msg_manager,
+                f"{name}將混著{cls.reply()}的紅牛將其一飲而盡[hp {tmp['hp_before']}->{tmp['hp_now']}].",
             )
         else:
             RegGameWork.reply_info(
                 msg_manager,
-                f"{name}將混著{cls.reply()}的紅牛喂給{RegGameWork.get_name(game, target)}.",
+                f"{name}將混著{cls.reply()}的紅牛喂給{RegGameWork.get_name(game, target)}[hp {tmp['hp_before']}->{tmp['hp_now']}].",
             )
         return True
 
@@ -351,11 +345,11 @@ class 扑克(PropComp, BaseProp):
             RegGameWork.create_prop_event(game, prop_data)
         data["bullet"] = not bullet
         if bullet:
-            data["ammo_blank"] -= 1
-            data["ammo_live"] += 1
-        else:
             data["ammo_blank"] += 1
             data["ammo_live"] -= 1
+        else:
+            data["ammo_blank"] -= 1
+            data["ammo_live"] += 1
         modify["ammo_show"] = False
         RegGameWork.reply_info(msg_manager, f"從牌堆抽到[{cls.reply()}], 命運已然改變.")
         return True
@@ -364,18 +358,24 @@ class 扑克(PropComp, BaseProp):
     def callback(cls, msg_manager, moment):
         if not moment in ["shoot", "reload"]:
             return False
+        RegGameWork.remove_prop_event(msg_manager, cls.name)
+        cls.unapply(msg_manager)
+        return True
+
+    @classmethod
+    def unapply(cls, msg_manager):
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
-        RegGameWork.remove_prop_event(game, cls.name)
         RegGameWork.reply_info(msg_manager, "迷霧被驅散了.")
         modify["ammo_show"] = ModeComp.get(game["mode"]["name"]).modify.ammo_show
-        return True
+        return
 
 
 class 转盘(PropComp, BaseProp):
     name = "转盘"
     brief = "以特殊比例重新装填弹仓."
+    clear_prop = ["扑克"]
 
     @staticmethod
     def reply():
@@ -394,6 +394,8 @@ class 转盘(PropComp, BaseProp):
         ammo_live = ammo - ammo_blank
         data["ammo_live"], data["ammo_blank"] = ammo_live, ammo_blank
         RegGameWork.bullet(msg_manager)
+        for clear_prop in cls.clear_prop:
+            RegGameWork.remove_prop_event(msg_manager, clear_prop)
         RegGameWork.reply_info(
             msg_manager, f"鏽迹斑斑的轉盤開始變換……現在是世界線[{cls.reply()}]"
         )
