@@ -429,7 +429,7 @@ class RegGameWork:
             RegGameWork.get_index(msg_manager)
         )
         cls.handle_event(msg_manager, "end_round")
-        consume_action = tmp.get("consume_action", 1)
+        consume_action = tmp.get("consume_action") or 1
         pl_shooter = players[shooter]
         pl_shooter["actions"] -= consume_action
         if pl_shooter["actions"] < 1:
