@@ -463,7 +463,16 @@ class 牛奶(PropComp, BaseProp):
 
 class 金币(PropComp, BaseProp):
     name = "金币"
-    brief = "兑换任意 1 个未被ban的道具. 增加指令: 购买(道具名)."
+    brief = (
+        "兑换任意 1 个未被ban的道具, 部分道具兑换后将直接使用. 增加指令: 购买(道具名)."
+    )
+    direct_use = ["锯子", "花生", "巧克力", "香烟", "放大镜", "扑克", "转盘", "牛奶"]
+
+    @staticmethod
+    def reply():
+        return random.choice(
+            ("嶄新", "啞暗", "磨損", "變形", "鏽蝕", "斑駁", "鏤空", "黏膩", "沾血")
+        )
 
     @classmethod
     def init(cls):
@@ -476,6 +485,7 @@ class 金币(PropComp, BaseProp):
             game, data, reply, tmp, modify, players, order, shooter, bullet = (
                 RegGameWork.get_index(msg_manager)
             )
+            # 检查是否是玩家回合
             if user_id != shooter:
                 msg_reply = msg_manager.msg_format(
                     "strMrGamblerTurn",
@@ -483,45 +493,42 @@ class 金币(PropComp, BaseProp):
                 )
                 plugin_event.reply(msg_reply)
                 return
+            # 检查是否持有金币
             if cls.name not in players[user_id]["props"]:
                 msg_reply = msg_manager.msg_format(
                     "strMrGamblerNoProp", {"tPropName": cls.name}
                 )
                 plugin_event.reply(msg_reply)
                 return
-            cls.purchase(msg_manager, user_id, groups[0])
+            # cls.purchase(msg_manager, user_id, groups[0])
+            prop = groups[0]
+            # 检查道具是否被禁售
+            if prop in game["mode"]["props"]["ban"]:
+                RegGameWork.reply_info(msg_manager, f"{prop}被禁售了.")
+                msg_reply = RegGameWork.format_reply(msg_manager)
+                plugin_event.reply(msg_reply)
+                return
+            # 兑换道具
+            pl_user = players[user_id]
+            props = pl_user["props"]
+            props[props.index(cls.name)] = prop
+            name = pl_user["name"]
+            RegGameWork.reply_info(
+                msg_manager,
+                f"{name}向自動販賣機投入一枚{cls.reply()}的金幣, "
+                + (
+                    f"結果沒有任何反應, {name}將其砸爛，取出{prop}."
+                    if random.randint(1, 4) == 1
+                    else f"自動販賣機吐出{prop}."
+                ),
+            )
+            # 部分道具将直接使用
+            if prop in cls.direct_use:
+                if PropComp.use(msg_manager, prop, user_id):
+                    RegGameWork.remove_prop(game, user_id, prop)
             msg_reply = RegGameWork.format_reply(msg_manager)
             plugin_event.reply(msg_reply)
             return
-
-    @staticmethod
-    def reply():
-        return random.choice(
-            ("嶄新", "啞暗", "磨損", "變形", "鏽蝕", "斑駁", "鏤空", "黏膩", "沾血")
-        )
-
-    @classmethod
-    def purchase(cls, msg_manager, user_id, prop):
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
-        if prop in game["mode"]["props"]["ban"]:
-            RegGameWork.reply_info(msg_manager, f"{prop}被禁售了.")
-            return
-        pl_user = players[user_id]
-        props = pl_user["props"]
-        props[props.index(cls.name)] = prop
-        name = pl_user["name"]
-        RegGameWork.reply_info(
-            msg_manager,
-            f"{name}向自動販賣機投入一枚{cls.reply()}的金幣, "
-            + (
-                f"結果沒有任何反應, {name}將其砸爛，取出{prop}."
-                if random.randint(1, 4) == 1
-                else f"自動販賣機吐出{prop}."
-            ),
-        )
-        return
 
 
 class 止疼药(PropComp, BaseProp):
