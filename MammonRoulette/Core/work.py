@@ -14,7 +14,7 @@ import re
 from AmorLib import DataBase, STRING_ROW
 
 from .comp import ModeComp, PropComp, EffectComp
-from .. import DB_PATH
+from .. import config
 
 
 class RegGameWork:
@@ -461,7 +461,7 @@ class RegGameWork:
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
-        with DataBase(DB_PATH) as db:
+        with DataBase(config.DB_PATH) as db:
             for pl in players.keys():
                 pl_target = players[pl]
                 mult = pl_target["points_mult"] + pl_target["kills"]

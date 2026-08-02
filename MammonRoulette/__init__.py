@@ -8,7 +8,7 @@
 @Desc      :    None
 """
 
-DB_PATH = "plugin/data/MammonRoulette/Roulette.db"
+from . import config
 
 from . import Core
 from . import Defs

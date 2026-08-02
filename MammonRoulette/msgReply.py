@@ -14,7 +14,7 @@ from collections import Counter
 
 from AmorLib import DataBase
 
-from . import DB_PATH
+from . import config
 from .main import commands, COMMON_CMD
 from .msgCustom import dictHelpDoc
 from .Core.comp import ModeComp, PropComp
@@ -68,7 +68,7 @@ def get_target(game, target):
 def signed(plugin_event, Proc, msg_manager, groups):
     name = groups[0]
     user_id = msg_manager.user_id
-    with DataBase(DB_PATH) as db:
+    with DataBase(config.DB_PATH) as db:
         gambler_info = db.select("gambler", "user_id", "user_id = ?", user_id)
         if gambler_info:
             db.update("gambler", {"name": name}, "user_id = ?", user_id)
@@ -95,7 +95,7 @@ def signed(plugin_event, Proc, msg_manager, groups):
 def card(plugin_event, Proc, msg_manager, groups):
     user_id = msg_manager.user_id
     target = groups[0] if groups[0] != "" else user_id
-    with DataBase(DB_PATH) as db:
+    with DataBase(config.DB_PATH) as db:
         gambler_info = db.select("gambler", "*", "user_id = ?", target)
         if not gambler_info:
             msg_reply = msg_manager.msg_format("strMrCardNone")
@@ -140,7 +140,7 @@ def leaderboard(plugin_event, Proc, msg_manager, groups):
         leaderboard_type = "surrender"
     else:
         leaderboard_type = "points"
-    with DataBase(DB_PATH) as db:
+    with DataBase(config.DB_PATH) as db:
         gambler_list = db.select(
             "gambler",
             f"name, {leaderboard_type}",
@@ -182,7 +182,7 @@ def leaderboard(plugin_event, Proc, msg_manager, groups):
 def match_game(plugin_event, Proc, msg_manager, groups):
     user_id, game = msg_manager.user_id, msg_manager.val["game"]
     # region 自动注册
-    with DataBase(DB_PATH) as db:
+    with DataBase(config.DB_PATH) as db:
         gambler_info = db.select("gambler", "user_id", "user_id = ?", user_id)
     if not gambler_info:
         name = f"{random.choice(poker['suits'])+random.choice(poker['ranks'])}"
@@ -274,7 +274,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
     order = data["order"]
     # region 添加玩家
     if user_id not in order:
-        with DataBase(DB_PATH) as db:
+        with DataBase(config.DB_PATH) as db:
             name = db.select("gambler", "name", "user_id = ?", user_id)[0][0]
         order.append(user_id)
         data["players"][user_id] = {
