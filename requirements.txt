@@ -1,1 +1,0 @@
-git+https://github.com/lianqingyuYuri-Love/OlivOS-AmorLib.git#egg=AmorLib
