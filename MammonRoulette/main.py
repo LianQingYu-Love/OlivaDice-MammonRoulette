@@ -17,7 +17,7 @@ import os
 from AmorLib import DataBase, FsmRouter, MsgManager, init_msgCustom
 
 from . import DB_PATH
-from .Core.cmop import ModeComp, PropComp
+from .Core.comp import ModeComp, PropComp
 
 GAME_PATH = "plugin/tmp/MammonRoulette_data.json"
 COMMON_CMD = ("priv", "ob", "prep", "play")
@@ -212,6 +212,7 @@ def unity_reply(plugin_event, Proc, msg_manager):
     # endregion
     forward = commands.search(state, msg, commands.SearchMode.ANY)
     if forward:
+        game["tmp"] = {}
         handler, groups = forward[0]
         handler(plugin_event, Proc, msg_manager, groups)
         if game.get("over", False):

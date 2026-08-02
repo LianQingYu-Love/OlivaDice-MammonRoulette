@@ -13,7 +13,7 @@ import re
 
 from AmorLib import DataBase, STRING_ROW
 
-from .cmop import ModeComp, PropComp, EffectComp
+from .comp import ModeComp, PropComp, EffectComp
 from .. import DB_PATH
 
 
@@ -278,9 +278,10 @@ class RegGameWork:
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
-        is_attack_me = target == shooter
         dmg_type = ""
+        is_attack_me = target == shooter
         murderer = shooter
+        consume_action = None
         cls.handle_event(
             msg_manager,
             "shoot",
@@ -289,19 +290,21 @@ class RegGameWork:
             dmg_type=dmg_type,
             is_attack_me=is_attack_me,
             murderer=murderer,
+            consume_action=consume_action,
         )
-        target, dmg, dmg_type, is_attack_me, murderer = (
+        target, dmg, dmg_type, is_attack_me, murderer, consume_action = (
             tmp["target"],
             tmp["dmg"],
             tmp["dmg_type"],
             tmp["is_attack_me"],
             tmp["murderer"],
+            tmp["consume_action"],
         )
-        pl_target, pl_shooter = (
-            players[target],
-            players[shooter],
-        )
+        pl_target = players[target]
         if data["bullet"]:
+            if consume_action is None:
+                consume_action = 1
+            tmp["consume_action"] = consume_action
             cls.damage(msg_manager, target, dmg, murderer)
             data["ammo_live"] -= 1
             hp_before, hp_now = tmp["hp_before"], tmp["hp_now"]
@@ -318,8 +321,9 @@ class RegGameWork:
             )
         else:
             data["ammo_blank"] -= 1
-            if is_attack_me:
-                pl_shooter["actions"] += 1
+            if consume_action is None:
+                consume_action = 0 if is_attack_me else 1
+            tmp["consume_action"] = consume_action
             cls.reply_info(
                 msg_manager,
                 msg_manager.msg_format(
@@ -336,11 +340,12 @@ class RegGameWork:
         return
 
     @classmethod
-    def damage(cls, msg_manager, target, dmg, murderer=None):  # 受伤
+    def damage(cls, msg_manager, target, dmg, murderer):  # 受伤
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
         dmg_type = tmp.get("dmg_type", "")
+        check_over = tmp.get("check_over", True)
         cls.handle_event(
             msg_manager,
             "damage",
@@ -348,12 +353,14 @@ class RegGameWork:
             dmg=dmg,
             murderer=murderer,
             dmg_type=dmg_type,
+            check_over=check_over,
         )
-        target, dmg, murderer, dmg_type = (
+        target, dmg, murderer, dmg_type, check_over = (
             tmp["target"],
             tmp["dmg"],
             tmp["murderer"],
             tmp["dmg_type"],
+            tmp["check_over"],
         )
         pl_target = players[target]
         tmp["hp_before"] = pl_target["hp"]
@@ -368,8 +375,11 @@ class RegGameWork:
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
-        cls.handle_event(msg_manager, "dead", target=target, murderer=murderer)
-        target, murderer = tmp["target"], tmp["murderer"]
+        check_over = tmp.get("check_over", True)
+        cls.handle_event(
+            msg_manager, "dead", target=target, murderer=murderer, check_over=check_over
+        )
+        target, murderer, check_over = tmp["target"], tmp["murderer"], tmp["check_over"]
         if not murderer:
             murderer = shooter
         pl_target, pl_murderer = (
@@ -377,7 +387,7 @@ class RegGameWork:
             players[murderer],
         )
         name = pl_target["name"]
-        if tmp["is_attack_me"]:
+        if target == murderer:
             pl_target["suicide"] = True
             cls.reply_info(
                 msg_manager,
@@ -394,15 +404,26 @@ class RegGameWork:
                 ),
             )
         order.remove(target)
+        if check_over:
+            cls.is_over(msg_manager)
+        return
+
+    @classmethod
+    def is_over(cls, msg_manager):  # 游戏是否结束
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
         if len(order) == 1:
-            reply["only"] = msg_manager.msg_format(
+            reply["only"] += msg_manager.msg_format(
                 "strMrGameEnd", {"tWinnerName": cls.get_name(game, order[0])}
             )
             cls.over(msg_manager)
-        if len(order) < 1:
-            reply["only"] = msg_manager.msg_format("strMrGameTied")
+            return True
+        elif len(order) < 1:
+            reply["only"] += msg_manager.msg_format("strMrGameTied")
             cls.over(msg_manager)
-        return
+            return True
+        return False
 
     @classmethod
     def end_round(cls, msg_manager):  # 回合结束
@@ -410,8 +431,9 @@ class RegGameWork:
             RegGameWork.get_index(msg_manager)
         )
         cls.handle_event(msg_manager, "end_round")
+        consume_action = tmp.get("consume_action") or 0
         pl_shooter = players[shooter]
-        pl_shooter["actions"] -= 1
+        pl_shooter["actions"] -= consume_action
         if pl_shooter["actions"] < 1:
             cls.switch(msg_manager)
         return

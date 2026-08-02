@@ -13,7 +13,7 @@ import string
 
 from ..main import commands
 from ..msgCustom import dictHelpDoc
-from ..Core.cmop import ModeComp, PropComp, EffectComp
+from ..Core.comp import ModeComp, PropComp, EffectComp
 from ..Core.work import RegGameWork
 
 
@@ -76,8 +76,8 @@ class 锯子(PropComp, BaseProp):
             RegGameWork.get_index(msg_manager)
         )
         if not RegGameWork.get_prop_data(game, cls.name):
-            prop_data = {"name": cls.name}
-            RegGameWork.create_prop_event(game, prop_data)
+            comp = {"name": cls.name}
+            RegGameWork.create_prop_event(msg_manager, comp)
             RegGameWork.reply_info(msg_manager, "槍管被鋸斷.")
             return True
         RegGameWork.reply_info(msg_manager, "槍管早已被鋸斷.")
@@ -90,7 +90,6 @@ class 锯子(PropComp, BaseProp):
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
-        prop_data = RegGameWork.get_prop_data(game, cls.name)
         tmp["dmg"] = modify["dmg"] + 1
         return True
 
@@ -227,10 +226,10 @@ class 放大镜(PropComp, BaseProp):
             RegGameWork.get_index(msg_manager)
         )
         if not RegGameWork.get_prop_data(game, cls.name):
-            prop_data = {"name": cls.name}
+            comp = {"name": cls.name}
             modify["ammo_show"] = True
             modify["bullet_show"] = True
-            RegGameWork.create_prop_event(game, prop_data)
+            RegGameWork.create_prop_event(msg_manager, comp)
             RegGameWork.reply_info(
                 msg_manager,
                 f"{RegGameWork.get_name(game)}砸碎放大鏡, 發現槍膛裏是{'實彈' if bullet else '空包彈'}.",
@@ -341,8 +340,8 @@ class 扑克(PropComp, BaseProp):
             RegGameWork.get_index(msg_manager)
         )
         if not RegGameWork.get_prop_data(game, cls.name):
-            prop_data = {"name": cls.name}
-            RegGameWork.create_prop_event(game, prop_data)
+            comp = {"name": cls.name}
+            RegGameWork.create_prop_event(msg_manager, comp)
         data["bullet"] = not bullet
         if bullet:
             data["ammo_blank"] += 1
@@ -463,7 +462,16 @@ class 牛奶(PropComp, BaseProp):
 
 class 金币(PropComp, BaseProp):
     name = "金币"
-    brief = "兑换任意 1 个未被ban的道具. 增加指令: 购买(道具名)."
+    brief = (
+        "兑换任意 1 个未被ban的道具, 部分道具兑换后将直接使用. 增加指令: 购买(道具名)."
+    )
+    direct_use = ["锯子", "花生", "巧克力", "香烟", "放大镜", "扑克", "转盘", "牛奶"]
+
+    @staticmethod
+    def reply():
+        return random.choice(
+            ("嶄新", "啞暗", "磨損", "變形", "鏽蝕", "斑駁", "鏤空", "黏膩", "沾血")
+        )
 
     @classmethod
     def init(cls):
@@ -476,6 +484,7 @@ class 金币(PropComp, BaseProp):
             game, data, reply, tmp, modify, players, order, shooter, bullet = (
                 RegGameWork.get_index(msg_manager)
             )
+            # 检查是否是玩家回合
             if user_id != shooter:
                 msg_reply = msg_manager.msg_format(
                     "strMrGamblerTurn",
@@ -483,45 +492,42 @@ class 金币(PropComp, BaseProp):
                 )
                 plugin_event.reply(msg_reply)
                 return
+            # 检查是否持有金币
             if cls.name not in players[user_id]["props"]:
                 msg_reply = msg_manager.msg_format(
                     "strMrGamblerNoProp", {"tPropName": cls.name}
                 )
                 plugin_event.reply(msg_reply)
                 return
-            cls.purchase(msg_manager, user_id, groups[0])
+            # cls.purchase(msg_manager, user_id, groups[0])
+            prop = groups[0]
+            # 检查道具是否被禁售
+            if prop in game["mode"]["props"]["ban"]:
+                RegGameWork.reply_info(msg_manager, f"{prop}被禁售了.")
+                msg_reply = RegGameWork.format_reply(msg_manager)
+                plugin_event.reply(msg_reply)
+                return
+            # 兑换道具
+            pl_user = players[user_id]
+            props = pl_user["props"]
+            props[props.index(cls.name)] = prop
+            name = pl_user["name"]
+            RegGameWork.reply_info(
+                msg_manager,
+                f"{name}向自動販賣機投入一枚{cls.reply()}的金幣, "
+                + (
+                    f"結果沒有任何反應, {name}將其砸爛，取出{prop}."
+                    if random.randint(1, 4) == 1
+                    else f"自動販賣機吐出{prop}."
+                ),
+            )
+            # 部分道具将直接使用
+            if prop in cls.direct_use:
+                if PropComp.use(msg_manager, prop, user_id):
+                    RegGameWork.remove_prop(game, user_id, prop)
             msg_reply = RegGameWork.format_reply(msg_manager)
             plugin_event.reply(msg_reply)
             return
-
-    @staticmethod
-    def reply():
-        return random.choice(
-            ("嶄新", "啞暗", "磨損", "變形", "鏽蝕", "斑駁", "鏤空", "黏膩", "沾血")
-        )
-
-    @classmethod
-    def purchase(cls, msg_manager, user_id, prop):
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
-        if prop in game["mode"]["props"]["ban"]:
-            RegGameWork.reply_info(msg_manager, f"{prop}被禁售了.")
-            return
-        pl_user = players[user_id]
-        props = pl_user["props"]
-        props[props.index(cls.name)] = prop
-        name = pl_user["name"]
-        RegGameWork.reply_info(
-            msg_manager,
-            f"{name}向自動販賣機投入一枚{cls.reply()}的金幣, "
-            + (
-                f"結果沒有任何反應, {name}將其砸爛，取出{prop}."
-                if random.randint(1, 4) == 1
-                else f"自動販賣機吐出{prop}."
-            ),
-        )
-        return
 
 
 class 止疼药(PropComp, BaseProp):
@@ -543,3 +549,71 @@ class 止疼药(PropComp, BaseProp):
             msg_manager, f"{RegGameWork.get_name(game, target)}服用止疼药."
         )
         return True
+
+
+class 烟花(PropComp, BaseProp):
+    name = "烟花"
+    brief = "所有赌徒各有1/2的概率HP-1. 每杀死一名赌徒, 重新生效一次, 且概率提高至2/3. 每生效一次, 所有赌徒抽取 1 个道具."
+
+    @classmethod
+    def apply(cls, msg_manager, target) -> bool | None:
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
+        msg_reply = f"{RegGameWork.get_name(game, target)}燃放煙花, 天空變得五彩斑斕."
+        RegGameWork.reply_info(msg_manager, msg_reply)
+        comp = {"name": cls.name, "data": {"reactivation": 0, "draws": 1}}
+        RegGameWork.create_prop_event(msg_manager, comp)
+        tmp["check_over"] = False
+        order_before = order.copy()
+        for pl in order_before:
+            tmp[f"{pl}_hp_before"], tmp[f"{pl}_hp_now"] = (
+                players[pl]["hp"],
+                players[pl]["hp"],
+            )
+            if random.randint(1, 2) == 1:
+                RegGameWork.damage(msg_manager, pl, 1, shooter)
+                tmp[f"{pl}_hp_now"] = tmp["hp_now"]
+        cls.explosion(msg_manager, order_before)
+        RegGameWork.remove_prop_event(msg_manager, cls.name)
+        tmp["check_over"] = True
+        situation = [
+            f"{RegGameWork.get_name(game, pl)}[hp {tmp[f'{pl}_hp_before']}->{tmp[f'{pl}_hp_now']}]."
+            for pl in order_before
+            if tmp[f"{pl}_hp_before"] != tmp[f"{pl}_hp_now"]
+        ]
+        situation_str = "\n".join(situation)
+        if not RegGameWork.is_over(msg_manager):
+            RegGameWork.reply_info(msg_manager, situation_str)
+            draws = comp["data"]["draws"]
+            for pl in order:
+                RegGameWork.draw_prop(msg_manager, pl, draws)
+        else:
+            reply["only"] += "\n" + msg_reply + situation_str
+        return True
+
+    @classmethod
+    def callback(cls, msg_manager, moment) -> bool | None:
+        if moment != "dead":
+            return False
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
+        comp = RegGameWork.get_prop_data(game, cls.name)
+        comp["data"]["reactivation"] += 1
+        comp["data"]["draws"] += 1
+        return False
+
+    @classmethod
+    def explosion(cls, msg_manager, order_before):
+        game, data, reply, tmp, modify, players, order, shooter, bullet = (
+            RegGameWork.get_index(msg_manager)
+        )
+        comp = RegGameWork.get_prop_data(game, cls.name)
+        while comp["data"]["reactivation"] > 0:
+            comp["data"]["reactivation"] -= 1
+            for pl in order_before:
+                if random.randint(1, 3) != 3:
+                    RegGameWork.damage(msg_manager, pl, 1, shooter)
+                    tmp[f"{pl}_hp_now"] = tmp["hp_now"]
+        return

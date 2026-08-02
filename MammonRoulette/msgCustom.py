@@ -107,6 +107,8 @@ dictStrCustomNote = {
     "strMrGameAmmoHide": "弹药 隐藏弹药时的显示.",
     "strMrGameDeadList": "死亡列表 显示死亡的玩家.",
     "strMrGameDeadNone": "死亡列表 没有玩家死亡时的显示.",
+    "strGameReplyInfo": "回复 显示游戏常规信息.",
+    "strGameReplyNote": "回复 显示游戏局势信息.",
     "strMrSituationResult": "【局势】指令 显示当前游戏局势.\n包括玩家数据、枪手、当前子弹、弹药、死亡玩家.",
 }
 

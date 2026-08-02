@@ -17,7 +17,7 @@ from AmorLib import DataBase
 from . import DB_PATH
 from .main import commands, COMMON_CMD
 from .msgCustom import dictHelpDoc
-from .Core.cmop import ModeComp, PropComp
+from .Core.comp import ModeComp, PropComp
 from .Core.work import RegGameWork
 
 dictHelpDoc["恶赌 命令"] = (
@@ -382,6 +382,7 @@ def use_prop(plugin_event, Proc, msg_manager, groups):
     game, data, reply, tmp, modify, players, order, shooter, bullet = (
         RegGameWork.get_index(msg_manager)
     )
+    # 检查是否是玩家回合
     if user_id != shooter:
         msg_reply = msg_manager.msg_format(
             "strMrGamblerTurn", {"tGamblerName": RegGameWork.get_name(game, shooter)}
@@ -389,14 +390,17 @@ def use_prop(plugin_event, Proc, msg_manager, groups):
         plugin_event.reply(msg_reply)
         return
     prop, target = groups[0], groups[1]
+    # 检查是否持有道具
     if prop not in players[user_id]["props"]:
         msg_reply = msg_manager.msg_format("strMrGamblerNoProp", {"tPropName": prop})
         plugin_event.reply(msg_reply)
         return
+    # 确认目标
     if not target:
         target = user_id
     elif not (target := get_target(game, target)):
         return
+    # 使用道具
     if PropComp.use(msg_manager, prop, target):
         RegGameWork.remove_prop(game, user_id, prop)
     msg_reply = RegGameWork.format_reply(msg_manager)
@@ -414,12 +418,8 @@ def surrender(plugin_event, Proc, msg_manager, groups):
     players[user_id]["surrender"] = True
     if len(order) <= 1:
         RegGameWork.end_round(msg_manager)
-    RegGameWork.reply_info(
-        msg_manager,
-        msg_manager.msg_format(
-            "strMrGamblerSurrender",
-            {"tGamblerName": RegGameWork.get_name(game, user_id)},
-        ),
+    msg_reply = msg_manager.msg_format(
+        "strMrGamblerSurrender", {"tGamblerName": RegGameWork.get_name(game, user_id)}
     )
     msg_reply = RegGameWork.format_reply(msg_manager)
     plugin_event.reply(msg_reply)
