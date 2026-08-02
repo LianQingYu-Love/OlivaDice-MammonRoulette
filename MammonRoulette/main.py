@@ -16,19 +16,21 @@ import os
 
 from AmorLib import DataBase, FsmRouter, MsgManager, init_msgCustom
 
-from . import DB_PATH
+from . import config
 from .Core.comp import ModeComp, PropComp
 
-GAME_PATH = "plugin/tmp/MammonRoulette_data.json"
 COMMON_CMD = ("priv", "ob", "prep", "play")
 game_data = {}
 
 
 class Event(object):
     def init(plugin_event, Proc):  # type: ignore
-        if not os.path.exists("plugin/data/MammonRoulette/"):
-            os.mkdir("plugin/data/MammonRoulette/")
-        with DataBase(DB_PATH) as db:
+        pass
+
+    def init_after(plugin_event, Proc):  # type: ignore
+        config.init_config()
+        # region 初始化数据库
+        with DataBase(config.DB_PATH) as db:
             db.create(
                 "gambler",
                 {
@@ -43,12 +45,11 @@ class Event(object):
                 },
                 primary_key="user_id",
             )
-
-    def init_after(plugin_event, Proc):  # type: ignore
+        # endregion
         # region 加载对局数据
         try:
-            if os.path.exists(GAME_PATH):
-                with open(GAME_PATH, "r", encoding="utf-8") as f:
+            if os.path.exists(config.TMP_GAME_PATH):
+                with open(config.TMP_GAME_PATH, "r", encoding="utf-8") as f:
                     global game_data
                     game_data = json.load(f)
             else:
@@ -56,7 +57,7 @@ class Event(object):
                     1,
                     "[unity] - [恶魔轮盘] - <game_data> - 本地对局数据存储文件不存在, 尝试创建.",
                 )
-                with open(GAME_PATH, "w", encoding="utf-8") as f:
+                with open(config.TMP_GAME_PATH, "w", encoding="utf-8") as f:
                     json.dump({}, f)
         except Exception as e:
             Proc.log(
@@ -69,7 +70,7 @@ class Event(object):
         init_msgCustom(MammonRoulette, Proc)
 
     def save(plugin_event, Proc):  # type: ignore
-        with open(GAME_PATH, "w", encoding="utf-8") as f:
+        with open(config.TMP_GAME_PATH, "w", encoding="utf-8") as f:
             json.dump(game_data, f, ensure_ascii=False, indent=4)
 
     def menu(plugin_event, Proc):  # type: ignore
@@ -116,7 +117,7 @@ class Event(object):
                 )
             # 数据重加载
             elif plugin_event.data.event == "MammonRoulette_Menu_clear_cache":  # type: ignore
-                with open(GAME_PATH, "w", encoding="utf-8") as f:
+                with open(config.TMP_GAME_PATH, "w", encoding="utf-8") as f:
                     json.dump({}, f)
                 game_data.clear()
                 Proc.log(2, "[unity] - [恶魔轮盘] - <game_data> - None")
@@ -182,7 +183,7 @@ def unity_reply(plugin_event, Proc, msg_manager):
     debug = unity_enabled("MrDebugEnabled", plugin_event.bot_info.hash)
     if debug:
         global game_data
-        with open(GAME_PATH, "r", encoding="utf-8") as f:
+        with open(config.TMP_GAME_PATH, "r", encoding="utf-8") as f:
             game_data = json.load(f)
     unity_state(msg_manager)
     game = msg_manager.val["game"]
@@ -218,6 +219,6 @@ def unity_reply(plugin_event, Proc, msg_manager):
         if game.get("over", False):
             game.clear()
     if debug:
-        with open(GAME_PATH, "w", encoding="utf-8") as f:
+        with open(config.TMP_GAME_PATH, "w", encoding="utf-8") as f:
             json.dump(game_data, f, ensure_ascii=False, indent=4)
         Proc.log(0, f"[unity] - [恶魔轮盘] - [debug] - commands(state, msg).")
