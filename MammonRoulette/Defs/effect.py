@@ -25,7 +25,7 @@ class BaseEffect:
         pass
 
     @classmethod
-    def callback(cls, msg_manager, moment, target) -> bool | None:
+    def callback(cls, msg_manager, moment, target, effect_data) -> bool | None:
         pass
 
     @classmethod
@@ -47,7 +47,7 @@ class 束缚(EffectComp, BaseEffect):
         return True
 
     @classmethod
-    def callback(cls, msg_manager, moment, target):
+    def callback(cls, msg_manager, moment, target, effect_data):
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
@@ -72,19 +72,18 @@ class 神经麻痹(EffectComp, BaseEffect):
                 "data": [],
                 "expired": expired,
             }
-        comp = players[target]["effect_event"][cls.name]
-        comp["stacks"] += stacks
-        comp["data"].append({"dmg": stacks, "murderer": tmp["murderer"]})
+        effect_data = players[target]["effect_event"][cls.name]
+        effect_data["stacks"] += stacks
+        effect_data["data"].append({"dmg": stacks, "murderer": tmp["murderer"]})
         return True
 
     @classmethod
-    def callback(cls, msg_manager, moment, target):
+    def callback(cls, msg_manager, moment, target, effect_data):
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
         if moment == "damage" and target == tmp["target"] and tmp["dmg_type"] == "":
-            comp = players[target]["effect_event"][cls.name]
-            stacks_before = comp["stacks"]
+            stacks_before = effect_data["stacks"]
             dmg, tmp["dmg"] = tmp["dmg"], 0
             EffectComp.give(msg_manager, cls.name, target, dmg)
             RegGameWork.reply_info(
@@ -93,13 +92,13 @@ class 神经麻痹(EffectComp, BaseEffect):
             )
             return False
         elif moment == "end_round" and target == shooter:
-            comp = players[target]["effect_event"][cls.name]
-            if not comp["expired"]:
-                comp["expired"] = True
+            effect_data = players[target]["effect_event"][cls.name]
+            if not effect_data["expired"]:
+                effect_data["expired"] = True
                 return False
             tmp["dmg_type"] = cls.name
             hp_before = players[target]["hp"]
-            for data in comp["data"]:
+            for data in effect_data["data"]:
                 RegGameWork.damage(msg_manager, target, data["dmg"], data["murderer"])
             RegGameWork.reply_info(
                 msg_manager,
