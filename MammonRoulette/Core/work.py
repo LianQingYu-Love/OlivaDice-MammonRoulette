@@ -414,13 +414,19 @@ class RegGameWork:
             RegGameWork.get_index(msg_manager)
         )
         if len(order) == 1:
-            reply["only"] += msg_manager.msg_format(
-                "strMrGameEnd", {"tWinnerName": cls.get_name(game, order[0])}
+            cls.reply_info(
+                msg_manager,
+                msg_manager.msg_format(
+                    "strMrGameEnd", {"tWinnerName": cls.get_name(game, order[0])}
+                ),
             )
             cls.over(msg_manager)
             return True
         elif len(order) < 1:
-            reply["only"] += msg_manager.msg_format("strMrGameTied")
+            cls.reply_info(
+                msg_manager,
+                msg_manager.msg_format("strMrGameTied"),
+            )
             cls.over(msg_manager)
             return True
         return False
