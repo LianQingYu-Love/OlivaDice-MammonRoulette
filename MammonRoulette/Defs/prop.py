@@ -592,7 +592,7 @@ class 烟花(PropComp, BaseProp):
         return True
 
     @classmethod
-    def callback(cls, msg_manager, moment) -> bool | None:
+    def callback(cls, msg_manager, moment, prop_data):
         if moment != "dead":
             return False
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
