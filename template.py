@@ -63,6 +63,7 @@ remove_prop_event = "remove"
 remove_effect_event = "remove"
 
 prop_data = {
+    "id": str,  # 道具id
     "name": str,  # 道具名称
     "data": {},  # 道具数据
 }

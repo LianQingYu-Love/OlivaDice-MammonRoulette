@@ -30,11 +30,11 @@ class BaseProp:
         pass
 
     @classmethod
-    def callback(cls, msg_manager, moment) -> bool | None:
+    def callback(cls, msg_manager, moment, prop_data) -> bool | None:
         pass
 
     @classmethod
-    def unapply(cls, msg_manager) -> bool | None:
+    def unapply(cls, msg_manager, prop_data) -> bool | None:
         pass
 
 
@@ -75,16 +75,16 @@ class 锯子(PropComp, BaseProp):
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
-        if not RegGameWork.get_prop_data(game, cls.name):
-            comp = {"name": cls.name}
-            RegGameWork.create_prop_event(msg_manager, comp)
+        if not RegGameWork.get_prop_data(game, prop_name=cls.name):
+            prop_data = {"name": cls.name}
+            RegGameWork.create_prop_event(msg_manager, prop_data)
             RegGameWork.reply_info(msg_manager, "槍管被鋸斷.")
             return True
         RegGameWork.reply_info(msg_manager, "槍管早已被鋸斷.")
         return False
 
     @classmethod
-    def callback(cls, msg_manager, moment):
+    def callback(cls, msg_manager, moment, prop_data):
         if moment != "shoot":
             return False
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
@@ -225,11 +225,11 @@ class 放大镜(PropComp, BaseProp):
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
-        if not RegGameWork.get_prop_data(game, cls.name):
-            comp = {"name": cls.name}
+        if not RegGameWork.get_prop_data(game, prop_name=cls.name):
+            prop_data = {"name": cls.name}
             modify["ammo_show"] = True
             modify["bullet_show"] = True
-            RegGameWork.create_prop_event(msg_manager, comp)
+            RegGameWork.create_prop_event(msg_manager, prop_data)
             RegGameWork.reply_info(
                 msg_manager,
                 f"{RegGameWork.get_name(game)}砸碎放大鏡, 發現槍膛裏是{'實彈' if bullet else '空包彈'}.",
@@ -239,7 +239,7 @@ class 放大镜(PropComp, BaseProp):
         return False
 
     @classmethod
-    def callback(cls, msg_manager, moment):
+    def callback(cls, msg_manager, moment, prop_data):
         if moment != "shoot":
             return False
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
@@ -339,9 +339,9 @@ class 扑克(PropComp, BaseProp):
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
-        if not RegGameWork.get_prop_data(game, cls.name):
-            comp = {"name": cls.name}
-            RegGameWork.create_prop_event(msg_manager, comp)
+        if not RegGameWork.get_prop_data(game, prop_name=cls.name):
+            prop_data = {"name": cls.name}
+            RegGameWork.create_prop_event(msg_manager, prop_data)
         data["bullet"] = not bullet
         if bullet:
             data["ammo_blank"] += 1
@@ -354,15 +354,14 @@ class 扑克(PropComp, BaseProp):
         return True
 
     @classmethod
-    def callback(cls, msg_manager, moment):
+    def callback(cls, msg_manager, moment, prop_data):
         if not moment in ["shoot", "reload"]:
             return False
-        RegGameWork.remove_prop_event(msg_manager, cls.name)
-        cls.unapply(msg_manager)
+        cls.unapply(msg_manager, prop_data)
         return True
 
     @classmethod
-    def unapply(cls, msg_manager):
+    def unapply(cls, msg_manager, prop_data):
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
@@ -394,7 +393,9 @@ class 转盘(PropComp, BaseProp):
         data["ammo_live"], data["ammo_blank"] = ammo_live, ammo_blank
         RegGameWork.bullet(msg_manager)
         for clear_prop in cls.clear_prop:
-            RegGameWork.remove_prop_event(msg_manager, clear_prop)
+            prop_data = RegGameWork.get_prop_data(game, prop_name=clear_prop)
+            if prop_data:
+                RegGameWork.remove_prop_event(msg_manager, prop_data[0]["id"])
         RegGameWork.reply_info(
             msg_manager, f"鏽迹斑斑的轉盤開始變換……現在是世界線[{cls.reply()}]"
         )
@@ -562,8 +563,8 @@ class 烟花(PropComp, BaseProp):
         )
         msg_reply = f"{RegGameWork.get_name(game, target)}燃放煙花, 天空變得五彩斑斕."
         RegGameWork.reply_info(msg_manager, msg_reply)
-        comp = {"name": cls.name, "data": {"reactivation": 0, "draws": 1}}
-        RegGameWork.create_prop_event(msg_manager, comp)
+        prop_data = {"name": cls.name, "data": {"reactivation": 0, "draws": 1}}
+        RegGameWork.create_prop_event(msg_manager, prop_data)
         tmp["check_over"] = False
         order_before = order.copy()
         for pl in order_before:
@@ -575,7 +576,7 @@ class 烟花(PropComp, BaseProp):
                 RegGameWork.damage(msg_manager, pl, 1, shooter)
                 tmp[f"{pl}_hp_now"] = tmp["hp_now"]
         cls.explosion(msg_manager, order_before)
-        RegGameWork.remove_prop_event(msg_manager, cls.name)
+        RegGameWork.remove_prop_event(msg_manager, prop_name=cls.name)
         tmp["check_over"] = True
         situation = [
             f"{RegGameWork.get_name(game, pl)}[hp {tmp[f'{pl}_hp_before']}->{tmp[f'{pl}_hp_now']}]."
@@ -585,21 +586,21 @@ class 烟花(PropComp, BaseProp):
         situation_str = "\n".join(situation)
         if not RegGameWork.is_over(msg_manager):
             RegGameWork.reply_info(msg_manager, situation_str)
-            draws = comp["data"]["draws"]
+            draws = prop_data["data"]["draws"]
             for pl in order:
                 RegGameWork.draw_prop(msg_manager, pl, draws)
         return True
 
     @classmethod
-    def callback(cls, msg_manager, moment) -> bool | None:
+    def callback(cls, msg_manager, moment, prop_data):
         if moment != "dead":
             return False
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
-        comp = RegGameWork.get_prop_data(game, cls.name)
-        comp["data"]["reactivation"] += 1
-        comp["data"]["draws"] += 1
+        prop_data = RegGameWork.get_prop_data(game, prop_name=cls.name)[0]
+        prop_data["data"]["reactivation"] += 1
+        prop_data["data"]["draws"] += 1
         return False
 
     @classmethod
@@ -607,9 +608,9 @@ class 烟花(PropComp, BaseProp):
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
-        comp = RegGameWork.get_prop_data(game, cls.name)
-        while comp["data"]["reactivation"] > 0:
-            comp["data"]["reactivation"] -= 1
+        prop_data = RegGameWork.get_prop_data(game, prop_name=cls.name)[0]
+        while prop_data["data"]["reactivation"] > 0:
+            prop_data["data"]["reactivation"] -= 1
             for pl in order_before:
                 if random.randint(1, 3) != 3:
                     RegGameWork.damage(msg_manager, pl, 1, shooter)
