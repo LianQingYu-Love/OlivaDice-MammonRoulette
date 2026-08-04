@@ -317,20 +317,21 @@ class RegGameWork:
             if consume_action is None:
                 consume_action = 1
             tmp["consume_action"] = consume_action
-            cls.damage(msg_manager, target, dmg, murderer)
             data["ammo_live"] -= 1
+            cls.damage(msg_manager, target, dmg, murderer)
             hp_before, hp_now = tmp["hp_before"], tmp["hp_now"]
-            cls.reply_info(
-                msg_manager,
-                msg_manager.msg_format(
-                    "strMrGamblerWasAmmoLiveShot",
-                    {
-                        "tGamblerName": pl_target["name"],
-                        "tHpBefore": hp_before,
-                        "tHpNow": hp_now,
-                    },
-                ),
-            )
+            if tmp["hp_now"] > 0:
+                cls.reply_info(
+                    msg_manager,
+                    msg_manager.msg_format(
+                        "strMrGamblerWasAmmoLiveShot",
+                        {
+                            "tGamblerName": pl_target["name"],
+                            "tHpBefore": hp_before,
+                            "tHpNow": hp_now,
+                        },
+                    ),
+                )
         else:
             data["ammo_blank"] -= 1
             if consume_action is None:
@@ -356,6 +357,8 @@ class RegGameWork:
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
+        if game["over"]:
+            return
         dmg_type = tmp.get("dmg_type", "")
         check_over = tmp.get("check_over", True)
         cls.handle_event(
@@ -387,6 +390,8 @@ class RegGameWork:
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
+        if game["over"]:
+            return
         check_over = tmp.get("check_over", True)
         cls.handle_event(
             msg_manager, "dead", target=target, murderer=murderer, check_over=check_over
@@ -415,6 +420,9 @@ class RegGameWork:
                     {"tGamblerName": name, "tMurdererName": pl_murderer["name"]},
                 ),
             )
+        if target == shooter:
+            cls.switch(msg_manager)
+            tmp["consume_action"] = 0
         order.remove(target)
         if check_over:
             cls.is_over(msg_manager)
@@ -425,6 +433,10 @@ class RegGameWork:
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
+        if game["over"]:
+            return True
+        game["over"] = True
+        tmp["check_over"] = True
         if len(order) == 1:
             cls.reply_info(
                 msg_manager,
@@ -502,7 +514,6 @@ class RegGameWork:
                     pl,
                     increment=("points", "kills", "suicide", wl),
                 )
-        game["over"] = True
         return
 
     # endregion

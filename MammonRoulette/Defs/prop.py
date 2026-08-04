@@ -355,18 +355,17 @@ class 扑克(PropComp, BaseProp):
 
     @classmethod
     def callback(cls, msg_manager, moment, prop_data):
-        if not moment in ["shoot", "reload"]:
-            return False
-        cls.unapply(msg_manager, prop_data)
-        return True
+        if moment in ["shoot", "reload"]:
+            return True
+        return False
 
     @classmethod
     def unapply(cls, msg_manager, prop_data):
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
-        RegGameWork.reply_info(msg_manager, "迷霧被驅散了.")
         modify["ammo_show"] = ModeComp.get(game["mode"]["name"]).modify.ammo_show
+        RegGameWork.reply_info(msg_manager, "迷霧被驅散了.")
         return
 
 
@@ -577,7 +576,6 @@ class 烟花(PropComp, BaseProp):
                 tmp[f"{pl}_hp_now"] = tmp["hp_now"]
         cls.explosion(msg_manager, order_before)
         RegGameWork.remove_prop_event(msg_manager, prop_name=cls.name)
-        tmp["check_over"] = True
         situation = [
             f"{RegGameWork.get_name(game, pl)}[hp {tmp[f'{pl}_hp_before']}->{tmp[f'{pl}_hp_now']}]."
             for pl in order_before
