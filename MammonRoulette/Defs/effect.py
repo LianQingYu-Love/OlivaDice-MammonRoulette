@@ -74,7 +74,7 @@ class 神经麻痹(EffectComp, BaseEffect):
             }
         effect_data = players[target]["effect_event"][cls.name]
         effect_data["stacks"] += stacks
-        effect_data["data"].append({"dmg": stacks, "murderer": tmp["murderer"]})
+        effect_data["data"].append({"dmg": stacks, "murderer": target})
         return True
 
     @classmethod
@@ -97,11 +97,13 @@ class 神经麻痹(EffectComp, BaseEffect):
                 effect_data["expired"] = True
                 return False
             tmp["dmg_type"] = cls.name
+            tmp["check_over"] = False
             hp_before = players[target]["hp"]
             for data in effect_data["data"]:
                 RegGameWork.damage(msg_manager, target, data["dmg"], data["murderer"])
-            RegGameWork.reply_info(
-                msg_manager,
-                f"{RegGameWork.get_name(game, target)}感到神经絮乱[hp{hp_before}->{tmp['hp_now']}].",
-            )
+            if not RegGameWork.is_over(msg_manager):
+                RegGameWork.reply_info(
+                    msg_manager,
+                    f"{RegGameWork.get_name(game, target)}感到神经絮乱[hp{hp_before}->{tmp['hp_now']}].",
+                )
             return True
