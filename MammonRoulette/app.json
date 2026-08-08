@@ -17,7 +17,7 @@
     ],
     "menu_config": [
         {
-            "title": "[总开关]",
+            "title": "[全局开关]",
             "event": "MammonRoulette_Menu_main_enabled"
         },
         {
@@ -26,15 +26,15 @@
         },
         {
             "title": "[debug开关]",
-            "event": "MammonRoulette_Menu_debug"
+            "event": "MammonRoulette_Menu_debug_enabled"
         },
         {
-            "title": "[开关重置]",
-            "event": "MammonRoulette_Menu_reset"
-        },
-        {
-            "title": "[清除缓存]",
+            "title": "清除缓存",
             "event": "MammonRoulette_Menu_clear_cache"
+        },
+        {
+            "title": "重载配置",
+            "event": "MammonRoulette_Menu_config_reload"
         }
     ]
 }

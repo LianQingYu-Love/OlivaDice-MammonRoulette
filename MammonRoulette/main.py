@@ -28,7 +28,7 @@ class Event(object):
         pass
 
     def init_after(plugin_event, Proc):  # type: ignore
-        config.init_config()
+        config.init()
         # region 初始化数据库
         with DataBase(config.DB_PATH) as db:
             db.create(
@@ -76,9 +76,9 @@ class Event(object):
     def menu(plugin_event, Proc):  # type: ignore
         if plugin_event.data.namespace == "MammonRoulette":  # type: ignore
             setConsoleSwitchByHash = OlivaDiceCore.console.setConsoleSwitchByHash
-            # 总开关
+            # 全局开关
             if plugin_event.data.event == "MammonRoulette_Menu_main_enabled":  # type: ignore
-                main_enabled = 1 if not unity_enabled("MrMainEnabled") else -1
+                main_enabled = 1 if not unity_enabled("MrMainEnabled") else 0
                 setConsoleSwitchByHash("MrMainEnabled", main_enabled)
                 Proc.log(
                     2,
@@ -87,40 +87,35 @@ class Event(object):
                 )
             # poke开关
             elif plugin_event.data.event == "MammonRoulette_Menu_poke_enabled":  # type: ignore
-                poke_enabled = 1 if not unity_enabled("MrPokeEnabled") else -1
+                poke_enabled = 1 if not unity_enabled("MrPokeEnabled") else 0
                 setConsoleSwitchByHash("MrPokeEnabled", poke_enabled)
                 Proc.log(
                     2,
                     "[unity] - [恶魔轮盘] - <MammonRoulette_Menu_poke_enabled> - "
                     + str(poke_enabled == 1),
                 )
-            # debug
-            elif plugin_event.data.event == "MammonRoulette_Menu_debug":  # type: ignore
-                debug_enabled = 1 if not unity_enabled("MrDebugEnabled") else -1
+            # debug开关
+            elif plugin_event.data.event == "MammonRoulette_Menu_debug_enabled":  # type: ignore
+                debug_enabled = 1 if not unity_enabled("MrDebugEnabled") else 0
                 setConsoleSwitchByHash("MrDebugEnabled", debug_enabled)
                 Proc.log(
                     2,
-                    "[unity] - [恶魔轮盘] - <MammonRoulette_Menu_debug> - "
+                    "[unity] - [恶魔轮盘] - <MammonRoulette_Menu_debug_enabled> - "
                     + str(debug_enabled == 1),
                 )
-            # 开关重置
-            elif plugin_event.data.event == "MammonRoulette_Menu_reset":  # type: ignore
-                setConsoleSwitchByHash("MrMainEnabled", 1)
-                setConsoleSwitchByHash("MrPokeEnabled", 1)
-                setConsoleSwitchByHash("MrDebugEnabled", -1)
-                Proc.log(
-                    2,
-                    "[unity] - [恶魔轮盘] - 全局开关重置."
-                    "<MammonRoulette_Menu_main_enabled> - true"
-                    "<MammonRoulette_Menu_poke_enabled> - true"
-                    "<MammonRoulette_Menu_debug> - false",
-                )
-            # 数据重加载
+            # 清除缓存
             elif plugin_event.data.event == "MammonRoulette_Menu_clear_cache":  # type: ignore
                 with open(config.TMP_GAME_PATH, "w", encoding="utf-8") as f:
                     json.dump({}, f)
                 game_data.clear()
                 Proc.log(2, "[unity] - [恶魔轮盘] - <game_data> - None")
+            # 重载配置
+            elif plugin_event.data.event == "MammonRoulette_Menu_config_reload":  # type: ignore
+                config.init()
+                Proc.log(
+                    2,
+                    "[unity] - [恶魔轮盘] - [config] - 重加载.",
+                )
 
     # region reply
     def group_message(plugin_event, Proc):  # type: ignore
@@ -155,12 +150,15 @@ commands = FsmRouter(COMMON_CMD)
 
 
 def unity_enabled(switchKey, bot_hash="unity"):
-    switchValue = OlivaDiceCore.console.getConsoleSwitchByHash(switchKey, bot_hash)
-    if switchValue == 0 and bot_hash != "unity":
-        switchValue = OlivaDiceCore.console.getConsoleSwitchByHash(switchKey)
-    if switchValue == 0:
-        switchValue = MammonRoulette.msgCustom.dictConsoleSwitch[switchKey]
-    return switchValue == 1
+    unity_switchValue = (
+        OlivaDiceCore.console.getConsoleSwitchByHash(switchKey, "unity") == 1
+    )
+    if bot_hash == "unity":
+        return unity_switchValue
+    bot_switchValue = (
+        OlivaDiceCore.console.getConsoleSwitchByHash(switchKey, bot_hash) == 1
+    )
+    return unity_switchValue and bot_switchValue
 
 
 def unity_state(msg_manager):

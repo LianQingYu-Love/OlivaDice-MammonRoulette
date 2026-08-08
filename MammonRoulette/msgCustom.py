@@ -175,7 +175,7 @@ dictConsoleSwitch = {
     "MrDebugEnabled": -1,
 }
 dictConsoleSwitchNote = {
-    "MrMainEnabled": "[恶魔轮盘]全局开关, 默认开启\n-1 关闭\n0 跟随全局\n1 开启",
-    "MrPokeEnabled": "[恶魔轮盘]poke开关, 默认开启\n-1 关闭\n0 跟随全局\n1 开启",
-    "MrDebugEnabled": "[恶魔轮盘]调试开关, 默认关闭\n-1 关闭\n0 跟随全局\n1 开启",
+    "MrMainEnabled": "[恶魔轮盘]全局开关, 默认开启\n0 关闭\n1 开启",
+    "MrPokeEnabled": "[恶魔轮盘]poke开关, 默认开启\n0 关闭\n1 开启",
+    "MrDebugEnabled": "[恶魔轮盘]调试开关, 默认关闭\n0 关闭\n1 开启",
 }
