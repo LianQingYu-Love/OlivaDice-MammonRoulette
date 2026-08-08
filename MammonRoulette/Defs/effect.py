@@ -35,7 +35,7 @@ class BaseEffect:
 
 class 束缚(EffectComp, BaseEffect):
     name = "束缚"
-    brief = ""
+    brief = "被手铐囚禁的标识."
 
     @classmethod
     def apply(cls, msg_manager, target, stacks):

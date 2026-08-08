@@ -81,6 +81,15 @@ class EffectComp(Registerable):
     _register = {}
 
     @classmethod
+    def init_after(cls):
+        effect_helpDoc = {}
+        for effect_name, effect_cls in cls._register.items():
+            effect_cls.init()
+            effect_helpDoc[f"恶赌效果 {effect_name}"] = effect_cls.brief
+        dictHelpDoc.update(effect_helpDoc)
+        return
+
+    @classmethod
     def trigger(cls, msg_manager, effect, moment, target, effect_data):
         return cls.get(effect).callback(msg_manager, moment, target, effect_data)
 
