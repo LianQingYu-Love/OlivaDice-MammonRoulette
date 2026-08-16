@@ -8,6 +8,13 @@
 @Desc      :    None
 """
 
+try:
+    import OlivaDiceNativeGUI
+
+    has_NativeGUI = True
+except ImportError:
+    has_NativeGUI = False
+
 import copy
 import json
 import os

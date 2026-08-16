@@ -5,7 +5,7 @@
 @Contact   :    xinghu2408@foxmail.com
 @License   :    AGPLv3
 @Copyright :    (C) 2026 MammonRoulette
-@Desc      :    与 OlivaDice 源码写法一致的设置面板
+@Desc      :    None
 """
 
 import OlivaDiceCore
@@ -29,11 +29,6 @@ from PIL import Image, ImageTk  # type: ignore
 from . import config
 from .msgCustom import dictDefsMode, dictDefsProp, dictDefsEffect, dictDefsNote
 
-
-def _():
-    pass
-
-
 dictColorContext = {
     "color_001": "#00A0EA",
     "color_002": "#BBE9FF",
@@ -45,7 +40,7 @@ dictColorContext = {
 
 
 class ConfigUI(object):
-    def __init__(self, Model_name, logger_proc=_):
+    def __init__(self, Model_name, logger_proc=None):
         self.Model_name = Model_name
         self.UIObject = {}  # 存储所有UI控件对象
         self.UIData = {}  # 存储UI运行时数据 (状态、选中项等)

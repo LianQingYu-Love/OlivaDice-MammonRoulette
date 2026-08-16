@@ -16,3 +16,8 @@ from . import Defs
 from . import main
 from . import msgCustom
 from . import msgReply
+
+import platform
+
+if platform.system() == "Windows":
+    from . import GUI

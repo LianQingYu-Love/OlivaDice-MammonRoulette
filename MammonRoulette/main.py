@@ -17,8 +17,7 @@ import platform
 
 from AmorLib import DataBase, FsmRouter, MsgManager, init_msgCustom
 
-from . import config, GUI
-from .msgCustom import dictDefsMode, dictDefsProp, dictDefsEffect
+from . import config
 from .Core.comp import ModeComp, PropComp, EffectComp
 
 COMMON_CMD = ("priv", "ob", "prep", "play")
@@ -121,8 +120,11 @@ class Event(object):
                     "[unity] - [恶魔轮盘] - [config] - 重加载.",
                 )
             elif plugin_event.data.event == "MammonRoulette_Menu_manage":  # type: ignore
-                if platform.system() == "Windows":
-                    GUI.ConfigUI(
+                if (
+                    MammonRoulette.config.has_NativeGUI
+                    and platform.system() == "Windows"
+                ):
+                    MammonRoulette.GUI.ConfigUI(
                         Model_name="MammonRoulette_manage",
                         logger_proc=Proc.Proc_info.logger_proc.log,
                     ).start()
