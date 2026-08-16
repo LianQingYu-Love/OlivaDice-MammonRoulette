@@ -17,6 +17,8 @@ from AmorLib import IniConfig
 from .msgCustom import dictDefsMode, dictDefsProp, dictDefsEffect
 
 name = "恶魔轮盘"
+debug = False
+
 dataDirRoot = "plugin/data/MammonRoulette/data"
 
 default_db_path = "plugin/data/MammonRoulette/Roulette.db"

@@ -25,8 +25,8 @@
             "event": "MammonRoulette_Menu_poke_enabled"
         },
         {
-            "title": "[debug开关]",
-            "event": "MammonRoulette_Menu_debug_enabled"
+            "title": "debug模式",
+            "event": "MammonRoulette_Menu_debug"
         },
         {
             "title": "清除缓存",

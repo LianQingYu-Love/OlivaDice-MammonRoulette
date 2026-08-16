@@ -178,7 +178,6 @@ dictConsoleSwitch = {
 dictConsoleSwitchNote = {
     "MrMainEnabled": "[恶魔轮盘]全局开关, 默认开启\n0 关闭\n1 开启",
     "MrPokeEnabled": "[恶魔轮盘]poke开关, 默认开启\n0 关闭\n1 开启",
-    "MrDebugEnabled": "[恶魔轮盘]调试开关, 默认关闭\n0 关闭\n1 开启",
 }
 # endregion
 # region MammonRoulette

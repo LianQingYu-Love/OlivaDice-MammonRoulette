@@ -100,13 +100,12 @@ class Event(object):
                     + str(poke_enabled == 1),
                 )
             # debug开关
-            elif plugin_event.data.event == "MammonRoulette_Menu_debug_enabled":  # type: ignore
-                debug_enabled = 1 if not unity_enabled("MrDebugEnabled") else 0
-                setConsoleSwitchByHash("MrDebugEnabled", debug_enabled)
+            elif plugin_event.data.event == "MammonRoulette_Menu_debug":  # type: ignore
+                config.debug = not config.debug
                 Proc.log(
                     2,
-                    "[unity] - [恶魔轮盘] - <MammonRoulette_Menu_debug_enabled> - "
-                    + str(debug_enabled == 1),
+                    "[unity] - [恶魔轮盘] - <MammonRoulette_Menu_debug> - "
+                    + str(config.debug),
                 )
             # 清除缓存
             elif plugin_event.data.event == "MammonRoulette_Menu_clear_cache":  # type: ignore
@@ -189,8 +188,7 @@ def unity_state(msg_manager):
 def unity_reply(plugin_event, Proc, msg_manager):
     if not msg_manager.allow_reply:
         return
-    debug = unity_enabled("MrDebugEnabled", plugin_event.bot_info.hash)
-    if debug:
+    if config.debug:
         global game_data
         with open(config.TMP_GAME_PATH, "r", encoding="utf-8") as f:
             game_data = json.load(f)
@@ -227,7 +225,7 @@ def unity_reply(plugin_event, Proc, msg_manager):
         handler(plugin_event, Proc, msg_manager, groups)
         if game.get("over", False):
             game.clear()
-    if debug:
+    if config.debug:
         with open(config.TMP_GAME_PATH, "w", encoding="utf-8") as f:
             json.dump(game_data, f, ensure_ascii=False, indent=4)
         Proc.log(0, f"[unity] - [恶魔轮盘] - [debug] - commands(state, msg).")
