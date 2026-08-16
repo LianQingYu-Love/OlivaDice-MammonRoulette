@@ -5,7 +5,7 @@
     "info": "權衡風險與收益：是孤注一擲，還是步步爲營? 生死之間唯有膽識與策略並存的惡鬼得以幸存.",
     "priority": 50000,
     "svn": 45,
-    "version": "2.15.4",
+    "version": "2.16",
     "compatible_svn": 201,
     "message_mode": "old_string",
     "support": [
@@ -35,6 +35,10 @@
         {
             "title": "重载配置",
             "event": "MammonRoulette_Menu_config_reload"
+        },
+        {
+            "title": "打开设置",
+            "event": "MammonRoulette_Menu_manage"
         }
     ]
 }

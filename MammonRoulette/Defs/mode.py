@@ -19,26 +19,20 @@ class BaseMode:
     brief = ""
     points = 0
 
-    class _seats:
+    class seats:
         default: int = 2
         max: int = 8
         min: int = 2
 
-    seats: type = _seats
-
-    class _props:
+    class props:
         pool: list = []
         ban: list = []
         limit: int = 0
 
-    props: type = _props
-
-    class _modify:
+    class modify:
         dmg: int = 1
         ammo_show: bool = True
         bullet_show: bool = False
-
-    modify: type = _modify
 
     @classmethod
     def init(cls):
@@ -313,7 +307,7 @@ class 赌徒(ModeComp, BaseMode):
         ban = []
         limit = 12
 
-    class modify:
+    class modify(BaseMode.modify):
         ammo_show = False
 
     @staticmethod

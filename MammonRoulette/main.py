@@ -8,16 +8,18 @@
 @Desc      :    None
 """
 
-import OlivaDiceCore  # type: ignore
+import OlivaDiceCore
 import MammonRoulette
 
 import json
 import os
+import platform
 
 from AmorLib import DataBase, FsmRouter, MsgManager, init_msgCustom
 
-from . import config
-from .Core.comp import ModeComp, PropComp
+from . import config, GUI
+from .msgCustom import dictDefsMode, dictDefsProp, dictDefsEffect
+from .Core.comp import ModeComp, PropComp, EffectComp
 
 COMMON_CMD = ("priv", "ob", "prep", "play")
 game_data = {}
@@ -28,7 +30,7 @@ class Event(object):
         pass
 
     def init_after(plugin_event, Proc):  # type: ignore
-        config.init()
+        config.initConfig(Proc)
         # region 初始化数据库
         with DataBase(config.DB_PATH) as db:
             db.create(
@@ -67,7 +69,10 @@ class Event(object):
         # endregion
         ModeComp.init_after()
         PropComp.init_after()
+        EffectComp.init_after()
         init_msgCustom(MammonRoulette, Proc)
+        config.readConfig(Proc)
+        config.saveConfig(Proc)
 
     def save(plugin_event, Proc):  # type: ignore
         with open(config.TMP_GAME_PATH, "w", encoding="utf-8") as f:
@@ -111,11 +116,17 @@ class Event(object):
                 Proc.log(2, "[unity] - [恶魔轮盘] - <game_data> - None")
             # 重载配置
             elif plugin_event.data.event == "MammonRoulette_Menu_config_reload":  # type: ignore
-                config.init()
+                config.readConfig(Proc)
                 Proc.log(
                     2,
                     "[unity] - [恶魔轮盘] - [config] - 重加载.",
                 )
+            elif plugin_event.data.event == "MammonRoulette_Menu_manage":  # type: ignore
+                if platform.system() == "Windows":
+                    GUI.ConfigUI(
+                        Model_name="MammonRoulette_manage",
+                        logger_proc=Proc.Proc_info.logger_proc.log,
+                    ).start()
 
     # region reply
     def group_message(plugin_event, Proc):  # type: ignore

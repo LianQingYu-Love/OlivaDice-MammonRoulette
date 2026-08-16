@@ -12,7 +12,7 @@ import random
 import string
 
 from ..main import commands
-from ..msgCustom import dictHelpDoc
+from ..msgCustom import dictHelpDoc, dictDefsMode
 from ..Core.comp import ModeComp, PropComp, EffectComp
 from ..Core.work import RegGameWork
 
@@ -245,8 +245,10 @@ class 放大镜(PropComp, BaseProp):
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
-        modify["ammo_show"] = ModeComp.get(game["mode"]["name"]).modify.ammo_show
-        modify["bullet_show"] = ModeComp.get(game["mode"]["name"]).modify.bullet_show
+        bot_hash = msg_manager.bot_hash
+        modf_cfg = dictDefsMode[bot_hash][game["mode"]["name"]]
+        modify["ammo_show"] = modf_cfg["modify"]["ammo_show"]
+        modify["bullet_show"] = modf_cfg["modify"]["bullet_show"]
         return True
 
 
@@ -350,6 +352,7 @@ class 扑克(PropComp, BaseProp):
             data["ammo_blank"] -= 1
             data["ammo_live"] += 1
         modify["ammo_show"] = False
+        modify["bullet_show"] = False
         RegGameWork.reply_info(msg_manager, f"從牌堆抽到[{cls.reply()}], 命運已然改變.")
         return True
 
@@ -364,7 +367,10 @@ class 扑克(PropComp, BaseProp):
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
-        modify["ammo_show"] = ModeComp.get(game["mode"]["name"]).modify.ammo_show
+        bot_hash = msg_manager.bot_hash
+        modf_cfg = dictDefsMode[bot_hash][game["mode"]["name"]]
+        modify["ammo_show"] = modf_cfg["modify"]["ammo_show"]
+        modify["bullet_show"] = modf_cfg["modify"]["bullet_show"]
         RegGameWork.reply_info(msg_manager, "迷霧被驅散了.")
         return
 

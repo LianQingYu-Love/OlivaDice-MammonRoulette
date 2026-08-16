@@ -8,6 +8,7 @@
 @Desc      :    None
 """
 
+# region OlivaDiceCore
 dictStrCustom = {
     "strMrSignedResult": "{tGamblerName}在生死狀簽下姓名.",
     "strMrCardHas": (
@@ -179,3 +180,22 @@ dictConsoleSwitchNote = {
     "MrPokeEnabled": "[恶魔轮盘]poke开关, 默认开启\n0 关闭\n1 开启",
     "MrDebugEnabled": "[恶魔轮盘]调试开关, 默认关闭\n0 关闭\n1 开启",
 }
+# endregion
+# region MammonRoulette
+dictDefsMode = {"default": {}}
+dictDefsProp = {"default": {}}
+dictDefsEffect = {"default": {}}
+dictDefsNote = {
+    "strModeBrief": "模式简洁",
+    "strModePoints": "赏金",
+    "strModeSeatsDefault": "默认玩家数",
+    "strModeSeatsMax": "最大玩家数",
+    "strModeSeatsMin": "最小玩家数",
+    "strModePropsPool": "道具池",
+    "strModePropsLimit": "道具上限",
+    "strModePropsBan": "禁用列表",
+    "strModeModifyDmg": "伤害修改",
+    "strModeModifyAmmoShow": "弹药显示",
+    "strModeModifyBulletShow": "子弹显示",
+}
+# endregion

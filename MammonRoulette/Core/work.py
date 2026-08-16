@@ -9,7 +9,6 @@
 """
 
 import random
-import re
 
 from AmorLib import DataBase, STRING_ROW
 

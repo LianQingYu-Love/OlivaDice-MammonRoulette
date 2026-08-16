@@ -16,7 +16,7 @@ from AmorLib import DataBase
 
 from . import config
 from .main import commands, COMMON_CMD
-from .msgCustom import dictHelpDoc
+from .msgCustom import dictHelpDoc, dictDefsMode
 from .Core.comp import ModeComp, PropComp
 from .Core.work import RegGameWork
 
@@ -190,11 +190,13 @@ def match_game(plugin_event, Proc, msg_manager, groups):
     # endregion
     # region 读取模式数据
     mode_name, seats = groups[0], groups[1]
-    mode_cfg = ModeComp.get(mode_name)
+    bot_hash = msg_manager.bot_hash
+    mode_cfg = dictDefsMode[bot_hash][mode_name]
+    mode_cls = ModeComp.get(mode_name)
     seats_min, seats_max, seats_def = (
-        mode_cfg.seats.min,
-        mode_cfg.seats.max,
-        mode_cfg.seats.default,
+        mode_cfg["seats"]["min"],
+        mode_cfg["seats"]["max"],
+        mode_cfg["seats"]["default"],
     )
     seats = int(seats) if seats else seats_def
     if not (seats_min <= seats <= seats_max):
@@ -227,11 +229,11 @@ def match_game(plugin_event, Proc, msg_manager, groups):
                 "seats": seats,
                 "mode": {
                     "name": mode_name,
-                    "points": mode_cfg.points,
+                    "points": mode_cfg["points"],
                     "props": {
-                        "pool": mode_cfg.props.pool,
-                        "ban": mode_cfg.props.ban,
-                        "limit": mode_cfg.props.limit,
+                        "pool": mode_cfg["props"]["pool"],
+                        "ban": mode_cfg["props"]["ban"],
+                        "limit": mode_cfg["props"]["limit"],
                     },
                 },
                 "data": {
@@ -242,9 +244,9 @@ def match_game(plugin_event, Proc, msg_manager, groups):
                     "order": [],
                     "players": {},
                     "modify": {
-                        "dmg": mode_cfg.modify.dmg,
-                        "ammo_show": mode_cfg.modify.ammo_show,
-                        "bullet_show": mode_cfg.modify.bullet_show,
+                        "dmg": mode_cfg["modify"]["dmg"],
+                        "ammo_show": bool(mode_cfg["modify"]["ammo_show"]),
+                        "bullet_show": bool(mode_cfg["modify"]["bullet_show"]),
                     },
                     "prop_event": [],
                 },
@@ -288,7 +290,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
             "points_mult": 0,
             "effect_event": {},
         }
-        mode_cfg.join(msg_manager, user_id)
+        mode_cls.join(msg_manager, user_id)
     # endregion
     # region 检查人数
     seats = game["seats"]
@@ -300,7 +302,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
         shooter = order[0]
         data["shooter"] = shooter
         data["players"][shooter]["actions"] = 1
-        mode_cfg.start(msg_manager)
+        mode_cls.start(msg_manager)
         game["reply"].update(
             {
                 "info": [],
