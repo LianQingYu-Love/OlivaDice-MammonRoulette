@@ -99,9 +99,7 @@ class 经典(ModeComp, BaseMode):
 
     @classmethod
     def start(cls, msg_manager):
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         for pl in order[2:]:
             RegGameWork.draw_prop(msg_manager, pl, 1)
         RegGameWork.draw_prop(msg_manager, shooter, 2)
@@ -113,9 +111,7 @@ class 经典(ModeComp, BaseMode):
     # 换人
     @classmethod
     def switch(cls, msg_manager):
-        RegGameWork.draw_prop(
-            msg_manager, msg_manager.val["game"]["data"]["shooter"], 2
-        )
+        RegGameWork.draw_prop(msg_manager, msg_manager.val["game"]["data"]["shooter"], 2)
 
 
 class 道具(ModeComp, BaseMode):
@@ -151,9 +147,7 @@ class 道具(ModeComp, BaseMode):
 
     @classmethod
     def join(cls, msg_manager, user_id):
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         players[user_id]["hp"] = 5 if len(order) < 4 else 6
 
     # 装弹
@@ -175,16 +169,8 @@ class 金币(ModeComp, BaseMode):
     )
     points = 60
     reply = [
-        (
-            "strMrModeGold_1",
-            "金币模式 机制2的回复词",
-            "金光乍現！一枚金幣落入{tGamblerName}手中.",
-        ),
-        (
-            "strMrModeGold_2",
-            "金币模式 机制2的回复词",
-            "金光乍現！一枚含金量0%的金幣?落入{tGamblerName}手中.",
-        ),
+        ("strMrModeGold_1", "金币模式 机制2的回复词", "金光乍現！一枚金幣落入{tGamblerName}手中."),
+        ("strMrModeGold_2", "金币模式 机制2的回复词", "金光乍現！一枚含金量0%的金幣?落入{tGamblerName}手中."),
     ]
 
     class props:
@@ -194,9 +180,7 @@ class 金币(ModeComp, BaseMode):
 
     @classmethod
     def start(cls, msg_manager):
-        RegGameWork.draw_prop(
-            msg_manager, msg_manager.val["game"]["data"]["shooter"], 1
-        )
+        RegGameWork.draw_prop(msg_manager, msg_manager.val["game"]["data"]["shooter"], 1)
 
     @classmethod
     def join(cls, msg_manager, user_id):
@@ -205,16 +189,12 @@ class 金币(ModeComp, BaseMode):
     # 换人
     @classmethod
     def switch(cls, msg_manager):
-        RegGameWork.draw_prop(
-            msg_manager, msg_manager.val["game"]["data"]["shooter"], 1
-        )
+        RegGameWork.draw_prop(msg_manager, msg_manager.val["game"]["data"]["shooter"], 1)
 
     # 受伤
     @classmethod
     def damage(cls, msg_manager):
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         target, dmg = tmp["target"], tmp["dmg"]
         comp = modify.setdefault("金币", [])
         if target not in comp and players[target]["hp"] - dmg <= 2:
@@ -240,13 +220,7 @@ class 勇者(ModeComp, BaseMode):
         "\n3. 实弹有1/3的概率使伤害+1."
     )
     points = 40
-    reply = [
-        (
-            "strMrModeHero_1",
-            "勇者模式 机制3的回复词",
-            "伴隨七彩光芒，魔彈發射.",
-        )
-    ]
+    reply = [("strMrModeHero_1", "勇者模式 机制3的回复词", "伴隨七彩光芒，魔彈發射.")]
 
     class props:
         pool = [
@@ -269,9 +243,7 @@ class 勇者(ModeComp, BaseMode):
 
     @classmethod
     def start(cls, msg_manager):
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         for pl in order:
             RegGameWork.draw_prop(msg_manager, pl, 2)
         RegGameWork.draw_prop(msg_manager, shooter, 1)
@@ -283,9 +255,7 @@ class 勇者(ModeComp, BaseMode):
     # 开枪
     @classmethod
     def shoot(cls, msg_manager):
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         if bullet and random.randint(1, 3) == 1:
             tmp["dmg"] += 1
             msg_reply = msg_manager.msg_format("strMrModeHero_1")
@@ -311,16 +281,8 @@ class 赌徒(ModeComp, BaseMode):
     )
     points = 40
     reply = [
-        (
-            "strMrModeGambler_1",
-            "赌徒模式 机制3的回复词",
-            "子彈擊穿突然出現的{poker}.",
-        ),
-        (
-            "strMrModeGambler_2",
-            "赌徒模式 机制4的回复词",
-            "伴隨七彩光芒，魔彈發射.",
-        ),
+        ("strMrModeGambler_1", "赌徒模式 机制3的回复词", "子彈擊穿突然出現的{poker}."),
+        ("strMrModeGambler_2", "赌徒模式 机制4的回复词", "伴隨七彩光芒，魔彈發射."),
     ]
 
     class props:
@@ -351,9 +313,7 @@ class 赌徒(ModeComp, BaseMode):
 
     @classmethod
     def start(cls, msg_manager):
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         modify["ammo_hide"] = True
         for pl in order:
             RegGameWork.draw_prop(msg_manager, pl, 2)
@@ -365,9 +325,7 @@ class 赌徒(ModeComp, BaseMode):
     # 开枪
     @classmethod
     def shoot(cls, msg_manager):
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         target, is_attack_me = tmp["target"], tmp["is_attack_me"]
         if is_attack_me and not bullet:
             RegGameWork.draw_prop(msg_manager, target, 3)
@@ -375,9 +333,7 @@ class 赌徒(ModeComp, BaseMode):
             data["bullet"] = not bullet
             data["ammo_blank"] += -1 if bullet else 1
             data["ammo_live"] += 1 if bullet else -1
-            msg_reply = msg_manager.msg_format(
-                "strMrModeGambler_1", {"poker": cls.poker()}
-            )
+            msg_reply = msg_manager.msg_format("strMrModeGambler_1", {"poker": cls.poker()})
             RegGameWork.reply_info(msg_manager, msg_reply)
         if data["bullet"] and random.randint(1, 3) == 1:
             tmp["dmg"] += 1

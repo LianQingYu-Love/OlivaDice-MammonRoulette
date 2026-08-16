@@ -27,7 +27,13 @@ import re
 from PIL import Image, ImageTk  # type: ignore
 
 from . import config
-from .msgCustom import dictDefsMode, dictDefsProp, dictDefsEffect, dictDefsNote
+from .msgCustom import (
+    dictHelpDoc,
+    dictDefsMode,
+    dictDefsProp,
+    dictDefsEffect,
+    dictDefsNote,
+)
 
 dictColorContext = {
     "color_001": "#00A0EA",
@@ -70,13 +76,9 @@ class ConfigUI(object):
         self.init_notebook()  # 主选项卡容器
 
         self.init_frame_main()  # "首页" 选项卡
-        self.UIObject["Notebook_root"].add(
-            self.UIObject["frame_main_root"], text="首页"
-        )
+        self.UIObject["Notebook_root"].add(self.UIObject["frame_main_root"], text="首页")
         self.init_frame_mode()  # "模式" 选项卡
-        self.UIObject["Notebook_root"].add(
-            self.UIObject["frame_mode_root"], text="模式"
-        )
+        self.UIObject["Notebook_root"].add(self.UIObject["frame_mode_root"], text="模式")
         # self.init_frame_prop()  # "道具" 选项卡
         # self.UIObject["Notebook_root"].add(
         #     self.UIObject["frame_prop_root"], text="道具"
@@ -115,9 +117,7 @@ class ConfigUI(object):
         # 构建下拉选项列表
         self.UIData["hash_default"] = "unity"
         self.UIData["hash_default_key"] = "全局 (不推荐)"
-        self.UIData["hash_find"] = {
-            self.UIData["hash_default_key"]: self.UIData["hash_default"]
-        }
+        self.UIData["hash_find"] = {self.UIData["hash_default_key"]: self.UIData["hash_default"]}
         self.UIData["hash_list"] = [self.UIData["hash_default_key"]]
 
         for hash_this in OlivaDiceNativeGUI.load.dictBotInfo:
@@ -133,12 +133,9 @@ class ConfigUI(object):
 
         self.UIData["hash_now"] = self.UIData["hash_default"]
         self.UIObject["hash_Combobox_root"]["value"] = tuple(self.UIData["hash_list"])
-        self.UIObject["hash_Combobox_root"].current(
-            self.UIData["hash_list"].index(self.UIData["hash_default_key"])
-        )
+        self.UIObject["hash_Combobox_root"].current(self.UIData["hash_list"].index(self.UIData["hash_default_key"]))
         self.UIObject["hash_Combobox_root"].bind(
-            "<<ComboboxSelected>>",
-            lambda x: self.Combobox_ComboboxSelected(x, "set", "hash_Combobox_root"),
+            "<<ComboboxSelected>>", lambda x: self.Combobox_ComboboxSelected(x, "set", "hash_Combobox_root")
         )
 
         # 在线状态标签 (显示当前在线Bot数量)
@@ -147,9 +144,7 @@ class ConfigUI(object):
             self.UIObject["root"],
             textvariable=self.UIData["onlineStatus_Label_root_StringVar"],
         )
-        self.UIObject["onlineStatus_Label_root"].configure(
-            bg=self.UIConfig["color_001"], fg=self.UIConfig["color_004"]
-        )
+        self.UIObject["onlineStatus_Label_root"].configure(bg=self.UIConfig["color_001"], fg=self.UIConfig["color_004"])
         self.UIObject["onlineStatus_Label_root"].grid(
             row=0,
             column=1,
@@ -162,9 +157,7 @@ class ConfigUI(object):
 
     def Combobox_ComboboxSelected(self, action, event, target):
         if target == "hash_Combobox_root":
-            self.UIData["hash_now"] = self.UIData["hash_find"][
-                self.UIData["hash_Combobox_root_StringVar"].get()
-            ]
+            self.UIData["hash_now"] = self.UIData["hash_find"][self.UIData["hash_Combobox_root_StringVar"].get()]
             self.init_data_total()
 
     # endregion
@@ -250,9 +243,7 @@ class ConfigUI(object):
         )
 
         # 创建 Notebook 实例并放置到主窗口
-        self.UIObject["Notebook_root"] = ttk.Notebook(
-            self.UIObject["root"], style="TNotebook"
-        )
+        self.UIObject["Notebook_root"] = ttk.Notebook(self.UIObject["root"], style="TNotebook")
         self.UIObject["Notebook_root"].grid(
             row=1,
             column=0,
@@ -295,12 +286,12 @@ class ConfigUI(object):
 
         # 全局模式 (unity) 下的安全限制
         buttons_to_disable_in_global = [
-            "button_reset_mode",
+            "button_reset_mode_default",
             "button_import_mode",
             "button_export_mode",
             "button_refresh_mode",
-            "buttom_reset_mode",
-            "buttom_reset_mode_detail",
+            "button_reset_mode_config",
+            "button_reset_mode_detail",
             "button_edit_mode_detail",
         ]
         for button_name in buttons_to_disable_in_global:
@@ -309,9 +300,7 @@ class ConfigUI(object):
                 self.UIObject[button_name].config(state=state)
 
         # 更新右上角在线状态
-        self.UIData["onlineStatus_Label_root_StringVar"].set(
-            "当前在线: %s" % OlivaDiceNativeGUI.load.onlineAPICount
-        )
+        self.UIData["onlineStatus_Label_root_StringVar"].set("当前在线: %s" % OlivaDiceNativeGUI.load.onlineAPICount)
 
         # region 模式数据
         # 保存当前选中的模式，以便刷新后恢复选择
@@ -324,27 +313,18 @@ class ConfigUI(object):
         for item in self.UIObject["tree_mode"].get_children():
             self.UIObject["tree_mode"].delete(item)
 
-        source_data = (
-            dictDefsMode["default"]
-            if is_global_mode
-            else dictDefsMode.get(self.UIData["hash_now"], {})
-        )
-        for mode_name, mode_info in source_data.items():
-            brief = mode_info.get("brief", "").replace("\n", " ").strip()
-            points = mode_info.get("points", 0)
-            seats = mode_info.get("seats", {})
+        source_data = dictDefsMode["default"] if is_global_mode else dictDefsMode.get(self.UIData["hash_now"], {})
+        for mode_name, mode_data in source_data.items():
+            brief = mode_data.get("brief", "").replace("\n", " ").strip()
+            points = mode_data.get("points", 0)
+            seats = mode_data.get("seats", {})
             seat_range = f"{seats.get('min', 2)}-{seats.get('max', 8)}"
-            self.UIObject["tree_mode"].insert(
-                "", "end", text=mode_name, values=(mode_name, points, seat_range, brief)
-            )
+            self.UIObject["tree_mode"].insert("", "end", text=mode_name, values=(mode_name, points, seat_range, brief))
 
         # 恢复之前选中的模式
         if selected_mode_name is not None:
             for child in self.UIObject["tree_mode"].get_children():
-                if (
-                    self.UIObject["tree_mode"].item(child)["values"][0]
-                    == selected_mode_name
-                ):
+                if self.UIObject["tree_mode"].item(child)["values"][0] == selected_mode_name:
                     self.UIObject["tree_mode"].selection_set(child)
                     self.UIObject["tree_mode"].focus(child)
                     self.UIObject["tree_mode"].see(child)
@@ -357,18 +337,14 @@ class ConfigUI(object):
         """初始化首页"""
         self.UIObject["frame_main_root"] = tkinter.Frame(self.UIObject["Notebook_root"])
         self.UIObject["frame_main_root"].configure(relief=tkinter.FLAT)
-        self.UIObject["frame_main_root"].grid(
-            row=1, column=0, sticky="nsew", rowspan=1, columnspan=1
-        )
+        self.UIObject["frame_main_root"].grid(row=1, column=0, sticky="nsew", rowspan=1, columnspan=1)
         # 配置网格权重
         for i in range(5):
             self.UIObject["frame_main_root"].grid_rowconfigure(i, weight=0)
         self.UIObject["frame_main_root"].grid_rowconfigure(3, weight=15)
         for i in range(9):
             self.UIObject["frame_main_root"].grid_columnconfigure(i, weight=15)
-        self.UIObject["frame_main_root"].configure(
-            bg=self.UIConfig["color_001"], borderwidth=0
-        )
+        self.UIObject["frame_main_root"].configure(bg=self.UIConfig["color_001"], borderwidth=0)
 
         # ---------- Bot 信息 ----------
         self.UIObject["label_bot_info"] = tkinter.Label(
@@ -412,12 +388,8 @@ class ConfigUI(object):
             height=2,
             width=12,
         )
-        self.UIObject["button_share_1"].bind(
-            "<Enter>", lambda x: self.button_action("button_share_1", "<Enter>")
-        )
-        self.UIObject["button_share_1"].bind(
-            "<Leave>", lambda x: self.button_action("button_share_1", "<Leave>")
-        )
+        self.UIObject["button_share_1"].bind("<Enter>", lambda x: self.button_action("button_share_1", "<Enter>"))
+        self.UIObject["button_share_1"].bind("<Leave>", lambda x: self.button_action("button_share_1", "<Leave>"))
         self.UIObject["button_share_1"].grid(
             row=4,
             column=0,
@@ -442,12 +414,8 @@ class ConfigUI(object):
             height=2,
             width=12,
         )
-        self.UIObject["button_share_2"].bind(
-            "<Enter>", lambda x: self.button_action("button_share_2", "<Enter>")
-        )
-        self.UIObject["button_share_2"].bind(
-            "<Leave>", lambda x: self.button_action("button_share_2", "<Leave>")
-        )
+        self.UIObject["button_share_2"].bind("<Enter>", lambda x: self.button_action("button_share_2", "<Enter>"))
+        self.UIObject["button_share_2"].bind("<Leave>", lambda x: self.button_action("button_share_2", "<Leave>"))
         self.UIObject["button_share_2"].grid(
             row=4,
             column=2,
@@ -462,9 +430,7 @@ class ConfigUI(object):
         self.UIObject["button_share_3"] = tkinter.Button(
             self.UIObject["frame_main_root"],
             text="项目源码",
-            command=lambda: self.show_project_site(
-                "https://github.com/OlivOS-Team/OlivaDiceCore"
-            ),
+            command=lambda: self.show_project_site("https://github.com/OlivOS-Team/OlivaDiceCore"),
             bd=0,
             activebackground=self.UIConfig["color_002"],
             activeforeground=self.UIConfig["color_001"],
@@ -474,12 +440,8 @@ class ConfigUI(object):
             height=2,
             width=12,
         )
-        self.UIObject["button_share_3"].bind(
-            "<Enter>", lambda x: self.button_action("button_share_3", "<Enter>")
-        )
-        self.UIObject["button_share_3"].bind(
-            "<Leave>", lambda x: self.button_action("button_share_3", "<Leave>")
-        )
+        self.UIObject["button_share_3"].bind("<Enter>", lambda x: self.button_action("button_share_3", "<Enter>"))
+        self.UIObject["button_share_3"].bind("<Leave>", lambda x: self.button_action("button_share_3", "<Leave>"))
         self.UIObject["button_share_3"].grid(
             row=4,
             column=5,
@@ -496,17 +458,13 @@ class ConfigUI(object):
         """初始化模式选项"""
         self.UIObject["frame_mode_root"] = tkinter.Frame(self.UIObject["Notebook_root"])
         self.UIObject["frame_mode_root"].configure(relief=tkinter.FLAT)
-        self.UIObject["frame_mode_root"].grid(
-            row=1, column=0, sticky="nsew", rowspan=1, columnspan=1, padx=0, pady=0
-        )
+        self.UIObject["frame_mode_root"].grid(row=1, column=0, sticky="nsew", rowspan=1, columnspan=1, padx=0, pady=0)
         self.UIObject["frame_mode_root"].grid_rowconfigure(0, weight=0)
         self.UIObject["frame_mode_root"].grid_rowconfigure(1, weight=1)
         self.UIObject["frame_mode_root"].grid_rowconfigure(2, weight=0)
         self.UIObject["frame_mode_root"].grid_columnconfigure(0, weight=1)
         self.UIObject["frame_mode_root"].grid_columnconfigure(1, weight=4)
-        self.UIObject["frame_mode_root"].configure(
-            bg=self.UIConfig["color_001"], borderwidth=0
-        )
+        self.UIObject["frame_mode_root"].configure(bg=self.UIConfig["color_001"], borderwidth=0)
 
         self.UIObject["label_mode_note"] = tkinter.Label(
             self.UIObject["frame_mode_root"],
@@ -515,9 +473,7 @@ class ConfigUI(object):
             fg=self.UIConfig["color_004"],
             font=("等线", 12),
         )
-        self.UIObject["label_mode_note"].grid(
-            row=0, column=0, columnspan=2, sticky="nw", padx=15, pady=(10, 5)
-        )
+        self.UIObject["label_mode_note"].grid(row=0, column=0, columnspan=2, sticky="nw", padx=15, pady=(10, 5))
 
         # 左侧模式列表
         self.UIObject["tree_mode"] = ttk.Treeview(self.UIObject["frame_mode_root"])
@@ -526,21 +482,15 @@ class ConfigUI(object):
         self.UIObject["tree_mode"].column("NAME", width=150, anchor="w")
         self.UIObject["tree_mode"].heading("NAME", text="模式")
         self.UIObject["tree_mode"].grid(row=1, column=0, sticky="nsew", padx=15, pady=5)
-        self.UIObject["tree_mode"].bind(
-            "<<TreeviewSelect>>", lambda x: self.tree_mode_select()
-        )
+        self.UIObject["tree_mode"].bind("<<TreeviewSelect>>", lambda x: self.tree_mode_select())
 
         self.UIObject["tree_mode_yscroll"] = ttk.Scrollbar(
             self.UIObject["frame_mode_root"],
             orient="vertical",
             command=self.UIObject["tree_mode"].yview,
         )
-        self.UIObject["tree_mode"].configure(
-            yscrollcommand=self.UIObject["tree_mode_yscroll"].set
-        )
-        self.UIObject["tree_mode_yscroll"].grid(
-            row=1, column=0, sticky="nse", padx=0, pady=5
-        )
+        self.UIObject["tree_mode"].configure(yscrollcommand=self.UIObject["tree_mode_yscroll"].set)
+        self.UIObject["tree_mode_yscroll"].grid(row=1, column=0, sticky="nse", padx=0, pady=5)
 
         # 右侧三列列表
         self.UIObject["tree_mode_detail"] = ttk.Treeview(
@@ -554,193 +504,55 @@ class ConfigUI(object):
         self.UIObject["tree_mode_detail"].column("#0", width=160, anchor="w")
         self.UIObject["tree_mode_detail"].column("NOTE", width=180, anchor="w")
         self.UIObject["tree_mode_detail"].column("VALUE", width=280, anchor="w")
-        self.UIObject["tree_mode_detail"].grid(
-            row=1, column=1, sticky="nsew", padx=15, pady=5
-        )
+        self.UIObject["tree_mode_detail"].grid(row=1, column=1, sticky="nsew", padx=15, pady=5)
 
         self.UIObject["tree_mode_detail_yscroll"] = ttk.Scrollbar(
             self.UIObject["frame_mode_root"],
             orient="vertical",
             command=self.UIObject["tree_mode_detail"].yview,
         )
-        self.UIObject["tree_mode_detail"].configure(
-            yscrollcommand=self.UIObject["tree_mode_detail_yscroll"].set
-        )
-        self.UIObject["tree_mode_detail_yscroll"].grid(
-            row=1, column=1, sticky="nse", padx=0, pady=5
-        )
+        self.UIObject["tree_mode_detail"].configure(yscrollcommand=self.UIObject["tree_mode_detail_yscroll"].set)
+        self.UIObject["tree_mode_detail_yscroll"].grid(row=1, column=1, sticky="nse", padx=0, pady=5)
 
         # 按钮栏
-        self.UIObject["button_frame_mode"] = tkinter.Frame(
-            self.UIObject["frame_mode_root"]
-        )
+        self.UIObject["button_frame_mode"] = tkinter.Frame(self.UIObject["frame_mode_root"])
         self.UIObject["button_frame_mode"].configure(bg=self.UIConfig["color_001"])
-        self.UIObject["button_frame_mode"].grid(
-            row=2, column=0, columnspan=2, sticky="nsew", padx=15, pady=8
-        )
+        self.UIObject["button_frame_mode"].grid(row=2, column=0, columnspan=2, sticky="nsew", padx=15, pady=8)
 
-        # 恢复默认
-        self.UIObject["button_reset_mode"] = tkinter.Button(
-            self.UIObject["button_frame_mode"],
-            text="恢复默认",
-            command=self.reset_mode_default,
-            bd=0,
-            activebackground=self.UIConfig["color_002"],
-            activeforeground=self.UIConfig["color_001"],
-            bg=self.UIConfig["color_003"],
-            fg=self.UIConfig["color_004"],
-            relief="groove",
-            height=2,
-            width=12,
-        )
-        self.UIObject["button_reset_mode"].bind(
-            "<Enter>", lambda x: self.button_action("button_reset_mode", "<Enter>")
-        )
-        self.UIObject["button_reset_mode"].bind(
-            "<Leave>", lambda x: self.button_action("button_reset_mode", "<Leave>")
-        )
-
-        # 导入
-        self.UIObject["button_import_mode"] = tkinter.Button(
-            self.UIObject["button_frame_mode"],
-            text="导入模式",
-            command=self.import_mode_config,
-            bd=0,
-            activebackground=self.UIConfig["color_002"],
-            activeforeground=self.UIConfig["color_001"],
-            bg=self.UIConfig["color_003"],
-            fg=self.UIConfig["color_004"],
-            relief="groove",
-            height=2,
-            width=12,
-        )
-        self.UIObject["button_import_mode"].bind(
-            "<Enter>", lambda x: self.button_action("button_import_mode", "<Enter>")
-        )
-        self.UIObject["button_import_mode"].bind(
-            "<Leave>", lambda x: self.button_action("button_import_mode", "<Leave>")
-        )
-
-        # 导出
-        self.UIObject["button_export_mode"] = tkinter.Button(
-            self.UIObject["button_frame_mode"],
-            text="导出模式",
-            command=self.export_mode_config,
-            bd=0,
-            activebackground=self.UIConfig["color_002"],
-            activeforeground=self.UIConfig["color_001"],
-            bg=self.UIConfig["color_003"],
-            fg=self.UIConfig["color_004"],
-            relief="groove",
-            height=2,
-            width=12,
-        )
-        self.UIObject["button_export_mode"].bind(
-            "<Enter>", lambda x: self.button_action("button_export_mode", "<Enter>")
-        )
-        self.UIObject["button_export_mode"].bind(
-            "<Leave>", lambda x: self.button_action("button_export_mode", "<Leave>")
-        )
-
-        # 刷新
-        self.UIObject["button_refresh_mode"] = tkinter.Button(
-            self.UIObject["button_frame_mode"],
-            text="刷新模式",
-            command=self.refresh_mode_config,
-            bd=0,
-            activebackground=self.UIConfig["color_002"],
-            activeforeground=self.UIConfig["color_001"],
-            bg=self.UIConfig["color_003"],
-            fg=self.UIConfig["color_004"],
-            relief="groove",
-            height=2,
-            width=12,
-        )
-        self.UIObject["button_refresh_mode"].bind(
-            "<Enter>", lambda x: self.button_action("button_refresh_mode", "<Enter>")
-        )
-        self.UIObject["button_refresh_mode"].bind(
-            "<Leave>", lambda x: self.button_action("button_refresh_mode", "<Leave>")
-        )
-
-        # 恢复模式
-        self.UIObject["buttom_reset_mode"] = tkinter.Button(
-            self.UIObject["button_frame_mode"],
-            text="恢复模式",
-            command=self.reset_mode_config,
-            bd=0,
-            activebackground=self.UIConfig["color_002"],
-            activeforeground=self.UIConfig["color_001"],
-            bg=self.UIConfig["color_003"],
-            fg=self.UIConfig["color_004"],
-            relief="groove",
-            height=2,
-            width=12,
-        )
-        self.UIObject["buttom_reset_mode"].bind(
-            "<Enter>", lambda x: self.button_action("buttom_reset_mode", "<Enter>")
-        )
-        self.UIObject["buttom_reset_mode"].bind(
-            "<Leave>", lambda x: self.button_action("buttom_reset_mode", "<Leave>")
-        )
-
-        # 恢复模式详情
-        self.UIObject["buttom_reset_mode_detail"] = tkinter.Button(
-            self.UIObject["button_frame_mode"],
-            text="恢复模式详情",
-            command=self.reset_mode_detail_config,
-            bd=0,
-            activebackground=self.UIConfig["color_002"],
-            activeforeground=self.UIConfig["color_001"],
-            bg=self.UIConfig["color_003"],
-            fg=self.UIConfig["color_004"],
-            relief="groove",
-            height=2,
-            width=14,
-        )
-        self.UIObject["buttom_reset_mode_detail"].bind(
-            "<Enter>",
-            lambda x: self.button_action("buttom_reset_mode_detail", "<Enter>"),
-        )
-        self.UIObject["buttom_reset_mode_detail"].bind(
-            "<Leave>",
-            lambda x: self.button_action("buttom_reset_mode_detail", "<Leave>"),
-        )
-
-        # 编辑
-        self.UIObject["button_edit_mode_detail"] = tkinter.Button(
-            self.UIObject["button_frame_mode"],
-            text="编辑",
-            command=self.tree_mode_detail_edit,
-            bd=0,
-            activebackground=self.UIConfig["color_002"],
-            activeforeground=self.UIConfig["color_001"],
-            bg=self.UIConfig["color_003"],
-            fg=self.UIConfig["color_004"],
-            relief="groove",
-            height=2,
-            width=12,
-        )
-        self.UIObject["button_edit_mode_detail"].bind(
-            "<Enter>",
-            lambda x: self.button_action("button_edit_mode_detail", "<Enter>"),
-        )
-        self.UIObject["button_edit_mode_detail"].bind(
-            "<Leave>",
-            lambda x: self.button_action("button_edit_mode_detail", "<Leave>"),
-        )
-
-        # 按钮栏布局
+        button_configs = [
+            ("button_reset_mode_default", "恢复默认", self.reset_mode_default),
+            ("button_import_mode", "导入模式", self.import_mode_config),
+            ("button_export_mode", "导出模式", self.export_mode_config),
+            ("button_refresh_mode", "刷新模式", self.refresh_mode_config),
+            ("button_reset_mode_config", "恢复模式", self.reset_mode_config),
+            ("button_reset_mode_detail", "恢复模式详情", self.reset_mode_detail_config, 14),
+            ("button_edit_mode_detail", "编辑", self.tree_mode_detail_edit),
+        ]
+        for config in button_configs:
+            name, text, command = config[0], config[1], config[2]
+            width = config[3] if len(config) > 3 else 12
+            self.UIObject[name] = tkinter.Button(
+                self.UIObject["button_frame_mode"],
+                text=text,
+                command=command,
+                bd=0,
+                activebackground=self.UIConfig["color_002"],
+                activeforeground=self.UIConfig["color_001"],
+                bg=self.UIConfig["color_003"],
+                fg=self.UIConfig["color_004"],
+                relief="groove",
+                height=2,
+                width=width,
+            )
+            self.UIObject[name].bind("<Enter>", lambda x: self.button_action(name, "<Enter>"))
+            self.UIObject[name].bind("<Leave>", lambda x: self.button_action(name, "<Leave>"))
+        # 按钮布局
         # 左侧按钮：恢复默认、导入、导出、刷新
-        self.UIObject["button_reset_mode"].pack(side=tkinter.LEFT, padx=(0, 5))
-        self.UIObject["button_import_mode"].pack(side=tkinter.LEFT, padx=(0, 5))
-        self.UIObject["button_export_mode"].pack(side=tkinter.LEFT, padx=(0, 5))
-        self.UIObject["button_refresh_mode"].pack(side=tkinter.LEFT, padx=(0, 5))
-
+        for name in ["button_reset_mode_default", "button_import_mode", "button_export_mode", "button_refresh_mode"]:
+            self.UIObject[name].pack(side=tkinter.LEFT, padx=(0, 5))
         # 右侧按钮：恢复模式、恢复模式详情、编辑（从右到左）
-        self.UIObject["button_edit_mode_detail"].pack(side=tkinter.RIGHT, padx=(0, 0))
-        self.UIObject["buttom_reset_mode_detail"].pack(side=tkinter.RIGHT, padx=(0, 5))
-        self.UIObject["buttom_reset_mode"].pack(side=tkinter.RIGHT, padx=(0, 5))
+        for name in ["button_edit_mode_detail", "button_reset_mode_detail", "button_reset_mode_config"]:
+            self.UIObject[name].pack(side=tkinter.RIGHT, padx=(0, 5))
 
     def tree_mode_select(self):
         """模式选择事件"""
@@ -752,13 +564,9 @@ class ConfigUI(object):
             return
         item = self.UIObject["tree_mode"].item(selection[0])
         mode_name = item["values"][0]
-        source_data = (
-            dictDefsMode["default"]
-            if self.UIData["hash_now"] == "unity"
-            else dictDefsMode[self.UIData["hash_now"]]
-        )
-        mode_info = source_data.get(mode_name)
-        if not mode_info:
+        source_data = dictDefsMode["default"] if self.UIData["hash_now"] == "unity" else dictDefsMode[self.UIData["hash_now"]]
+        mode_data = source_data.get(mode_name)
+        if not mode_data:
             return
 
         # 字段配置
@@ -780,11 +588,11 @@ class ConfigUI(object):
             value = ""
             note_text = dictDefsNote.get(note_key, "")
             if field_key == "brief":
-                value = mode_info.get("brief", "").replace("\n", "\\n")
+                value = mode_data.get("brief", "").replace("\n", "\\n")
             elif field_key == "points":
-                value = str(mode_info.get("points", 0))
+                value = str(mode_data.get("points", 0))
             elif field_key.startswith("seats_"):
-                seats = mode_info.get("seats", {})
+                seats = mode_data.get("seats", {})
                 if field_key == "seats_default":
                     value = str(seats.get("default", 2))
                 elif field_key == "seats_min":
@@ -792,7 +600,7 @@ class ConfigUI(object):
                 elif field_key == "seats_max":
                     value = str(seats.get("max", 8))
             elif field_key.startswith("props_"):
-                props = mode_info.get("props", {})
+                props = mode_data.get("props", {})
                 if field_key == "props_pool":
                     lst = props.get("pool", [])
                     value = ", ".join(lst) if lst else "（空）"
@@ -802,7 +610,7 @@ class ConfigUI(object):
                 elif field_key == "props_limit":
                     value = str(props.get("limit", 0))
             elif field_key.startswith("modify_"):
-                modify = mode_info.get("modify", {})
+                modify = mode_data.get("modify", {})
                 if field_key == "modify_dmg":
                     value = str(modify.get("dmg", 1))
                 elif field_key == "modify_ammo_show":
@@ -817,6 +625,11 @@ class ConfigUI(object):
                 tags=(field_key,),
             )
 
+    def update_mode_helpdoc(self, mode_name, mode_data):
+        """更新帮助文档"""
+        current_hash = self.UIData["hash_now"]
+        OlivaDiceCore.helpDocData.dictHelpDoc[current_hash][f"恶赌模式 {mode_name}"] = mode_data["brief"]
+
     def reset_mode_default(self):
         """恢复模式默认值"""
         if not messagebox.askyesno(
@@ -829,14 +642,15 @@ class ConfigUI(object):
         current_hash = self.UIData["hash_now"]
         default_modes = copy.deepcopy(dictDefsMode["default"])
         dictDefsMode[current_hash] = default_modes
+        # 更新帮助文档
+        for mode_name, mode_data in default_modes.items():
+            self.update_mode_helpdoc(mode_name, mode_data)
         # 保存到文件
         file_path = config.dataDirRoot + "/" + current_hash + "/customMode.json"
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(default_modes, f, ensure_ascii=False, indent=4)
         self.init_data_total()
-        messagebox.showinfo(
-            "完成", "模式配置已恢复为默认值", parent=self.UIObject["root"]
-        )
+        messagebox.showinfo("完成", "模式配置已恢复为默认值", parent=self.UIObject["root"])
 
     def import_mode_config(self):
         """导入模式配置"""
@@ -864,22 +678,23 @@ class ConfigUI(object):
             try:
                 # 更新全局
                 dictDefsMode[current_hash] = import_data
+                # 更新帮助文档
+                for mode_name, mode_data in import_data.items():
+                    self.update_mode_helpdoc(mode_name, mode_data)
                 # 保存文件
                 file_path = config.dataDirRoot + "/" + current_hash + "/customMode.json"
                 with open(file_path, "w", encoding="utf-8") as f:
                     json.dump(import_data, f, ensure_ascii=False, indent=4)
                 self.init_data_total()
-                messagebox.showinfo(
-                    "完成", "模式配置导入成功", parent=self.UIObject["root"]
-                )
+                messagebox.showinfo("完成", "模式配置导入成功", parent=self.UIObject["root"])
             except Exception as e:
                 # 回滚
                 dictDefsMode[current_hash] = backup
+                for mode_name, mode_data in backup.items():
+                    self.update_mode_helpdoc(mode_name, mode_data)
                 raise
         except Exception as e:
-            messagebox.showerror(
-                "错误", f"导入失败: {str(e)}\n配置未更改", parent=self.UIObject["root"]
-            )
+            messagebox.showerror("错误", f"导入失败: {str(e)}\n配置未更改", parent=self.UIObject["root"])
 
     def export_mode_config(self):
         """导出模式配置"""
@@ -897,13 +712,9 @@ class ConfigUI(object):
             export_data = dictDefsMode.get(current_hash, {})
             with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(export_data, f, ensure_ascii=False, indent=4)
-            messagebox.showinfo(
-                "完成", "模式配置导出成功", parent=self.UIObject["root"]
-            )
+            messagebox.showinfo("完成", "模式配置导出成功", parent=self.UIObject["root"])
         except Exception as e:
-            messagebox.showerror(
-                "错误", f"导出失败: {str(e)}", parent=self.UIObject["root"]
-            )
+            messagebox.showerror("错误", f"导出失败: {str(e)}", parent=self.UIObject["root"])
 
     def refresh_mode_config(self):
         """刷新模式配置"""
@@ -925,16 +736,17 @@ class ConfigUI(object):
                 dictDefsMode[current_hash] = loaded
             else:
                 dictDefsMode[current_hash] = copy.deepcopy(dictDefsMode["default"])
+            # 更新帮助文档
+            for mode_name, mode_data in loaded.items():
+                self.update_mode_helpdoc(mode_name, mode_data)
             self.init_data_total()
-            messagebox.showinfo(
-                "完成", "模式配置刷新成功", parent=self.UIObject["root"]
-            )
+            messagebox.showinfo("完成", "模式配置刷新成功", parent=self.UIObject["root"])
         except Exception as e:
             # 回滚
             dictDefsMode[current_hash] = backup
-            messagebox.showerror(
-                "错误", f"刷新失败: {str(e)}\n配置未更改", parent=self.UIObject["root"]
-            )
+            for mode_name, mode_data in backup.items():
+                self.update_mode_helpdoc(mode_name, mode_data)
+            messagebox.showerror("错误", f"刷新失败: {str(e)}\n配置未更改", parent=self.UIObject["root"])
 
     def reset_mode_config(self):
         """恢复模式配置"""
@@ -953,9 +765,8 @@ class ConfigUI(object):
             parent=root,
         ):
             return
-        dictDefsMode[current_hash][mode_name] = copy.deepcopy(
-            dictDefsMode["default"][mode_name]
-        )
+        dictDefsMode[current_hash][mode_name] = copy.deepcopy(dictDefsMode["default"][mode_name])
+        self.update_mode_helpdoc(mode_name, dictDefsMode[current_hash][mode_name])
         file_path = config.dataDirRoot + "/" + current_hash + "/customMode.json"
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(dictDefsMode[current_hash], f, ensure_ascii=False, indent=4)
@@ -993,6 +804,8 @@ class ConfigUI(object):
         # 根据字段类型更新数据
         if field_key in ("brief", "points"):
             current_data[field_key] = default_modes[field_key]
+            if field_key == "brief":
+                self.update_mode_helpdoc(mode_name, current_data)
         elif field_key in ("seats_default", "seats_min", "seats_max"):
             key_map = {
                 "seats_default": "default",
@@ -1026,16 +839,12 @@ class ConfigUI(object):
         """模式字段编辑事件"""
         selection = self.UIObject["tree_mode_detail"].selection()
         if not selection:
-            messagebox.showwarning(
-                "警告", "请先选择要编辑的字段", parent=self.UIObject["root"]
-            )
+            messagebox.showwarning("警告", "请先选择要编辑的字段", parent=self.UIObject["root"])
             return
         item = self.UIObject["tree_mode_detail"].item(selection[0])
         tags = item["tags"]
         if not tags:
-            messagebox.showwarning(
-                "警告", "无法识别选中的字段", parent=self.UIObject["root"]
-            )
+            messagebox.showwarning("警告", "无法识别选中的字段", parent=self.UIObject["root"])
             return
         field_key = tags[0]
         display_name = item["text"]  # 条目名（即 note_key）
@@ -1147,9 +956,7 @@ class ConfigUI(object):
                 padx=4,
                 pady=8,
             )
-            self.UIObject["text_edit"].grid(
-                row=1, column=0, sticky="nsew", padx=15, pady=(0, 15)
-            )
+            self.UIObject["text_edit"].grid(row=1, column=0, sticky="nsew", padx=15, pady=(0, 15))
             self.UIObject["text_edit"].insert("1.0", self.current_value)
 
             self.UIObject["root"].iconbitmap("./resource/tmp_favoricon.ico")
@@ -1178,6 +985,7 @@ class ConfigUI(object):
         try:
             if field_key == "brief":
                 mode_data["brief"] = new_value
+                self.update_mode_helpdoc(mode_name, mode_data)
             elif field_key == "points":
                 mode_data["points"] = int(new_value)
             elif field_key.startswith("seats_"):
@@ -1193,14 +1001,10 @@ class ConfigUI(object):
                 if field_key == "props_limit":
                     props["limit"] = int(new_value)
                 elif field_key == "props_pool":
-                    lst = [
-                        item.strip() for item in new_value.split(",") if item.strip()
-                    ]
+                    lst = [item.strip() for item in new_value.split(",") if item.strip()]
                     props["pool"] = lst
                 elif field_key == "props_ban":
-                    lst = [
-                        item.strip() for item in new_value.split(",") if item.strip()
-                    ]
+                    lst = [item.strip() for item in new_value.split(",") if item.strip()]
                     props["ban"] = lst
             elif field_key.startswith("modify_"):
                 modify = mode_data.setdefault("modify", {})
@@ -1211,9 +1015,7 @@ class ConfigUI(object):
                 elif field_key == "modify_bullet_show":
                     modify["bullet_show"] = bool(int(new_value))
         except ValueError:
-            messagebox.showerror(
-                "错误", "请输入正确的数值", parent=self.UIObject["root"]
-            )
+            messagebox.showerror("错误", "请输入正确的数值", parent=self.UIObject["root"])
             return
         file_path = config.dataDirRoot + "/" + current_hash + "/customMode.json"
         with open(file_path, "w", encoding="utf-8") as f:

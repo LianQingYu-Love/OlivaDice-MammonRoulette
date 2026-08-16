@@ -185,7 +185,7 @@ dictDefsMode = {"default": {}}
 dictDefsProp = {"default": {}}
 dictDefsEffect = {"default": {}}
 dictDefsNote = {
-    "strModeBrief": "模式简洁",
+    "strModeBrief": "模式简介",
     "strModePoints": "赏金",
     "strModeSeatsDefault": "默认玩家数",
     "strModeSeatsMax": "最大玩家数",

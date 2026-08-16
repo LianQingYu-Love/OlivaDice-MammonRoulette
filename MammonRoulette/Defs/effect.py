@@ -40,18 +40,14 @@ class 束缚(EffectComp, BaseEffect):
 
     @classmethod
     def apply(cls, msg_manager, target, stacks):
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         effect_data = {"stacks": 1}
         RegGameWork.create_effect_event(game, cls.name, effect_data, target)
         return True
 
     @classmethod
     def callback(cls, msg_manager, moment, target, effect_data):
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         if moment != "switch" or target != shooter:
             return False
         return True
@@ -61,23 +57,13 @@ class 神经麻痹(EffectComp, BaseEffect):
     name = "神经麻痹"
     brief = "回合结束时失去所有[神经麻痹], 并失去等值的HP."
     reply = [
-        (
-            "strMrEffectPain_1",
-            "神经麻痹效果 层数增加",
-            "{tGamblerName}感到神经麻痹[{stacks_before}->{stacks_now}].",
-        ),
-        (
-            "strMrEffectPain_2",
-            "神经麻痹效果 结算",
-            "{tGamblerName}感到神经絮乱[hp {hp_before}->{hp_now}].",
-        ),
+        ("strMrEffectPain_1", "神经麻痹效果 层数增加", "{tGamblerName}感到神经麻痹[{stacks_before}->{stacks_now}]."),
+        ("strMrEffectPain_2", "神经麻痹效果 结算", "{tGamblerName}感到神经絮乱[hp {hp_before}->{hp_now}]."),
     ]
 
     @classmethod
     def apply(cls, msg_manager, target, stacks):
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         if cls.name not in players[target]["effect_event"]:
             expired = False if target == shooter else True
             players[target]["effect_event"][cls.name] = {
@@ -92,9 +78,7 @@ class 神经麻痹(EffectComp, BaseEffect):
 
     @classmethod
     def callback(cls, msg_manager, moment, target, effect_data):
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         if moment == "damage" and target == tmp["target"] and tmp["dmg_type"] == "":
             stacks_before = effect_data["stacks"]
             dmg, tmp["dmg"] = tmp["dmg"], 0
