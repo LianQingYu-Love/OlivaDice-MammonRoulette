@@ -20,6 +20,7 @@ from ..Core.work import RegGameWork
 class BaseProp:
     name = ""
     brief = ""
+    reply: list = []
 
     @classmethod
     def init(cls):
@@ -41,10 +42,11 @@ class BaseProp:
 class 手铐(PropComp, BaseProp):
     name = "手铐"
     brief = "不能将枪手选为目标. 束缚目标行动 1 回合, 且在目标恢复行动前无法将其再次选为目标."
-
-    @staticmethod
-    def reply():
-        return random.choice(("双手", "双手", "双手", "双腿"))
+    reply = [
+        ("strMrPropHandcuffs_1", "手铐道具 使用成功", "{tGamblerName}被銬住了{limb}."),
+        ("strMrPropHandcuffs_2", "手铐道具 使用失败", "{tGamblerName}已經被銬住了."),
+        ("strMrPropHandcuffsLimb", "手铐道具 随机描述", "双手|双手|双手|双腿"),
+    ]
 
     @classmethod
     def apply(cls, msg_manager, target):
@@ -58,17 +60,29 @@ class 手铐(PropComp, BaseProp):
         if not RegGameWork.get_effect_stacks(game, "束缚", target):
             pl_target["actions"] -= 1
             EffectComp.give(msg_manager, "束缚", target)
-            RegGameWork.reply_info(
-                msg_manager, f"{pl_target['name']}被銬住了{cls.reply()}."
+            msg_reply = msg_manager.msg_format(
+                "strMrPropHandcuffs_1",
+                {
+                    "tGamblerName": pl_target["name"],
+                    "limb": msg_manager.msg_format("strMrPropHandcuffsLimb"),
+                },
             )
+            RegGameWork.reply_info(msg_manager, msg_reply)
             return True
-        RegGameWork.reply_info(msg_manager, f"{pl_target['name']}已經被铐住了.")
+        msg_reply = msg_manager.msg_format(
+            "strMrPropHandcuffs_2", {"tGamblerName": pl_target["name"]}
+        )
+        RegGameWork.reply_info(msg_manager, msg_reply)
         return False
 
 
 class 锯子(PropComp, BaseProp):
     name = "锯子"
     brief = "每次开枪前只能使用 1 次. 下一发子弹若为实弹则伤害 +1."
+    reply = [
+        ("strMrPropSaw_1", "锯子道具 使用成功", "槍管被鋸斷."),
+        ("strMrPropSaw_2", "锯子道具 使用失败", "槍管早已被鋸斷."),
+    ]
 
     @classmethod
     def apply(cls, msg_manager, target):
@@ -78,9 +92,11 @@ class 锯子(PropComp, BaseProp):
         if not RegGameWork.get_prop_data(game, prop_name=cls.name):
             prop_data = {"name": cls.name}
             RegGameWork.create_prop_event(msg_manager, prop_data)
-            RegGameWork.reply_info(msg_manager, "槍管被鋸斷.")
+            msg_reply = msg_manager.msg_format("strMrPropSaw_1")
+            RegGameWork.reply_info(msg_manager, msg_reply)
             return True
-        RegGameWork.reply_info(msg_manager, "槍管早已被鋸斷.")
+        msg_reply = msg_manager.msg_format("strMrPropSaw_2")
+        RegGameWork.reply_info(msg_manager, msg_reply)
         return False
 
     @classmethod
@@ -97,7 +113,15 @@ class 锯子(PropComp, BaseProp):
 class 邀请函(PropComp, BaseProp):
     name = "邀请函"
     brief = "在特定道具池中, 使目标抽取 2 个道具, 并结束枪手回合."
-    pool = ("手铐", "锯子", "红牛", "放大镜", "口红", "牛奶", "止疼药")
+    reply = [
+        ("strMrPropInvite_1", "邀请函道具 对自己使用", "{tGamblerName}將邀請函撕碎."),
+        (
+            "strMrPropInvite_2",
+            "邀请函道具 对目标使用",
+            "{tGamblerName}邀請{tTargetName}參加宴會.",
+        ),
+    ]
+    pool = ("手镯", "锯子", "红牛", "放大镜", "口红", "牛奶", "止疼药")
 
     @classmethod
     def apply(cls, msg_manager, target):
@@ -108,17 +132,25 @@ class 邀请函(PropComp, BaseProp):
         RegGameWork.draw_prop(msg_manager, target, 2, cls.pool)
         RegGameWork.end_round(msg_manager)
         if target == shooter:
-            RegGameWork.reply_info(msg_manager, f"{name}將邀請函撕碎.")
-        else:
-            RegGameWork.reply_info(
-                msg_manager, f"{name}邀請{RegGameWork.get_name(game, target)}參加宴會."
+            msg_reply = msg_manager.msg_format(
+                "strMrPropInvite_1", {"tGamblerName": name}
             )
+            RegGameWork.reply_info(msg_manager, msg_reply)
+            return True
+        msg_reply = msg_manager.msg_format(
+            "strMrPropInvite_2",
+            {"tGamblerName": name, "tTargetName": RegGameWork.get_name(game, target)},
+        )
+        RegGameWork.reply_info(msg_manager, msg_reply)
         return True
 
 
 class 花生(PropComp, BaseProp):
     name = "花生"
     brief = "装填 1 发空包弹, 然后重新上膛."
+    reply = [
+        ("strMrPropPeanut_1", "花生道具 使用成功", "{tGamblerName}花生被塞進彈倉."),
+    ]
 
     @classmethod
     def apply(cls, msg_manager, target):
@@ -128,32 +160,26 @@ class 花生(PropComp, BaseProp):
         data["ammo_blank"] += 1
         RegGameWork.bullet(msg_manager)
         name = RegGameWork.get_name(game)
-        RegGameWork.reply_info(msg_manager, f"{name}裝入1发空包彈.")
+        msg_reply = msg_manager.msg_format("strMrPropPeanut_1", {"tGamblerName": name})
+        RegGameWork.reply_info(msg_manager, msg_reply)
         return True
 
 
 class 巧克力(PropComp, BaseProp):
     name = "巧克力"
     brief = "装填 1 发实弹, 然后重新上膛."
-
-    @staticmethod
-    def reply():
-        return random.choice(
-            (
-                "酒心",
-                "果仁",
-                "果醬",
-                "奶油",
-                "焦糖",
-                "咖啡",
-                "抹茶",
-                "香草",
-                "芝士",
-                "辣味",
-                "慕斯",
-                "奶油",
-            )
-        )
+    reply = [
+        (
+            "strMrPropChocolate_1",
+            "巧克力道具 使用成功",
+            "{heart}巧克力被塞進彈倉.",
+        ),
+        (
+            "strMrPropChocolateHeart",
+            "巧克力道具 随机描述",
+            "酒心|果仁|果醬|奶油|焦糖|咖啡|抹茶|香草|芝士|辣味|慕斯|奶油",
+        ),
+    ]
 
     @classmethod
     def apply(cls, msg_manager, target):
@@ -162,13 +188,24 @@ class 巧克力(PropComp, BaseProp):
         )
         data["ammo_live"] += 1
         RegGameWork.bullet(msg_manager)
-        RegGameWork.reply_info(msg_manager, f"{cls.reply()}巧克力被塞進彈倉.")
+        msg_reply = msg_manager.msg_format(
+            "strMrPropChocolate_1",
+            {"heart": msg_manager.msg_format("strMrPropChocolateHeart")},
+        )
+        RegGameWork.reply_info(msg_manager, msg_reply)
         return True
 
 
 class 香烟(PropComp, BaseProp):
     name = "香烟"
     brief = "取出 1 发空包弹, 然后重新上膛. 若弹仓内只有实弹, 则取出 1 发实弹."
+    reply = [
+        (
+            "strMrPropSmoke_1",
+            "香烟道具 使用成功",
+            "{tGamblerName}扔掉香煙, 取出一發{tBulletType}.",
+        ),
+    ]
 
     @classmethod
     def apply(cls, msg_manager, target):
@@ -182,19 +219,34 @@ class 香烟(PropComp, BaseProp):
             data["ammo_live"] -= 1
             bullet = "實彈"
         RegGameWork.bullet(msg_manager)
-        RegGameWork.reply_info(
-            msg_manager, f"{RegGameWork.get_name(game)}扔掉香煙, 取出一發{bullet}."
+        msg_reply = msg_manager.msg_format(
+            "strMrPropSmoke_1",
+            {"tGamblerName": RegGameWork.get_name(game), "tBulletType": bullet},
         )
+        RegGameWork.reply_info(msg_manager, msg_reply)
         return True
 
 
 class 红牛(PropComp, BaseProp):
     name = "红牛"
     brief = "使目标HP+1."
-
-    @staticmethod
-    def reply():
-        return random.choice(("胰島素", "白開水", "辣椒粉", "薯片", "益達", "紅牛?"))
+    reply = [
+        (
+            "strMrPropRedCow_1",
+            "红牛道具 对自己使用",
+            "{tGamblerName}將混著{ingredients}的紅牛將其一飲而盡[hp {tHpBefore}->{tHpNow}].",
+        ),
+        (
+            "strMrPropRedCow_2",
+            "红牛道具 对他人使用",
+            "{tGamblerName}將混著{ingredients}的紅牛喂給{tTargetName}[hp {tHpBefore}->{tHpNow}].",
+        ),
+        (
+            "strMrPropRedCowIngredients",
+            "红牛道具 随机描述",
+            "胰岛素|白開水|辣椒粉|薯片|益達|紅牛?",
+        ),
+    ]
 
     @classmethod
     def apply(cls, msg_manager, target):
@@ -204,21 +256,46 @@ class 红牛(PropComp, BaseProp):
         RegGameWork.damage(msg_manager, target, -1, shooter)
         name = RegGameWork.get_name(game)
         if target == shooter:
-            RegGameWork.reply_info(
-                msg_manager,
-                f"{name}將混著{cls.reply()}的紅牛將其一飲而盡[hp {tmp['hp_before']}->{tmp['hp_now']}].",
+            msg_reply = msg_manager.msg_format(
+                "strMrPropRedCow_1",
+                {
+                    "tGamblerName": name,
+                    "ingredients": msg_manager.msg_format("strMrPropRedCowIngredients"),
+                    "tHpBefore": tmp["hp_before"],
+                    "tHpNow": tmp["hp_now"],
+                },
             )
+            RegGameWork.reply_info(msg_manager, msg_reply)
         else:
-            RegGameWork.reply_info(
-                msg_manager,
-                f"{name}將混著{cls.reply()}的紅牛喂給{RegGameWork.get_name(game, target)}[hp {tmp['hp_before']}->{tmp['hp_now']}].",
+            msg_reply = msg_manager.msg_format(
+                "strMrPropRedCow_2",
+                {
+                    "tGamblerName": name,
+                    "ingredients": msg_manager.msg_format("strMrPropRedCowIngredients"),
+                    "tTargetName": RegGameWork.get_name(game, target),
+                    "tHpBefore": tmp["hp_before"],
+                    "tHpNow": tmp["hp_now"],
+                },
             )
+            RegGameWork.reply_info(msg_manager, msg_reply)
         return True
 
 
 class 放大镜(PropComp, BaseProp):
     name = "放大镜"
     brief = "每次开枪前只能使用 1 次. 在开枪前持续显示下一发子弹的虚实."
+    reply = [
+        (
+            "strMrPropMagnifier_1",
+            "放大镜道具 使用成功",
+            "{tGamblerName}砸碎放大鏡, 發現槍膛裏是{tNowBulletType}.",
+        ),
+        (
+            "strMrPropMagnifier_2",
+            "放大镜道具 使用失败",
+            "已用放大镜, 开枪前可查看子弹虚实.",
+        ),
+    ]
 
     @classmethod
     def apply(cls, msg_manager, target):
@@ -230,12 +307,20 @@ class 放大镜(PropComp, BaseProp):
             modify["ammo_show"] = True
             modify["bullet_show"] = True
             RegGameWork.create_prop_event(msg_manager, prop_data)
+            t_value = {
+                "tGamblerName": RegGameWork.get_name(game),
+                "tNowBulletType": msg_manager.msg_format(
+                    "strMrAmmoLive" if bullet else "strMrAmmoBlank"
+                ),
+            }
+            msg_reply = msg_manager.msg_format("strMrPropMagnifier_1", t_value)
             RegGameWork.reply_info(
                 msg_manager,
-                f"{RegGameWork.get_name(game)}砸碎放大鏡, 發現槍膛裏是{'實彈' if bullet else '空包彈'}.",
+                msg_reply,
             )
-            return True
-        RegGameWork.reply_info(msg_manager, "已用放大镜, 开枪前可查看子弹虚实.")
+        else:
+            msg_reply = msg_manager.msg_format("strMrPropMagnifier_2")
+            RegGameWork.reply_info(msg_manager, msg_reply)
         return False
 
     @classmethod
@@ -255,45 +340,24 @@ class 放大镜(PropComp, BaseProp):
 class 口红(PropComp, BaseProp):
     name = "口红"
     brief = "夺取目标口红和金币以外的 1 个道具, 或重新抽取 1 个道具."
-
-    @staticmethod
-    def reply():
-        return random.choice(("塗上", "塗上", "吃下")) + random.choice(
-            (
-                "複古正紅",
-                "牛血色",
-                "姨媽紅",
-                "梅子紅",
-                "磚紅色",
-                "楓葉紅",
-                "車厘子紅",
-                "酒紅色",
-                "山楂紅",
-                "朱砂紅",
-                "元氣橙色",
-                "珊瑚色",
-                "西柚色",
-                "南瓜色",
-                "胡蘿蔔色",
-                "髒橘色",
-                "赤陶色",
-                "焦糖色",
-                "芒果色",
-                "柿子色",
-                "淺粉色",
-                "桃粉色",
-                "玫瑰色",
-                "煙熏玫瑰",
-                "豆沙紅",
-                "幹枯玫瑰",
-                "豆沙粉",
-                "薔薇粉",
-                "奶茶玫瑰",
-                "蜜桃玫瑰",
-                "五彩斑斓的黑",
-                "顔色正在變幻?",
-            )
-        )
+    reply = [
+        (
+            "strMrPropLipstick_1",
+            "口红道具 对自己使用或目标无道具",
+            "{tGamblerName}{usage}{color}的口紅, 神明贈予{tPropName}.",
+        ),
+        (
+            "strMrPropLipstick_2",
+            "口红道具 对目标使用",
+            "{tGamblerName}給{usage}{color}的口紅, {tTargetName}以{tPropName}回贈.",
+        ),
+        ("strMrPropLipstickUsage", "口红道具 随机描述", "塗上|塗上|吃下"),
+        (
+            "strMrPropLipstickColor",
+            "口红道具 随机色号",
+            "複古正紅|牛血色|姨妈紅|梅子紅|磚紅色|楓葉紅|車厘子紅|酒紅色|山楂紅|朱砂紅|元氣橙色|珊瑚色|西柚色|南瓜色|胡蘿蔔色|髒橘色|赤陶色|焦糖色|芒果色|柿子色|淺粉色|桃粉色|玫瑰色|煙熏玫瑰|幹枯玫瑰|豆沙紅|幹枯玫瑰|豆沙粉|薔薇粉|奶茶玫瑰|蜜桃缤纷的黑|顔色正在變幻?",
+        ),
+    ]
 
     @classmethod
     def apply(cls, msg_manager, target):
@@ -308,17 +372,31 @@ class 口红(PropComp, BaseProp):
         ]
         if target == shooter or not props_list:
             prop = random.choice(game["mode"]["props"]["pool"])
-            RegGameWork.reply_info(
-                msg_manager, f"{name}{cls.reply()}的口紅, 神明贈予{prop}."
+            msg_reply = msg_manager.msg_format(
+                "strMrPropLipstick_1",
+                {
+                    "tGamblerName": name,
+                    "usage": msg_manager.msg_format("strMrPropLipstickUsage"),
+                    "color": msg_manager.msg_format("strMrPropLipstickColor"),
+                    "tPropName": prop,
+                },
             )
+            RegGameWork.reply_info(msg_manager, msg_reply)
         else:
             prop = random.choice(props_list)
             target_name = RegGameWork.get_name(game, target)
             RegGameWork.remove_prop(game, target, prop)
-            RegGameWork.reply_info(
-                msg_manager,
-                f"{name}給{target_name}{cls.reply()}的口紅, {target_name}以{prop}回贈.",
+            msg_reply = msg_manager.msg_format(
+                "strMrPropLipstick_2",
+                {
+                    "tGamblerName": name,
+                    "usage": msg_manager.msg_format("strMrPropLipstickUsage"),
+                    "color": msg_manager.msg_format("strMrPropLipstickColor"),
+                    "tTargetName": target_name,
+                    "tPropName": prop,
+                },
             )
+            RegGameWork.reply_info(msg_manager, msg_reply)
         RegGameWork.get_prop(game, shooter, prop)
         return True
 
@@ -326,15 +404,17 @@ class 口红(PropComp, BaseProp):
 class 扑克(PropComp, BaseProp):
     name = "扑克"
     brief = "反转子弹虚实, 并在效果期间隐藏弹仓."
-
-    @staticmethod
-    def reply():
-        if random.randint(1, 54) > 2:
-            suits = ("方片♦️", "梅花♣️", "红桃♥️", "黑桃♠️")
-            ranks = ("A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K")
-            return random.choice(suits) + random.choice(ranks)
-        else:
-            return random.choice(["JOKER", "joker"])
+    reply = [
+        (
+            "strMrPropPoker_1",
+            "扑克道具 使用成功",
+            "{tGamblerName}從牌堆抽到[{poker}], 命運已然改變.",
+        ),
+        ("strMrPropPoker_2", "扑克道具 失效", "迷霧被驅散了."),
+        ("strMrPropPokerSuits", "扑克道具 花色", "方片♦️|梅花♣️|紅桃♥️|黑桃♠️"),
+        ("strMrPropPokerRanks", "扑克道具 点数", "A|2|3|4|5|6|7|8|9|10|J|Q|K"),
+        ("strMrPropPokerJoker", "扑克道具 大小王", "JOKER|joker"),
+    ]
 
     @classmethod
     def apply(cls, msg_manager, target):
@@ -353,7 +433,20 @@ class 扑克(PropComp, BaseProp):
             data["ammo_live"] += 1
         modify["ammo_show"] = False
         modify["bullet_show"] = False
-        RegGameWork.reply_info(msg_manager, f"從牌堆抽到[{cls.reply()}], 命運已然改變.")
+        if random.randint(1, 54) > 2:
+            poker = msg_manager.msg_format(
+                "strMrPropPokerSuits"
+            ) + msg_manager.msg_format("strMrPropPokerRanks")
+        else:
+            poker = msg_manager.msg_format("strMrPropPokerJoker")
+        msg_reply = msg_manager.msg_format(
+            "strMrPropPoker_1",
+            {
+                "tGamblerName": RegGameWork.get_name(msg_manager),
+                "poker": poker,
+            },
+        )
+        RegGameWork.reply_info(msg_manager, msg_reply)
         return True
 
     @classmethod
@@ -371,17 +464,26 @@ class 扑克(PropComp, BaseProp):
         modf_cfg = dictDefsMode[bot_hash][game["mode"]["name"]]
         modify["ammo_show"] = modf_cfg["modify"]["ammo_show"]
         modify["bullet_show"] = modf_cfg["modify"]["bullet_show"]
-        RegGameWork.reply_info(msg_manager, "迷霧被驅散了.")
+        msg_reply = msg_manager.msg_format("strMrPropPoker_2")
+        RegGameWork.reply_info(msg_manager, msg_reply)
         return
 
 
 class 转盘(PropComp, BaseProp):
     name = "转盘"
     brief = "以特殊比例重新装填弹仓."
+    reply = [
+        (
+            "strMrPropRoulette_1",
+            "转盘道具 使用成功",
+            "鏽迹斑斑的轉盤開始變換……現在是世界線[{garbled}].",
+        ),
+    ]
+
     clear_prop = ["扑克"]
 
     @staticmethod
-    def reply():
+    def garbled():
         return "".join(
             random.choice(string.ascii_letters + string.digits + string.punctuation)
             for _ in range(8)
@@ -401,9 +503,11 @@ class 转盘(PropComp, BaseProp):
             prop_data = RegGameWork.get_prop_data(game, prop_name=clear_prop)
             if prop_data:
                 RegGameWork.remove_prop_event(msg_manager, prop_data[0]["id"])
-        RegGameWork.reply_info(
-            msg_manager, f"鏽迹斑斑的轉盤開始變換……現在是世界線[{cls.reply()}]"
+        msg_reply = msg_manager.msg_format(
+            "strMrPropRoulette_1",
+            {"garbled": cls.garbled()},
         )
+        RegGameWork.reply_info(msg_manager, msg_reply)
         reply["note"]["ammo"] = True
         return True
 
@@ -411,8 +515,25 @@ class 转盘(PropComp, BaseProp):
 class 牛奶(PropComp, BaseProp):
     name = "牛奶"
     brief = "在特定道具池中, 使目标抽取 2 个道具, 其余赌徒抽取 1 个道具."
+    reply = [
+        (
+            "strMrPropMilk_1",
+            "牛奶道具 对自己使用",
+            "{tGamblerName}飲下{milk}, 在暈眩中神明降下賜福..",
+        ),
+        (
+            "strMrPropMilk_2",
+            "牛奶道具 对目标使用",
+            "{tGamblerName}讓{tTargetName}飲下{milk}, 在暈眩中神明降下賜福..",
+        ),
+        (
+            "strMrPropMilkType",
+            "牛奶道具 随机描述",
+            "生鮮牛乳|酸奶|純牛奶|調味奶|炼乳|奶昔|奶酪|複原乳|濃縮牛乳|變質牛乳|冷凍牛乳",
+        ),
+    ]
     pool = (
-        "手铐",
+        "手镯",
         "锯子",
         "邀请函",
         "花生",
@@ -425,27 +546,6 @@ class 牛奶(PropComp, BaseProp):
         "转盘",
     )
 
-    @staticmethod
-    def reply():
-        return (
-            random.choice(
-                (
-                    "生鮮牛乳",
-                    "酸奶",
-                    "純牛奶",
-                    "調味奶",
-                    "煉乳",
-                    "奶昔",
-                    "奶酪",
-                    "複原乳",
-                    "濃縮牛乳",
-                    "變質牛乳",
-                    "冷凍牛乳",
-                )
-            )
-            + ", 在暈眩中神明降下賜福."
-        )
-
     @classmethod
     def apply(cls, msg_manager, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
@@ -456,13 +556,25 @@ class 牛奶(PropComp, BaseProp):
             if pl != target:
                 RegGameWork.draw_prop(msg_manager, pl, 1, cls.pool)
         name = RegGameWork.get_name(game)
+        milk = msg_manager.msg_format("strMrPropMilkType")
         if target == shooter:
-            RegGameWork.reply_info(msg_manager, f"{name}飲下{cls.reply()}")
-        else:
-            RegGameWork.reply_info(
-                msg_manager,
-                f"{name}讓{RegGameWork.get_name(game, target)}飲下{cls.reply()}",
+            msg_reply = msg_manager.msg_format(
+                "strMrPropMilk_1",
+                {
+                    "tGamblerName": name,
+                    "milk": milk,
+                },
             )
+        else:
+            msg_reply = msg_manager.msg_format(
+                "strMrPropMilk_2",
+                {
+                    "tGamblerName": name,
+                    "tTargetName": RegGameWork.get_name(game, target),
+                    "milk": milk,
+                },
+            )
+        RegGameWork.reply_info(msg_manager, msg_reply)
         return True
 
 
@@ -473,11 +585,23 @@ class 金币(PropComp, BaseProp):
     )
     direct_use = ["锯子", "花生", "巧克力", "香烟", "放大镜", "扑克", "转盘", "牛奶"]
 
-    @staticmethod
-    def reply():
-        return random.choice(
-            ("嶄新", "啞暗", "磨損", "變形", "鏽蝕", "斑駁", "鏤空", "黏膩", "沾血")
-        )
+    reply = [
+        (
+            "strMrPropGold_1",
+            "金币道具 使用成功",
+            "{tGamblerName}向自動販賣機投入一枚{quality}的金幣, 自動販賣機吐出{tPropName}.",
+        ),
+        (
+            "strMrPropGold_2",
+            "金币道具 使用成功",
+            "{tGamblerName}向自動販賣機投入一枚{quality}的金幣, 結果沒有任何反應, {tGamblerName}將其砸爛，取出{tPropName}.",
+        ),
+        (
+            "strMrPropGoldQuality",
+            "金币道具 随机描述",
+            "嶄新|啞暗|磨損|變形|鏽蝕|斑駁|鏤空|黏膩|沾血",
+        ),
+    ]
 
     @classmethod
     def init(cls):
@@ -518,15 +642,16 @@ class 金币(PropComp, BaseProp):
             props = pl_user["props"]
             props[props.index(cls.name)] = prop
             name = pl_user["name"]
-            RegGameWork.reply_info(
-                msg_manager,
-                f"{name}向自動販賣機投入一枚{cls.reply()}的金幣, "
-                + (
-                    f"結果沒有任何反應, {name}將其砸爛，取出{prop}."
-                    if random.randint(1, 4) == 1
-                    else f"自動販賣機吐出{prop}."
-                ),
-            )
+            t_value = {
+                "tGamblerName": name,
+                "tPropName": prop,
+                "quality": msg_manager.msg_format("strMrPropGoldQuality"),
+            }
+            if random.randint(1, 4) == 1:
+                msg_reply = msg_manager.msg_format("strMrPropGold_1", t_value)
+            else:
+                msg_reply = msg_manager.msg_format("strMrPropGold_2", t_value)
+            RegGameWork.reply_info(msg_manager, msg_reply)
             # 部分道具将直接使用
             if prop in cls.direct_use:
                 if PropComp.use(msg_manager, prop, user_id):
@@ -539,6 +664,23 @@ class 金币(PropComp, BaseProp):
 class 止疼药(PropComp, BaseProp):
     name = "止疼药"
     brief = "使目标在其回合结束前受到的枪击伤害转变为等值的神经麻痹. 对自身使用时, 效果延长到下回合结束."
+    reply = [
+        (
+            "strMrPropPain_1",
+            "止疼药道具 对自己使用",
+            "{tGamblerName}服用止疼药.",
+        ),
+        (
+            "strMrPropPain_2",
+            "止疼药道具 对目标使用",
+            "{tGamblerName}喂{tTargetName}服用止疼药.",
+        ),
+        (
+            "strMrPropPain_3",
+            "止疼药道具 使用失败",
+            "{tGamblerName}已服用止疼药.",
+        ),
+    ]
 
     @classmethod
     def apply(cls, msg_manager, target):
@@ -546,27 +688,47 @@ class 止疼药(PropComp, BaseProp):
             RegGameWork.get_index(msg_manager)
         )
         if RegGameWork.get_effect_stacks(game, "神经麻痹", target):
-            RegGameWork.reply_info(
-                msg_manager, f"{RegGameWork.get_name(game, target)}已服用止疼药."
+            msg_reply = msg_manager.msg_format(
+                "strMrPropPain_3", {"tGamblerName": RegGameWork.get_name(game, target)}
             )
+            RegGameWork.reply_info(msg_manager, msg_reply)
             return False
         EffectComp.give(msg_manager, "神经麻痹", target, 0)
-        RegGameWork.reply_info(
-            msg_manager, f"{RegGameWork.get_name(game, target)}服用止疼药."
-        )
+        if target == shooter:
+            msg_reply = msg_manager.msg_format(
+                "strMrPropPain_1", {"tGamblerName": RegGameWork.get_name(game, target)}
+            )
+        else:
+            msg_reply = msg_manager.msg_format(
+                "strMrPropPain_2",
+                {
+                    "tGamblerName": RegGameWork.get_name(game, shooter),
+                    "tTargetName": RegGameWork.get_name(game, target),
+                },
+            )
+        RegGameWork.reply_info(msg_manager, msg_reply)
         return True
 
 
 class 烟花(PropComp, BaseProp):
     name = "烟花"
     brief = "所有赌徒各有1/2的概率HP-1. 每杀死一名赌徒, 重新生效一次, 且概率提高至2/3. 每生效一次, 所有赌徒抽取 1 个道具."
+    reply = [
+        (
+            "strMrPropFirework_1",
+            "烟花道具 使用成功",
+            "{tGamblerName}燃放煙花, 天空變得五彩斑斕.",
+        ),
+    ]
 
     @classmethod
     def apply(cls, msg_manager, target) -> bool | None:
         game, data, reply, tmp, modify, players, order, shooter, bullet = (
             RegGameWork.get_index(msg_manager)
         )
-        msg_reply = f"{RegGameWork.get_name(game, target)}燃放煙花, 天空變得五彩斑斕."
+        msg_reply = msg_manager.msg_format(
+            "strMrPropFirework_1", {"tGamblerName": RegGameWork.get_name(game, target)}
+        )
         RegGameWork.reply_info(msg_manager, msg_reply)
         prop_data = {"name": cls.name, "data": {"reactivation": 0, "draws": 1}}
         RegGameWork.create_prop_event(msg_manager, prop_data)

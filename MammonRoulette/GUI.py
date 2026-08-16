@@ -173,8 +173,9 @@ class ConfigUI(object):
             self.init_data_total()
 
     # endregion
-    # region 主选项卡容器 (Notebook)
+    # region 容器
     def init_notebook(self):
+        """初始化 Notebook 容器"""
         self.UIData["style"] = ttk.Style(self.UIObject["root"])
 
         # 创建自定义元素
@@ -272,8 +273,28 @@ class ConfigUI(object):
         self.UIObject["Notebook_root"].grid_rowconfigure(1, weight=15)
         self.UIObject["Notebook_root"].grid_columnconfigure(0, weight=15)
 
+    def show_project_site(self, url):
+        """在默认浏览器中打开项目链接"""
+        messagebox.showinfo("提示", "将通过浏览器访问 " + url)
+        try:
+            webbrowser.open(url)
+        except webbrowser.Error as error_info:
+            messagebox.showerror("webbrowser.Error", str(error_info))
+
+    def button_action(self, name, action):
+        """
+        按钮悬停/离开事件处理
+        改变按钮背景色提供视觉反馈
+        """
+        if name in self.UIObject:
+            if action == "<Enter>":
+                self.UIObject[name].configure(bg=self.UIConfig["color_006"])
+            if action == "<Leave>":
+                self.UIObject[name].configure(bg=self.UIConfig["color_003"])
+
     # endregion
     def init_data_total(self):
+        """初始化数据"""
         tmp_hashSelection = self.UIData["hash_now"]
         is_global_mode = tmp_hashSelection == "unity"
 
@@ -338,6 +359,7 @@ class ConfigUI(object):
 
     # region 首页
     def init_frame_main(self):
+        """初始化首页"""
         self.UIObject["frame_main_root"] = tkinter.Frame(self.UIObject["Notebook_root"])
         self.UIObject["frame_main_root"].configure(relief=tkinter.FLAT)
         self.UIObject["frame_main_root"].grid(
@@ -473,35 +495,10 @@ class ConfigUI(object):
             pady=(15, 0),
         )
 
-    def show_project_site(self, url):
-        """
-        在默认浏览器中打开项目链接
-        Args:
-            url: 要打开的网址
-        """
-        messagebox.showinfo("提示", "将通过浏览器访问 " + url)
-        try:
-            webbrowser.open(url)
-        except webbrowser.Error as error_info:
-            messagebox.showerror("webbrowser.Error", str(error_info))
-
-    def button_action(self, name, action):
-        """
-        按钮悬停/离开事件处理
-        改变按钮背景色提供视觉反馈
-        Args:
-            name: 按钮对象名称
-            action: '<Enter>' 悬停 或 '<Leave>' 离开
-        """
-        if name in self.UIObject:
-            if action == "<Enter>":
-                self.UIObject[name].configure(bg=self.UIConfig["color_006"])
-            if action == "<Leave>":
-                self.UIObject[name].configure(bg=self.UIConfig["color_003"])
-
     # endregion
     # region 模式
     def init_frame_mode(self):
+        """初始化模式选项"""
         self.UIObject["frame_mode_root"] = tkinter.Frame(self.UIObject["Notebook_root"])
         self.UIObject["frame_mode_root"].configure(relief=tkinter.FLAT)
         self.UIObject["frame_mode_root"].grid(
@@ -751,6 +748,7 @@ class ConfigUI(object):
         self.UIObject["buttom_reset_mode"].pack(side=tkinter.RIGHT, padx=(0, 5))
 
     def tree_mode_select(self):
+        """模式选择事件"""
         for child in self.UIObject["tree_mode_detail"].get_children():
             self.UIObject["tree_mode_detail"].delete(child)
 
@@ -785,7 +783,6 @@ class ConfigUI(object):
 
         for field_key, note_key in field_configs:
             value = ""
-            display_name = note_key
             note_text = dictDefsNote.get(note_key, "")
             if field_key == "brief":
                 value = mode_info.get("brief", "").replace("\n", "\\n")
@@ -820,12 +817,13 @@ class ConfigUI(object):
             self.UIObject["tree_mode_detail"].insert(
                 "",
                 "end",
-                text=display_name,
+                text=note_key,
                 values=(note_text, value),
                 tags=(field_key,),
             )
 
     def reset_mode_default(self):
+        """恢复模式默认值"""
         if not messagebox.askyesno(
             "确认恢复",
             f"确定要恢复当前账号的模式配置为默认值吗？这将覆盖所有自定义修改。",
@@ -846,6 +844,7 @@ class ConfigUI(object):
         )
 
     def import_mode_config(self):
+        """导入模式配置"""
         file_path = filedialog.askopenfilename(
             title="选择模式配置文件",
             filetypes=[("JSON文件", "*.json"), ("所有文件", "*.*")],
@@ -888,6 +887,7 @@ class ConfigUI(object):
             )
 
     def export_mode_config(self):
+        """导出模式配置"""
         file_path = filedialog.asksaveasfilename(
             title="保存模式配置文件",
             defaultextension=".json",
@@ -911,6 +911,7 @@ class ConfigUI(object):
             )
 
     def refresh_mode_config(self):
+        """刷新模式配置"""
         if not messagebox.askyesno(
             "确认刷新",
             "确定要从文件重新加载模式配置吗？这将覆盖当前内存中的修改。",
@@ -941,6 +942,7 @@ class ConfigUI(object):
             )
 
     def reset_mode_config(self):
+        """恢复模式配置"""
         current_hash = self.UIData["hash_now"]
         root = self.UIObject["root"]
         mode_selection = self.UIObject["tree_mode"].selection()
@@ -965,6 +967,7 @@ class ConfigUI(object):
         self.init_data_total()
 
     def reset_mode_detail_config(self):
+        """恢复模式字段配置"""
         current_hash = self.UIData["hash_now"]
         root = self.UIObject["root"]
 
@@ -1025,6 +1028,7 @@ class ConfigUI(object):
         self.init_data_total()
 
     def tree_mode_detail_edit(self):
+        """模式字段编辑事件"""
         selection = self.UIObject["tree_mode_detail"].selection()
         if not selection:
             messagebox.showwarning(
@@ -1169,6 +1173,7 @@ class ConfigUI(object):
             self.root_class.init_data_total()
 
     def save_mode_detail(self, mode_name, field_key, new_value):
+        """保存模式字段配置"""
         current_hash = self.UIData["hash_now"]
         mode_dict = dictDefsMode.get(current_hash, {})
         if mode_name not in mode_dict:

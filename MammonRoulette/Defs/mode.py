@@ -10,6 +10,7 @@
 
 import random
 
+from ..msgCustom import dictDefsMode, dictDefsNote
 from ..Core.comp import ModeComp
 from ..Core.work import RegGameWork
 
@@ -18,6 +19,7 @@ class BaseMode:
     name = ""
     brief = ""
     points = 0
+    reply: list = []
 
     class seats:
         default: int = 2
@@ -172,6 +174,18 @@ class 金币(ModeComp, BaseMode):
         "\n2. 玩家血量首次低至 2 时, 获得 1 枚金币."
     )
     points = 60
+    reply = [
+        (
+            "strMrModeGold_1",
+            "金币模式 机制2的回复词",
+            "金光乍現！一枚金幣落入{tGamblerName}手中.",
+        ),
+        (
+            "strMrModeGold_2",
+            "金币模式 机制2的回复词",
+            "金光乍現！一枚含金量0%的金幣?落入{tGamblerName}手中.",
+        ),
+    ]
 
     class props:
         pool = ["金币"]
@@ -204,16 +218,12 @@ class 金币(ModeComp, BaseMode):
         target, dmg = tmp["target"], tmp["dmg"]
         comp = modify.setdefault("金币", [])
         if target not in comp and players[target]["hp"] - dmg <= 2:
+            t_value = {"tGamblerName": RegGameWork.get_name(game, target)}
             if RegGameWork.get_prop(game, target, "金币"):
-                RegGameWork.reply_info(
-                    msg_manager,
-                    f"金光乍現！一枚金幣落入{RegGameWork.get_name(game,target)}手中.",
-                )
+                msg_reply = msg_manager.msg_format("strMrModeGold_1", t_value)
             else:
-                RegGameWork.reply_info(
-                    msg_manager,
-                    f"金光乍現！一枚金幣落入{RegGameWork.get_name(game,target)}手中, 但不慎滑落.",
-                )
+                msg_reply = msg_manager.msg_format("strMrModeGold_2", t_value)
+            RegGameWork.reply_info(msg_manager, msg_reply)
             comp.append(target)
 
 
@@ -230,6 +240,13 @@ class 勇者(ModeComp, BaseMode):
         "\n3. 实弹有1/3的概率使伤害+1."
     )
     points = 40
+    reply = [
+        (
+            "strMrModeHero_1",
+            "勇者模式 机制3的回复词",
+            "伴隨七彩光芒，魔彈發射.",
+        )
+    ]
 
     class props:
         pool = [
@@ -271,7 +288,8 @@ class 勇者(ModeComp, BaseMode):
         )
         if bullet and random.randint(1, 3) == 1:
             tmp["dmg"] += 1
-            RegGameWork.reply_info(msg_manager, f"伴隨七彩光芒，魔彈發射.")
+            msg_reply = msg_manager.msg_format("strMrModeHero_1")
+            RegGameWork.reply_info(msg_manager, msg_reply)
         target, is_attack_me = tmp["target"], tmp["is_attack_me"]
         if is_attack_me and not bullet:
             RegGameWork.draw_prop(msg_manager, target, 2)
@@ -292,6 +310,18 @@ class 赌徒(ModeComp, BaseMode):
         "\n5. 不会正常显示弹药数量."
     )
     points = 40
+    reply = [
+        (
+            "strMrModeGambler_1",
+            "赌徒模式 机制3的回复词",
+            "子彈擊穿突然出現的{poker}.",
+        ),
+        (
+            "strMrModeGambler_2",
+            "赌徒模式 机制4的回复词",
+            "伴隨七彩光芒，魔彈發射.",
+        ),
+    ]
 
     class props:
         pool = [
@@ -311,7 +341,7 @@ class 赌徒(ModeComp, BaseMode):
         ammo_show = False
 
     @staticmethod
-    def reply():
+    def poker():
         if random.randint(1, 54) > 2:
             suits = ("方片♦️", "梅花♣️", "红桃♥️", "黑桃♠️")
             ranks = ("A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K")
@@ -345,7 +375,11 @@ class 赌徒(ModeComp, BaseMode):
             data["bullet"] = not bullet
             data["ammo_blank"] += -1 if bullet else 1
             data["ammo_live"] += 1 if bullet else -1
-            RegGameWork.reply_info(msg_manager, f"子彈擊穿突然出現的{cls.reply()}.")
+            msg_reply = msg_manager.msg_format(
+                "strMrModeGambler_1", {"poker": cls.poker()}
+            )
+            RegGameWork.reply_info(msg_manager, msg_reply)
         if data["bullet"] and random.randint(1, 3) == 1:
             tmp["dmg"] += 1
-            RegGameWork.reply_info(msg_manager, f"伴隨七彩光芒，魔彈發射.")
+            msg_reply = msg_manager.msg_format("strMrModeGambler_2")
+            RegGameWork.reply_info(msg_manager, msg_reply)

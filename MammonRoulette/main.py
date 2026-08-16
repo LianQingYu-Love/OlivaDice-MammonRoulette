@@ -99,7 +99,7 @@ class Event(object):
                     "[unity] - [恶魔轮盘] - <MammonRoulette_Menu_poke_enabled> - "
                     + str(poke_enabled == 1),
                 )
-            # debug开关
+            # debug模式
             elif plugin_event.data.event == "MammonRoulette_Menu_debug":  # type: ignore
                 config.debug = not config.debug
                 Proc.log(
