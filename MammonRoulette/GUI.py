@@ -430,7 +430,7 @@ class ConfigUI(object):
         self.UIObject["button_share_3"] = tkinter.Button(
             self.UIObject["frame_main_root"],
             text="项目源码",
-            command=lambda: self.show_project_site("https://github.com/OlivOS-Team/OlivaDiceCore"),
+            command=lambda: self.show_project_site("https://github.com/lianqingyuYuri/OlivaDice-MammonRoulette"),
             bd=0,
             activebackground=self.UIConfig["color_002"],
             activeforeground=self.UIConfig["color_001"],
