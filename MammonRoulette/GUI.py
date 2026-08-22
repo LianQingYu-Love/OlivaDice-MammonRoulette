@@ -278,7 +278,6 @@ class ConfigUI(object):
             if action == "<Leave>":
                 self.UIObject[name].configure(bg=self.UIConfig["color_003"])
 
-    # endregion
     def init_data_total(self):
         """初始化数据"""
         tmp_hashSelection = self.UIData["hash_now"]
@@ -332,6 +331,7 @@ class ConfigUI(object):
         self.tree_mode_select()
         # endregion
 
+    # endregion
     # region 首页
     def init_frame_main(self):
         """初始化首页"""
@@ -404,7 +404,7 @@ class ConfigUI(object):
         self.UIObject["button_share_2"] = tkinter.Button(
             self.UIObject["frame_main_root"],
             text="使用手册",
-            command=lambda: self.show_project_site("https://wiki.dice.center/"),
+            command=lambda: self.show_project_site("https://lianqingyuyuri.github.io/AmorDocs/MammonRoulette/"),
             bd=0,
             activebackground=self.UIConfig["color_002"],
             activeforeground=self.UIConfig["color_001"],
