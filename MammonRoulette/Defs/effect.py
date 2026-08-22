@@ -42,7 +42,7 @@ class 束缚(EffectComp, BaseEffect):
     def apply(cls, msg_manager, target, stacks):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         effect_data = {"stacks": 1}
-        RegGameWork.create_effect_event(game, cls.name, effect_data, target)
+        RegGameWork.create_effect_event(msg_manager, cls.name, effect_data, target)
         return True
 
     @classmethod
