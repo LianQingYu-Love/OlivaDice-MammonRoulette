@@ -117,7 +117,6 @@ class 邀请函(PropComp, BaseProp):
         name = RegGameWork.get_name(game)
         if target == shooter:
             msg_reply = msg_manager.msg_format("strMrPropInvite_1", {"tGamblerName": name})
-            RegGameWork.reply_info(msg_manager, msg_reply)
         else:
             msg_reply = msg_manager.msg_format(
                 "strMrPropInvite_2",
