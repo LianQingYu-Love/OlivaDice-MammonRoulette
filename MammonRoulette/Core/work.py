@@ -8,11 +8,12 @@
 @Desc      :    None
 """
 
+import Core
+
 import random
 
-from AmorLib import DataBase, STRING_ROW
+from AmorLib import DataBase
 
-from .comp import ModeComp, PropComp, EffectComp
 from .. import config
 
 
@@ -39,36 +40,30 @@ class RegGameWork:
         return game, data, reply, tmp, modify, players, order, shooter, bullet
 
     @staticmethod
+    def is_ai(game, user_id: str) -> bool:  # 是否为AI玩家
+        return game["data"]["players"][user_id]["ai_flag"] != None
+
+    @staticmethod
     def reply_info(msg_manager, info: str):
         reply = msg_manager.val["game"]["reply"]
         reply["info"].append(info)
 
     @staticmethod
     def format_reply(msg_manager) -> str:  # 格式化回复消息
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         if not reply["only"]:
             info, note = reply["info"], reply["note"]
             t_value = {}
             t_value.update({"tInfo": "\n".join(info)})
             if note["ammo"]:
                 # 子弹
-                t_value.update(
-                    {
-                        "tNowBulletType": msg_manager.msg_format(
-                            "strMrAmmoLive" if bullet else "strMrAmmoBlank"
-                        )
-                    }
-                )
+                t_value.update({"tNowBulletType": msg_manager.msg_format("strMrAmmoLive" if bullet else "strMrAmmoBlank")})
                 t_value.update(
                     {
                         "tGameNowBullet": (
                             msg_manager.msg_format("strMrGameNowBulletShow", t_value)
                             if modify["bullet_show"]
-                            else msg_manager.msg_format(
-                                "strMrGameNowBulletHide", t_value
-                            )
+                            else msg_manager.msg_format("strMrGameNowBulletHide", t_value)
                         )
                     }
                 )
@@ -139,13 +134,6 @@ class RegGameWork:
     def get_effect_stacks(game, effect: str, target: str):
         return game["data"]["players"][target]["effect_event"].get(effect, 0)
 
-    # @staticmethod
-    # def create_prop_event(game, prop, moments: STRING_ROW | str):
-    #     moments = (moments,) if type(moments) == str else moments
-    #     for moment in moments:
-    #         game["data"]["prop_event"][moment].append(prop)
-    #     return
-
     @staticmethod
     def create_prop_event(msg_manager, prop_data):
         prop_data["id"] = id(prop_data)
@@ -153,20 +141,10 @@ class RegGameWork:
 
     @staticmethod
     def create_effect_event(msg_manager, effect: str, effect_data: dict, target: str):
-        msg_manager.val["game"]["data"]["players"][target]["effect_event"][
-            effect
-        ] = effect_data
+        msg_manager.val["game"]["data"]["players"][target]["effect_event"][effect] = effect_data
 
-    # @staticmethod
-    # def remove_prop_event(game, prop, moment: STRING_ROW | str):
-    #     moments = (moment,) if type(moment) == str else moment
-    #     for moment in moments:
-    #         game["data"]["prop_event"][moment].remove(prop)
-    #     return
     @staticmethod
-    def remove_prop_event(
-        msg_manager, prop_id: int | None = None, prop_name: str | None = None
-    ):
+    def remove_prop_event(msg_manager, prop_id: int | None = None, prop_name: str | None = None):
         if not prop_id and not prop_name:
             return
         search = prop_id if prop_id else prop_name
@@ -174,40 +152,34 @@ class RegGameWork:
         prop_event = msg_manager.val["game"]["data"]["prop_event"]
         for prop_data in prop_event:
             if prop_data[search_key] == search:
-                PropComp.uninstall(msg_manager, prop_data["name"], prop_data)
+                Core.comp.PropComp.uninstall(msg_manager, prop_data["name"], prop_data)
                 prop_event.remove(prop_data)
         return
 
     @staticmethod
     def remove_effect_event(msg_manager, effect, target, stacks: int = 0):
-        effect_event = msg_manager.val["game"]["data"]["players"][target][
-            "effect_event"
-        ]
+        effect_event = msg_manager.val["game"]["data"]["players"][target]["effect_event"]
         effect_data = effect_event[effect]
         effect_data["stacks"] -= stacks
         if effect_data["stacks"] <= 0 or stacks == 0:
-            EffectComp.uninstall(msg_manager, effect)
+            Core.comp.EffectComp.uninstall(msg_manager, effect)
             del effect_event[effect]
         return
 
     @classmethod
     def handle_event(cls, msg_manager, moment, **kwargs):
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         tmp.update(kwargs)
         prop_event = data["prop_event"]
         for prop_data in reversed(prop_event):
-            if PropComp.trigger(msg_manager, prop_data["name"], moment, prop_data):
+            if Core.comp.PropComp.trigger(msg_manager, prop_data["name"], moment, prop_data):
                 cls.remove_prop_event(msg_manager, prop_data["id"])
         for target in players:
             effect_event = players[target]["effect_event"]
             for effect in list(effect_event.keys()):
-                if EffectComp.trigger(
-                    msg_manager, effect, moment, target, effect_event[effect]
-                ):
+                if Core.comp.EffectComp.trigger(msg_manager, effect, moment, target, effect_event[effect]):
                     cls.remove_effect_event(msg_manager, effect, target, 0)
-        ModeComp.trigger(msg_manager, moment)
+        Core.comp.ModeComp.trigger(msg_manager, moment)
         return
 
     # endregion
@@ -233,9 +205,7 @@ class RegGameWork:
 
     @classmethod
     def draw_prop(cls, msg_manager, user_id, count, prop_pool=None):  # 抽取道具
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         prop_pool = prop_pool or game["mode"]["props"]["pool"]
         draw_props = []
         for _ in range(count):
@@ -260,10 +230,59 @@ class RegGameWork:
     # endregion
     # region action
     @classmethod
-    def bullet(cls, msg_manager):  # 刷新子弹
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
+    def join(cls, msg_manager, user_id, ai_model=None):
+        """添加一名玩家."""
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
+        if ai_model is None:
+            with DataBase(config.DB_PATH) as db:
+                name = db.select("gambler", "name", "user_id = ?", user_id)[0][0]
+        else:
+            name = ai_model
+        order.append(user_id)
+        data["players"][user_id] = {
+            "name": name,
+            "hp": 3,
+            "actions": 0,
+            "props": [],
+            "kills": 0,
+            "suicide": False,
+            "surrender": False,
+            "points_mult": 0,
+            "effect_event": {},
+            "ai_model": ai_model,
+        }
+        Core.comp.ModeComp.get(game["mode"]["name"]).join(msg_manager, user_id)
+        return
+
+    @classmethod
+    def start(cls, msg_manager):
+        """对局开始"""
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
+        game["start"] = True
+        game["expireTime"] = 0
+        cls.bullet(msg_manager)
+        random.shuffle(order)
+        shooter = order[0]
+        data["shooter"] = shooter
+        data["players"][shooter]["actions"] = 1
+        Core.comp.ModeComp.get(game["mode"]["name"]).start(msg_manager)
+        reply.update(
+            {
+                "info": [],
+                "note": {
+                    "ammo": modify["ammo_show"] or modify["bullet_show"],
+                    "round": False,
+                },
+                "only": "",
+            }
         )
+        if cls.is_ai(game, shooter):
+            Core.comp.AIComp.action(msg_manager, shooter)
+        return
+
+    @classmethod
+    def bullet(cls, msg_manager):  # 刷新子弹
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         if data["ammo_live"] < 1:
             ammo_live, ammo_blank = cls.reload(msg_manager)
         else:
@@ -275,9 +294,7 @@ class RegGameWork:
 
     @classmethod
     def reload(cls, msg_manager):  # 装弹
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         cls.handle_event(msg_manager, "reload")
         ammo_live, ammo_blank = random.randint(1, 4), random.randint(1, 4)
         data["ammo_live"], data["ammo_blank"] = ammo_live, ammo_blank
@@ -286,9 +303,7 @@ class RegGameWork:
 
     @classmethod
     def shoot(cls, msg_manager, target):  # 开枪
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         dmg_type = ""
         is_attack_me = target == shooter
         murderer = shooter
@@ -353,9 +368,7 @@ class RegGameWork:
 
     @classmethod
     def damage(cls, msg_manager, target, dmg, murderer):  # 受伤
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         if game["over"]:
             return
         dmg_type = tmp.get("dmg_type", "")
@@ -386,15 +399,11 @@ class RegGameWork:
 
     @classmethod
     def dead(cls, msg_manager, target, murderer):  # 死亡
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         if game["over"]:
             return
         check_over = tmp.get("check_over", True)
-        cls.handle_event(
-            msg_manager, "dead", target=target, murderer=murderer, check_over=check_over
-        )
+        cls.handle_event(msg_manager, "dead", target=target, murderer=murderer, check_over=check_over)
         target, murderer, check_over = tmp["target"], tmp["murderer"], tmp["check_over"]
         if not murderer:
             murderer = shooter
@@ -429,19 +438,14 @@ class RegGameWork:
 
     @classmethod
     def is_over(cls, msg_manager):  # 游戏是否结束
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         if game["over"]:
             return True
-        game["over"] = True
         tmp["check_over"] = True
         if len(order) == 1:
             cls.reply_info(
                 msg_manager,
-                msg_manager.msg_format(
-                    "strMrGameEnd", {"tWinnerName": cls.get_name(game, order[0])}
-                ),
+                msg_manager.msg_format("strMrGameEnd", {"tWinnerName": cls.get_name(game, order[0])}),
             )
             cls.over(msg_manager)
             return True
@@ -456,9 +460,7 @@ class RegGameWork:
 
     @classmethod
     def end_round(cls, msg_manager):  # 回合结束
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         cls.handle_event(msg_manager, "end_round")
         consume_action = tmp.get("consume_action") or 0
         pl_shooter = players[shooter]
@@ -469,10 +471,8 @@ class RegGameWork:
 
     @classmethod
     def switch(cls, msg_manager):  # 换人
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
-        for _ in range(game["seats"] * 10):
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
+        while True:
             shooter = order[(order.index(shooter) + 1) % len(order)]
             pl_shooter = players[shooter]
             pl_shooter["actions"] += 1
@@ -483,15 +483,18 @@ class RegGameWork:
             pl_shooter = players[shooter]
             reply["note"]["round"] = True
             cls.handle_event(msg_manager, "switch")
+            if cls.is_ai(game, shooter):
+                Core.comp.AIComp.action(msg_manager, shooter)
         return
 
     @classmethod
     def over(cls, msg_manager):  # 结算
-        game, data, reply, tmp, modify, players, order, shooter, bullet = (
-            RegGameWork.get_index(msg_manager)
-        )
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
+        game["over"] = True
         with DataBase(config.DB_PATH) as db:
             for pl in players.keys():
+                if cls.is_ai(game, pl):
+                    continue
                 pl_target = players[pl]
                 mult = pl_target["points_mult"] + pl_target["kills"]
                 if pl not in order:

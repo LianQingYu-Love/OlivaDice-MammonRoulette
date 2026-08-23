@@ -1,0 +1,11 @@
+# 调试脚本示例: 按行模拟消息与命令
+10001 经典匹配3p
+10002 加入
+10001 局势
+aiadd 斯蒂芬
+10001 局势
+model
+py print("自由代码执行成功, AI类型:", AIComp.list(), "| 已学习局数:", get_stephen().games)
+aigame 斯蒂芬
+state ai_manual
+exit

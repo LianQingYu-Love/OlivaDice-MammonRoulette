@@ -28,7 +28,7 @@ class BaseProp:
 
     @classmethod
     def apply(cls, msg_manager, target) -> bool | None:
-        pass
+        raise NotImplementedError
 
     @classmethod
     def callback(cls, msg_manager, moment, prop_data) -> bool | None:
@@ -364,7 +364,7 @@ class 扑克(PropComp, BaseProp):
         msg_reply = msg_manager.msg_format(
             "strMrPropPoker_1",
             {
-                "tGamblerName": RegGameWork.get_name(msg_manager),
+                "tGamblerName": RegGameWork.get_name(game),
                 "poker": poker,
             },
         )
@@ -541,8 +541,7 @@ class 金币(PropComp, BaseProp):
             RegGameWork.reply_info(msg_manager, msg_reply)
             # 部分道具将直接使用
             if prop in cls.direct_use:
-                if PropComp.use(msg_manager, prop, user_id):
-                    RegGameWork.remove_prop(game, user_id, prop)
+                PropComp.use(msg_manager, prop, user_id, user_id)
             msg_reply = RegGameWork.format_reply(msg_manager)
             plugin_event.reply(msg_reply)
             return

@@ -18,7 +18,7 @@ import platform
 from AmorLib import DataBase, FsmRouter, MsgManager, init_msgCustom
 
 from . import config
-from .Core.comp import ModeComp, PropComp, EffectComp
+from .Core.comp import ModeComp, PropComp, EffectComp, AIComp
 
 COMMON_CMD = ("priv", "ob", "prep", "play")
 game_data = {}
@@ -72,10 +72,12 @@ class Event(object):
         init_msgCustom(MammonRoulette, Proc)
         config.readConfig(Proc)
         config.saveConfig(Proc)
+        AIComp.load_all()
 
     def save(plugin_event, Proc):  # type: ignore
         with open(config.TMP_GAME_PATH, "w", encoding="utf-8") as f:
             json.dump(game_data, f, ensure_ascii=False, indent=4)
+        AIComp.save_all()
 
     def menu(plugin_event, Proc):  # type: ignore
         if plugin_event.data.namespace == "MammonRoulette":  # type: ignore
@@ -86,8 +88,7 @@ class Event(object):
                 setConsoleSwitchByHash("MrMainEnabled", main_enabled)
                 Proc.log(
                     2,
-                    "[unity] - [恶魔轮盘] - <MammonRoulette_Menu_main_enabled> - "
-                    + str(main_enabled == 1),
+                    "[unity] - [恶魔轮盘] - <MammonRoulette_Menu_main_enabled> - " + str(main_enabled == 1),
                 )
             # poke开关
             elif plugin_event.data.event == "MammonRoulette_Menu_poke_enabled":  # type: ignore
@@ -95,16 +96,15 @@ class Event(object):
                 setConsoleSwitchByHash("MrPokeEnabled", poke_enabled)
                 Proc.log(
                     2,
-                    "[unity] - [恶魔轮盘] - <MammonRoulette_Menu_poke_enabled> - "
-                    + str(poke_enabled == 1),
+                    "[unity] - [恶魔轮盘] - <MammonRoulette_Menu_poke_enabled> - " + str(poke_enabled == 1),
                 )
             # debug模式
             elif plugin_event.data.event == "MammonRoulette_Menu_debug":  # type: ignore
-                config.debug = not config.debug
+                config.DEBUG_FLAG = not config.DEBUG_FLAG
+                config.saveConfig(Proc)
                 Proc.log(
                     2,
-                    "[unity] - [恶魔轮盘] - <MammonRoulette_Menu_debug> - "
-                    + str(config.debug),
+                    "[unity] - [恶魔轮盘] - <MammonRoulette_Menu_debug> - " + str(config.DEBUG_FLAG),
                 )
             # 清除缓存
             elif plugin_event.data.event == "MammonRoulette_Menu_clear_cache":  # type: ignore
@@ -120,10 +120,7 @@ class Event(object):
                     "[unity] - [恶魔轮盘] - [config] - 重加载.",
                 )
             elif plugin_event.data.event == "MammonRoulette_Menu_manage":  # type: ignore
-                if (
-                    MammonRoulette.config.has_NativeGUI
-                    and platform.system() == "Windows"
-                ):
+                if MammonRoulette.config.has_NativeGUI and platform.system() == "Windows":
                     MammonRoulette.GUI.ConfigUI(
                         Model_name="MammonRoulette_manage",
                         logger_proc=Proc.Proc_info.logger_proc.log,
@@ -162,14 +159,10 @@ commands = FsmRouter(COMMON_CMD)
 
 
 def unity_enabled(switchKey, bot_hash="unity"):
-    unity_switchValue = (
-        OlivaDiceCore.console.getConsoleSwitchByHash(switchKey, "unity") == 1
-    )
+    unity_switchValue = OlivaDiceCore.console.getConsoleSwitchByHash(switchKey, "unity") == 1
     if bot_hash == "unity":
         return unity_switchValue
-    bot_switchValue = (
-        OlivaDiceCore.console.getConsoleSwitchByHash(switchKey, bot_hash) == 1
-    )
+    bot_switchValue = OlivaDiceCore.console.getConsoleSwitchByHash(switchKey, bot_hash) == 1
     return unity_switchValue and bot_switchValue
 
 
@@ -190,7 +183,7 @@ def unity_state(msg_manager):
 def unity_reply(plugin_event, Proc, msg_manager):
     if not msg_manager.allow_reply:
         return
-    if config.debug:
+    if config.DEBUG_FLAG:
         global game_data
         with open(config.TMP_GAME_PATH, "r", encoding="utf-8") as f:
             game_data = json.load(f)
@@ -211,11 +204,7 @@ def unity_reply(plugin_event, Proc, msg_manager):
                 msg = "退出"
             elif state == "play":
                 msg = "局势"
-        elif (
-            state == "play"
-            and msg_manager.user_id == game["data"]["shooter"]
-            and target_id in game["data"]["order"]
-        ):
+        elif state == "play" and msg_manager.user_id == game["data"]["shooter"] and target_id in game["data"]["order"]:
             msg = f"开枪{target_id}"
     if not msg:
         return
@@ -227,7 +216,7 @@ def unity_reply(plugin_event, Proc, msg_manager):
         handler(plugin_event, Proc, msg_manager, groups)
         if game.get("over", False):
             game.clear()
-    if config.debug:
+    if config.DEBUG_FLAG:
         with open(config.TMP_GAME_PATH, "w", encoding="utf-8") as f:
             json.dump(game_data, f, ensure_ascii=False, indent=4)
-        Proc.log(0, f"[unity] - [恶魔轮盘] - [debug] - commands(state, msg).")
+        Proc.log(0, f"[unity] - [恶魔轮盘] - [debug] - commands({state}, {msg}).")

@@ -30,6 +30,7 @@ game = {
                 "surrender": bool,  # 投降
                 "points_mult": int,  # 积分倍率
                 "effect_event": {},  # 效果事件
+                "ai_model": None,  # AI模型
             },
         },
         "modify": {
@@ -42,8 +43,8 @@ game = {
     "reply": {
         "info": [],  # 常规信息
         "note": {
-            "ammo": bool,  # 弹药消息刷新
-            "round": bool,  # 轮次信息刷新
+            "ammo": bool,  # 弹药消息
+            "round": bool,  # 轮次信息
         },  # 分割线以下的消息
         "only": "",  # 会覆盖其他消息
     },

@@ -23,7 +23,7 @@ class BaseEffect:
 
     @classmethod
     def apply(cls, msg_manager, target, stacks) -> bool | None:
-        pass
+        raise NotImplementedError
 
     @classmethod
     def callback(cls, msg_manager, moment, target, effect_data) -> bool | None:
