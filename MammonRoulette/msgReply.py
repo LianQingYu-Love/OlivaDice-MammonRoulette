@@ -17,7 +17,7 @@ from AmorLib import DataBase
 from . import config
 from .main import commands, COMMON_CMD
 from .msgCustom import dictHelpDoc, dictDefsMode
-from .Core.comp import ModeComp, PropComp
+from .Core.comp import ModeComp, PropComp, AIComp
 from .Core.work import RegGameWork
 
 dictHelpDoc["恶赌 命令"] = (
@@ -28,6 +28,7 @@ dictHelpDoc["恶赌 命令"] = (
     "#房间操作\n"
     "(模式名)[匹配,对局] //以默认人数匹配对局, 满人自动开启\n(模式名)匹配(数值)p //以自定义人数匹配对局.\n"
     "[加入,进入] //加入正在匹配的对局\n"
+    "(添加,加入,召唤)ai[(类型,留空)] //向匹配对局添加一名AI\n"
     "[退出,离开] //退出匹配\n"
     "#对局操作\n"
     "(吞或开)枪(目标) //对目标射击, 可用qq号或序号指定目标, 留空默认下一顺位.\n"
@@ -190,7 +191,6 @@ def match_game(plugin_event, Proc, msg_manager, groups):
     mode_name, seats = groups[0], groups[1]
     bot_hash = msg_manager.bot_hash
     mode_cfg = dictDefsMode[bot_hash][mode_name]
-    mode_cls = ModeComp.get(mode_name)
     seats_min, seats_max, seats_def = (
         mode_cfg["seats"]["min"],
         mode_cfg["seats"]["max"],
@@ -282,6 +282,35 @@ def match_game(plugin_event, Proc, msg_manager, groups):
         situation(plugin_event, Proc, msg_manager, None)
     else:
         msg_reply = msg_manager.msg_format("strMrGamePrep", {"tGameMode": mode_name, "tSeatsHas": len(order), "tSeatsMax": seats})
+        plugin_event.reply(msg_reply)
+        return
+    # endregion
+
+
+@commands.route("prep", f"^(?:召唤)({'|'.join(AIComp.list())})$")
+def join_ai(plugin_event, Proc, msg_manager, groups):
+    game = msg_manager.val["game"]
+    if not game or game["start"]:
+        return
+    game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
+    seats = game["seats"]
+    mode_name = game["mode"]["name"]
+    ai_name = groups[0]
+    # region 添加AI
+    while True:
+        ai_id = f"ai_{random.randint(0, 999999)}"
+        if ai_id not in players:
+            break
+    RegGameWork.join(msg_manager, ai_id, ai_model=ai_name)
+    # endregion
+    # region 检查人数
+    if len(order) >= seats:
+        RegGameWork.start(msg_manager)
+        situation(plugin_event, Proc, msg_manager, None)
+    else:
+        msg_reply = msg_manager.msg_format(
+            "strMrAiJoin", {"tAIName": ai_name, "tGameMode": mode_name, "tSeatsHas": len(order), "tSeatsMax": seats}
+        )
         plugin_event.reply(msg_reply)
         return
     # endregion

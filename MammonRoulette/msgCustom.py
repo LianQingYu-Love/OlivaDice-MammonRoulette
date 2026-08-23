@@ -39,6 +39,7 @@ dictStrCustom = {
     "strMrGameModeError": "已开设{tGameMode}对局.",
     "strMrGameDismiss": "你已退出，对局解散.",
     "strMrGameRemain": "你已退出，剩余：{tSeatsHas}人.",
+    "strMrAiJoin": "{tAIName}降臨{tGameMode}对局[{tSeatsHas}/{tSeatsMax}].",
     "strMrGameAmmoRanOut": "彈藥耗盡，重新裝填中……",
     "strMrGameEnd": "{tWinnerName}用鮮血爲這場生死對局畫上句號.",
     "strMrGameTied": "這場對局沒有贏家.",
@@ -83,6 +84,7 @@ dictStrCustomNote = {
     "strMrGameModeError": "【匹配】指令 已开设其他模式的对局.",
     "strMrGameDismiss": "【退出】指令 退出游戏后, 对局解散.",
     "strMrGameRemain": "【退出】指令 退出游戏后的剩余人数显示.",
+    "strMrAiJoin": "【加入AI】指令 AI加入匹配对局时的显示.",
     "strMrGameAmmoRanOut": "实弹耗尽, 重新装弹时的显示.",
     "strMrGameEnd": "游戏结束时的显示.",
     "strMrGameTied": "游戏平局时的显示.",
@@ -142,6 +144,8 @@ dictTValue = {
     "tSeatsMax": "N/A",  # 最大座位数
     "tSeatsMin": "N/A",  # 最小座位数
     "tSeatsDef": "N/A",  # 默认座位数
+    # AI相关
+    "tAIName": "N/A",  # AI名称
     # 道具相关
     "tPropName": "",  # 道具名称
     "tPropCount": "N/A",  # 道具数量

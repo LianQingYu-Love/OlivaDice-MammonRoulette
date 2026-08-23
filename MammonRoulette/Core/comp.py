@@ -8,7 +8,7 @@
 @Desc      :    None
 """
 
-import Core
+import MammonRoulette as MR
 
 from ..msgCustom import (
     dictStrCustom,
@@ -88,7 +88,7 @@ class PropComp(Registerable):
     @classmethod
     def use(cls, msg_manager, prop, user_id, target):
         if cls.get(prop).apply(msg_manager, target):
-            Core.work.RegGameWork.remove_prop(msg_manager.val["game"], user_id, prop)
+            MR.Core.work.RegGameWork.remove_prop(msg_manager.val["game"], user_id, prop)
 
     @classmethod
     def uninstall(cls, msg_manager, prop, prop_data):
@@ -133,7 +133,7 @@ class AIComp(Registerable):
     @classmethod
     def state_snapshot(cls, msg_manager):
         """抓取枪手视角的对局快照"""
-        game, data, reply, tmp, modify, players, order, shooter, bullet = Core.work.RegGameWork.get_index(msg_manager)
+        game, data, reply, tmp, modify, players, order, shooter, bullet = MR.Core.work.RegGameWork.get_index(msg_manager)
         enemies = [uid for uid in order if uid != shooter]
         t_players = {
             uid: {
@@ -164,7 +164,7 @@ class AIComp(Registerable):
     @classmethod
     def legal_actions(cls, msg_manager):
         """枚举当前枪手全部合法指令文本(仅开枪/吞枪/使用道具)"""
-        game, data, reply, tmp, modify, players, order, shooter, bullet = Core.work.RegGameWork.get_index(msg_manager)
+        game, data, reply, tmp, modify, players, order, shooter, bullet = MR.Core.work.RegGameWork.get_index(msg_manager)
         target_props = ("手铐", "红牛", "止疼药", "口红", "邀请函", "牛奶")
         # 开枪动作
         actions = ["吞枪"]
@@ -177,20 +177,20 @@ class AIComp(Registerable):
                 continue  # 金币仅用于购买, 而AI只允许开枪与使用道具
             if prop == "手铐":
                 next_uid = order[(order.index(shooter) + 1) % len(order)]
-                if not Core.work.RegGameWork.get_effect_stacks(game, "束缚", next_uid):
+                if not MR.Core.work.RegGameWork.get_effect_stacks(game, "束缚", next_uid):
                     actions.append(f"使用{prop}")
                 for idx, uid in enumerate(order, 1):
-                    if uid != shooter and not Core.work.RegGameWork.get_effect_stacks(game, "束缚", uid):
+                    if uid != shooter and not MR.Core.work.RegGameWork.get_effect_stacks(game, "束缚", uid):
                         actions.append(f"使用{prop}{idx}")
                 continue
             if prop == "止疼药":
-                if not Core.work.RegGameWork.get_effect_stacks(game, "神经麻痹", shooter):
+                if not MR.Core.work.RegGameWork.get_effect_stacks(game, "神经麻痹", shooter):
                     actions.append(f"使用{prop}")
                 for idx, uid in enumerate(order, 1):
-                    if uid != shooter and not Core.work.RegGameWork.get_effect_stacks(game, "神经麻痹", uid):
+                    if uid != shooter and not MR.Core.work.RegGameWork.get_effect_stacks(game, "神经麻痹", uid):
                         actions.append(f"使用{prop}{idx}")
                 continue
-            if prop == "锯子" and Core.work.RegGameWork.get_prop_data(game, prop_name="锯子"):
+            if prop == "锯子" and MR.Core.work.RegGameWork.get_prop_data(game, prop_name="锯子"):
                 continue
             if prop == "放大镜" and modify["bullet_show"]:
                 continue
@@ -209,13 +209,13 @@ class AIComp(Registerable):
         - "使用X":  PropComp.use(msg_manager, X, shooter, shooter)
         - "使用XN": PropComp.use(msg_manager, X, shooter, order[N-1])
         """
-        game, data, reply, tmp, modify, players, order, shooter, bullet = Core.work.RegGameWork.get_index(msg_manager)
+        game, data, reply, tmp, modify, players, order, shooter, bullet = MR.Core.work.RegGameWork.get_index(msg_manager)
         if action == "吞枪":
-            Core.work.RegGameWork.shoot(msg_manager, shooter)
+            MR.Core.work.RegGameWork.shoot(msg_manager, shooter)
         elif action.startswith("开枪"):
             seat = int(action[2:]) - 1
             target = order[seat]
-            Core.work.RegGameWork.shoot(msg_manager, target)
+            MR.Core.work.RegGameWork.shoot(msg_manager, target)
         elif action.startswith("使用"):
             prop = action[2:]
             target = shooter
@@ -234,9 +234,9 @@ class AIComp(Registerable):
         if not game["data"]["modify"]["ai_flag"]:
             return
         while not game.get("over", False):
-            game, data, reply, tmp, modify, players, order, shooter, bullet = Core.work.RegGameWork.get_index(msg_manager)
+            game, data, reply, tmp, modify, players, order, shooter, bullet = MR.Core.work.RegGameWork.get_index(msg_manager)
             ai_model = players[shooter]["ai_model"]
-            if not Core.work.RegGameWork.is_ai(game, shooter):
+            if not MR.Core.work.RegGameWork.is_ai(game, shooter):
                 modify["ai_flag"] = False
                 break
             ai = cls.get(ai_model).instance()

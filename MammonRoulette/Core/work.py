@@ -8,7 +8,7 @@
 @Desc      :    None
 """
 
-import Core
+import MammonRoulette as MR
 
 import random
 
@@ -152,7 +152,7 @@ class RegGameWork:
         prop_event = msg_manager.val["game"]["data"]["prop_event"]
         for prop_data in prop_event:
             if prop_data[search_key] == search:
-                Core.comp.PropComp.uninstall(msg_manager, prop_data["name"], prop_data)
+                MR.Core.comp.PropComp.uninstall(msg_manager, prop_data["name"], prop_data)
                 prop_event.remove(prop_data)
         return
 
@@ -162,7 +162,7 @@ class RegGameWork:
         effect_data = effect_event[effect]
         effect_data["stacks"] -= stacks
         if effect_data["stacks"] <= 0 or stacks == 0:
-            Core.comp.EffectComp.uninstall(msg_manager, effect)
+            MR.Core.comp.EffectComp.uninstall(msg_manager, effect)
             del effect_event[effect]
         return
 
@@ -172,14 +172,14 @@ class RegGameWork:
         tmp.update(kwargs)
         prop_event = data["prop_event"]
         for prop_data in reversed(prop_event):
-            if Core.comp.PropComp.trigger(msg_manager, prop_data["name"], moment, prop_data):
+            if MR.Core.comp.PropComp.trigger(msg_manager, prop_data["name"], moment, prop_data):
                 cls.remove_prop_event(msg_manager, prop_data["id"])
         for target in players:
             effect_event = players[target]["effect_event"]
             for effect in list(effect_event.keys()):
-                if Core.comp.EffectComp.trigger(msg_manager, effect, moment, target, effect_event[effect]):
+                if MR.Core.comp.EffectComp.trigger(msg_manager, effect, moment, target, effect_event[effect]):
                     cls.remove_effect_event(msg_manager, effect, target, 0)
-        Core.comp.ModeComp.trigger(msg_manager, moment)
+        MR.Core.comp.ModeComp.trigger(msg_manager, moment)
         return
 
     # endregion
@@ -251,7 +251,7 @@ class RegGameWork:
             "effect_event": {},
             "ai_model": ai_model,
         }
-        Core.comp.ModeComp.get(game["mode"]["name"]).join(msg_manager, user_id)
+        MR.Core.comp.ModeComp.get(game["mode"]["name"]).join(msg_manager, user_id)
         return
 
     @classmethod
@@ -265,7 +265,7 @@ class RegGameWork:
         shooter = order[0]
         data["shooter"] = shooter
         data["players"][shooter]["actions"] = 1
-        Core.comp.ModeComp.get(game["mode"]["name"]).start(msg_manager)
+        MR.Core.comp.ModeComp.get(game["mode"]["name"]).start(msg_manager)
         reply.update(
             {
                 "info": [],
@@ -277,7 +277,7 @@ class RegGameWork:
             }
         )
         modify["ai_flag"] = cls.is_ai(game, shooter)
-        Core.comp.AIComp.action(msg_manager)
+        MR.Core.comp.AIComp.action(msg_manager)
         return
 
     @classmethod
@@ -469,7 +469,7 @@ class RegGameWork:
             cls.switch(msg_manager)
         shooter = data["shooter"]
         modify["ai_flag"] = cls.is_ai(game, shooter)
-        Core.comp.AIComp.action(msg_manager)
+        MR.Core.comp.AIComp.action(msg_manager)
         return
 
     @classmethod
