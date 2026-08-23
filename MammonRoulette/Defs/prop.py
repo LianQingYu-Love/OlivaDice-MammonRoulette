@@ -218,7 +218,7 @@ class 红牛(PropComp, BaseProp):
                 "strMrPropRedCow_1",
                 {
                     "tGamblerName": name,
-                    "ingredients": msg_manager.msg_format("strMrPropRedCowIngredients"),
+                    "ingredients": msg_manager.msg_format("strMrPropRedCowIngredients", flagSplit=True),
                     "tHpBefore": tmp["hp_before"],
                     "tHpNow": tmp["hp_now"],
                 },
