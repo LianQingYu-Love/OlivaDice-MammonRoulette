@@ -41,7 +41,7 @@ class RegGameWork:
 
     @staticmethod
     def is_ai(game, user_id: str) -> bool:  # 是否为AI玩家
-        return game["data"]["players"][user_id]["ai_flag"] != None
+        return game["data"]["players"][user_id]["ai_model"] != None
 
     @staticmethod
     def reply_info(msg_manager, info: str):
@@ -276,8 +276,8 @@ class RegGameWork:
                 "only": "",
             }
         )
-        if cls.is_ai(game, shooter):
-            Core.comp.AIComp.action(msg_manager, shooter)
+        modify["ai_flag"] = cls.is_ai(game, shooter)
+        Core.comp.AIComp.action(msg_manager)
         return
 
     @classmethod
@@ -467,6 +467,9 @@ class RegGameWork:
         pl_shooter["actions"] -= consume_action
         if pl_shooter["actions"] < 1:
             cls.switch(msg_manager)
+        shooter = data["shooter"]
+        modify["ai_flag"] = cls.is_ai(game, shooter)
+        Core.comp.AIComp.action(msg_manager)
         return
 
     @classmethod
@@ -483,8 +486,6 @@ class RegGameWork:
             pl_shooter = players[shooter]
             reply["note"]["round"] = True
             cls.handle_event(msg_manager, "switch")
-            if cls.is_ai(game, shooter):
-                Core.comp.AIComp.action(msg_manager, shooter)
         return
 
     @classmethod

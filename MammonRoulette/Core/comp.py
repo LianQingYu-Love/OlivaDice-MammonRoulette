@@ -210,17 +210,13 @@ class AIComp(Registerable):
         - "使用XN": PropComp.use(msg_manager, X, shooter, order[N-1])
         """
         game, data, reply, tmp, modify, players, order, shooter, bullet = Core.work.RegGameWork.get_index(msg_manager)
-        # 开枪 / 吞枪
         if action == "吞枪":
             Core.work.RegGameWork.shoot(msg_manager, shooter)
-            return
-        if action.startswith("开枪"):
+        elif action.startswith("开枪"):
             seat = int(action[2:]) - 1
             target = order[seat]
             Core.work.RegGameWork.shoot(msg_manager, target)
-            return
-        # 使用道具
-        if action.startswith("使用"):
+        elif action.startswith("使用"):
             prop = action[2:]
             target = shooter
             for pos, ch in enumerate(prop):
@@ -230,15 +226,18 @@ class AIComp(Registerable):
                     target = order[seat]
                     break
             PropComp.use(msg_manager, prop, shooter, target)
-            return
-        return
 
     @classmethod
-    def action(cls, msg_manager, ai_model):
+    def action(cls, msg_manager):
         """AI行动"""
-        while True:
+        game = msg_manager.val["game"]
+        if not game["data"]["modify"]["ai_flag"]:
+            return
+        while not game.get("over", False):
             game, data, reply, tmp, modify, players, order, shooter, bullet = Core.work.RegGameWork.get_index(msg_manager)
-            if ai_model != shooter:
+            ai_model = players[shooter]["ai_model"]
+            if not Core.work.RegGameWork.is_ai(game, shooter):
+                modify["ai_flag"] = False
                 break
             ai = cls.get(ai_model).instance()
             action = ai.decide(msg_manager)

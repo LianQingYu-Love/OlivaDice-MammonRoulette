@@ -245,6 +245,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
                         "dmg": mode_cfg["modify"]["dmg"],
                         "ammo_show": bool(mode_cfg["modify"]["ammo_show"]),
                         "bullet_show": bool(mode_cfg["modify"]["bullet_show"]),
+                        "ai_flag": False,
                     },
                     "prop_event": [],
                 },
