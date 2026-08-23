@@ -61,7 +61,7 @@ class 手铐(PropComp, BaseProp):
                 "strMrPropHandcuffs_1",
                 {
                     "tGamblerName": pl_target["name"],
-                    "limb": msg_manager.msg_format("strMrPropHandcuffsLimb"),
+                    "limb": msg_manager.msg_format("strMrPropHandcuffsLimb", flagSplit=True),
                 },
             )
             RegGameWork.reply_info(msg_manager, msg_reply)
@@ -158,7 +158,7 @@ class 巧克力(PropComp, BaseProp):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         msg_reply = msg_manager.msg_format(
             "strMrPropChocolate_1",
-            {"heart": msg_manager.msg_format("strMrPropChocolateHeart")},
+            {"heart": msg_manager.msg_format("strMrPropChocolateHeart", flagSplit=True)},
         )
         RegGameWork.reply_info(msg_manager, msg_reply)
         data["ammo_live"] += 1
@@ -170,7 +170,7 @@ class 香烟(PropComp, BaseProp):
     name = "香烟"
     brief = "取出 1 发空包弹, 然后重新上膛. 若弹仓内只有实弹, 则取出 1 发实弹."
     reply = [
-        ("strMrPropSmoke_1", "香烟道具 使用成功", "{tGamblerName}扔掉香煙, 取出一發{tBulletType}."),
+        ("strMrPropSmoke_1", "香烟道具 使用成功", "{tGamblerName}扔掉香煙, 取出一發{tNowBulletType}."),
     ]
 
     @classmethod
@@ -228,7 +228,7 @@ class 红牛(PropComp, BaseProp):
                 "strMrPropRedCow_2",
                 {
                     "tGamblerName": name,
-                    "ingredients": msg_manager.msg_format("strMrPropRedCowIngredients"),
+                    "ingredients": msg_manager.msg_format("strMrPropRedCowIngredients", flagSplit=True),
                     "tTargetName": RegGameWork.get_name(game, target),
                     "tHpBefore": tmp["hp_before"],
                     "tHpNow": tmp["hp_now"],
@@ -295,18 +295,15 @@ class 口红(PropComp, BaseProp):
     @classmethod
     def apply(cls, msg_manager, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
-        name = RegGameWork.get_name(game)
         props_list = [prop for prop in data["players"][target]["props"] if prop not in ("口红", "金币")]
+        name = RegGameWork.get_name(game)
+        usage = msg_manager.msg_format("strMrPropLipstickUsage", flagSplit=True)
+        color = msg_manager.msg_format("strMrPropLipstickColor", flagSplit=True)
         if target == shooter or not props_list:
             prop = random.choice(game["mode"]["props"]["pool"])
             msg_reply = msg_manager.msg_format(
                 "strMrPropLipstick_1",
-                {
-                    "tGamblerName": name,
-                    "usage": msg_manager.msg_format("strMrPropLipstickUsage"),
-                    "color": msg_manager.msg_format("strMrPropLipstickColor"),
-                    "tPropName": prop,
-                },
+                {"tGamblerName": name, "usage": usage, "color": color, "tPropName": prop},
             )
             RegGameWork.reply_info(msg_manager, msg_reply)
         else:
@@ -314,13 +311,7 @@ class 口红(PropComp, BaseProp):
             target_name = RegGameWork.get_name(game, target)
             msg_reply = msg_manager.msg_format(
                 "strMrPropLipstick_2",
-                {
-                    "tGamblerName": name,
-                    "usage": msg_manager.msg_format("strMrPropLipstickUsage"),
-                    "color": msg_manager.msg_format("strMrPropLipstickColor"),
-                    "tTargetName": target_name,
-                    "tPropName": prop,
-                },
+                {"tGamblerName": name, "usage": usage, "color": color, "tTargetName": target_name, "tPropName": prop},
             )
             RegGameWork.reply_info(msg_manager, msg_reply)
             RegGameWork.remove_prop(game, target, prop)
@@ -343,9 +334,11 @@ class 扑克(PropComp, BaseProp):
     def apply(cls, msg_manager, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         if random.randint(1, 54) > 2:
-            poker = msg_manager.msg_format("strMrPropPokerSuits") + msg_manager.msg_format("strMrPropPokerRanks")
+            poker = msg_manager.msg_format("strMrPropPokerSuits", flagSplit=True) + msg_manager.msg_format(
+                "strMrPropPokerRanks", flagSplit=True
+            )
         else:
-            poker = msg_manager.msg_format("strMrPropPokerJoker")
+            poker = msg_manager.msg_format("strMrPropPokerJoker", flagSplit=True)
         msg_reply = msg_manager.msg_format(
             "strMrPropPoker_1",
             {
@@ -450,7 +443,7 @@ class 牛奶(PropComp, BaseProp):
     def apply(cls, msg_manager, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         name = RegGameWork.get_name(game)
-        milk = msg_manager.msg_format("strMrPropMilkType")
+        milk = msg_manager.msg_format("strMrPropMilkType", flagSplit=True)
         if target == shooter:
             msg_reply = msg_manager.msg_format(
                 "strMrPropMilk_1",
@@ -529,7 +522,7 @@ class 金币(PropComp, BaseProp):
             t_value = {
                 "tGamblerName": name,
                 "tPropName": prop,
-                "quality": msg_manager.msg_format("strMrPropGoldQuality"),
+                "quality": msg_manager.msg_format("strMrPropGoldQuality", flagSplit=True),
             }
             if random.randint(1, 4) == 1:
                 msg_reply = msg_manager.msg_format("strMrPropGold_1", t_value)
@@ -583,7 +576,7 @@ class 烟花(PropComp, BaseProp):
     ]
 
     @classmethod
-    def apply(cls, msg_manager, target) -> bool | None:
+    def apply(cls, msg_manager, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         msg_reply = msg_manager.msg_format("strMrPropFirework_1", {"tGamblerName": RegGameWork.get_name(game, target)})
         RegGameWork.reply_info(msg_manager, msg_reply)

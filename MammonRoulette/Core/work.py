@@ -283,6 +283,8 @@ class RegGameWork:
     @classmethod
     def bullet(cls, msg_manager):  # 刷新子弹
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
+        if game["over"]:
+            return
         if data["ammo_live"] < 1:
             ammo_live, ammo_blank = cls.reload(msg_manager)
         else:
@@ -461,6 +463,8 @@ class RegGameWork:
     @classmethod
     def end_round(cls, msg_manager):  # 回合结束
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
+        if game["over"]:
+            return
         cls.handle_event(msg_manager, "end_round")
         consume_action = tmp.get("consume_action") or 0
         pl_shooter = players[shooter]
