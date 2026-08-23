@@ -57,7 +57,6 @@ class 手铐(PropComp, BaseProp):
         pl_target = players[target]
         if not RegGameWork.get_effect_stacks(game, "束缚", target):
             pl_target["actions"] -= 1
-            EffectComp.give(msg_manager, "束缚", target)
             msg_reply = msg_manager.msg_format(
                 "strMrPropHandcuffs_1",
                 {
@@ -66,6 +65,7 @@ class 手铐(PropComp, BaseProp):
                 },
             )
             RegGameWork.reply_info(msg_manager, msg_reply)
+            EffectComp.give(msg_manager, "束缚", target)
             return True
         msg_reply = msg_manager.msg_format("strMrPropHandcuffs_2", {"tGamblerName": pl_target["name"]})
         RegGameWork.reply_info(msg_manager, msg_reply)
@@ -84,10 +84,10 @@ class 锯子(PropComp, BaseProp):
     def apply(cls, msg_manager, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         if not RegGameWork.get_prop_data(game, prop_name=cls.name):
-            prop_data = {"name": cls.name}
-            RegGameWork.create_prop_event(msg_manager, prop_data)
             msg_reply = msg_manager.msg_format("strMrPropSaw_1")
             RegGameWork.reply_info(msg_manager, msg_reply)
+            prop_data = {"name": cls.name}
+            RegGameWork.create_prop_event(msg_manager, prop_data)
             return True
         msg_reply = msg_manager.msg_format("strMrPropSaw_2")
         RegGameWork.reply_info(msg_manager, msg_reply)
@@ -115,17 +115,17 @@ class 邀请函(PropComp, BaseProp):
     def apply(cls, msg_manager, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         name = RegGameWork.get_name(game)
-        RegGameWork.draw_prop(msg_manager, target, 2, cls.pool)
-        RegGameWork.end_round(msg_manager)
         if target == shooter:
             msg_reply = msg_manager.msg_format("strMrPropInvite_1", {"tGamblerName": name})
             RegGameWork.reply_info(msg_manager, msg_reply)
-            return True
-        msg_reply = msg_manager.msg_format(
-            "strMrPropInvite_2",
-            {"tGamblerName": name, "tTargetName": RegGameWork.get_name(game, target)},
-        )
+        else:
+            msg_reply = msg_manager.msg_format(
+                "strMrPropInvite_2",
+                {"tGamblerName": name, "tTargetName": RegGameWork.get_name(game, target)},
+            )
         RegGameWork.reply_info(msg_manager, msg_reply)
+        RegGameWork.draw_prop(msg_manager, target, 2, cls.pool)
+        RegGameWork.end_round(msg_manager)
         return True
 
 
@@ -137,11 +137,11 @@ class 花生(PropComp, BaseProp):
     @classmethod
     def apply(cls, msg_manager, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
-        data["ammo_blank"] += 1
-        RegGameWork.bullet(msg_manager)
         name = RegGameWork.get_name(game)
         msg_reply = msg_manager.msg_format("strMrPropPeanut_1", {"tGamblerName": name})
         RegGameWork.reply_info(msg_manager, msg_reply)
+        data["ammo_blank"] += 1
+        RegGameWork.bullet(msg_manager)
         return True
 
 
@@ -156,13 +156,13 @@ class 巧克力(PropComp, BaseProp):
     @classmethod
     def apply(cls, msg_manager, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
-        data["ammo_live"] += 1
-        RegGameWork.bullet(msg_manager)
         msg_reply = msg_manager.msg_format(
             "strMrPropChocolate_1",
             {"heart": msg_manager.msg_format("strMrPropChocolateHeart")},
         )
         RegGameWork.reply_info(msg_manager, msg_reply)
+        data["ammo_live"] += 1
+        RegGameWork.bullet(msg_manager)
         return True
 
 
@@ -178,16 +178,17 @@ class 香烟(PropComp, BaseProp):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         if data["ammo_blank"] > 0:
             data["ammo_blank"] -= 1
-            bullet = "空包彈"
+            bullet = False
         else:
             data["ammo_live"] -= 1
-            bullet = "實彈"
-        RegGameWork.bullet(msg_manager)
-        msg_reply = msg_manager.msg_format(
-            "strMrPropSmoke_1",
-            {"tGamblerName": RegGameWork.get_name(game), "tBulletType": bullet},
-        )
+            bullet = True
+        t_value = {
+            "tGamblerName": RegGameWork.get_name(game),
+            "tNowBulletType": msg_manager.msg_format("strMrAmmoLive" if bullet else "strMrAmmoBlank"),
+        }
+        msg_reply = msg_manager.msg_format("strMrPropSmoke_1", t_value)
         RegGameWork.reply_info(msg_manager, msg_reply)
+        RegGameWork.bullet(msg_manager)
         return True
 
 
@@ -211,7 +212,6 @@ class 红牛(PropComp, BaseProp):
     @classmethod
     def apply(cls, msg_manager, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
-        RegGameWork.damage(msg_manager, target, -1, shooter)
         name = RegGameWork.get_name(game)
         if target == shooter:
             msg_reply = msg_manager.msg_format(
@@ -223,7 +223,6 @@ class 红牛(PropComp, BaseProp):
                     "tHpNow": tmp["hp_now"],
                 },
             )
-            RegGameWork.reply_info(msg_manager, msg_reply)
         else:
             msg_reply = msg_manager.msg_format(
                 "strMrPropRedCow_2",
@@ -235,7 +234,8 @@ class 红牛(PropComp, BaseProp):
                     "tHpNow": tmp["hp_now"],
                 },
             )
-            RegGameWork.reply_info(msg_manager, msg_reply)
+        RegGameWork.reply_info(msg_manager, msg_reply)
+        RegGameWork.damage(msg_manager, target, -1, shooter)
         return True
 
 
@@ -251,22 +251,19 @@ class 放大镜(PropComp, BaseProp):
     def apply(cls, msg_manager, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         if not RegGameWork.get_prop_data(game, prop_name=cls.name):
-            prop_data = {"name": cls.name}
-            modify["ammo_show"] = True
-            modify["bullet_show"] = True
-            RegGameWork.create_prop_event(msg_manager, prop_data)
             t_value = {
                 "tGamblerName": RegGameWork.get_name(game),
                 "tNowBulletType": msg_manager.msg_format("strMrAmmoLive" if bullet else "strMrAmmoBlank"),
             }
             msg_reply = msg_manager.msg_format("strMrPropMagnifier_1", t_value)
-            RegGameWork.reply_info(
-                msg_manager,
-                msg_reply,
-            )
-        else:
-            msg_reply = msg_manager.msg_format("strMrPropMagnifier_2")
             RegGameWork.reply_info(msg_manager, msg_reply)
+            prop_data = {"name": cls.name}
+            modify["ammo_show"] = True
+            modify["bullet_show"] = True
+            RegGameWork.create_prop_event(msg_manager, prop_data)
+            return True
+        msg_reply = msg_manager.msg_format("strMrPropMagnifier_2")
+        RegGameWork.reply_info(msg_manager, msg_reply)
         return False
 
     @classmethod
@@ -315,7 +312,6 @@ class 口红(PropComp, BaseProp):
         else:
             prop = random.choice(props_list)
             target_name = RegGameWork.get_name(game, target)
-            RegGameWork.remove_prop(game, target, prop)
             msg_reply = msg_manager.msg_format(
                 "strMrPropLipstick_2",
                 {
@@ -327,6 +323,7 @@ class 口红(PropComp, BaseProp):
                 },
             )
             RegGameWork.reply_info(msg_manager, msg_reply)
+            RegGameWork.remove_prop(game, target, prop)
         RegGameWork.get_prop(game, shooter, prop)
         return True
 
@@ -345,18 +342,6 @@ class 扑克(PropComp, BaseProp):
     @classmethod
     def apply(cls, msg_manager, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
-        if not RegGameWork.get_prop_data(game, prop_name=cls.name):
-            prop_data = {"name": cls.name}
-            RegGameWork.create_prop_event(msg_manager, prop_data)
-        data["bullet"] = not bullet
-        if bullet:
-            data["ammo_blank"] += 1
-            data["ammo_live"] -= 1
-        else:
-            data["ammo_blank"] -= 1
-            data["ammo_live"] += 1
-        modify["ammo_show"] = False
-        modify["bullet_show"] = False
         if random.randint(1, 54) > 2:
             poker = msg_manager.msg_format("strMrPropPokerSuits") + msg_manager.msg_format("strMrPropPokerRanks")
         else:
@@ -369,6 +354,18 @@ class 扑克(PropComp, BaseProp):
             },
         )
         RegGameWork.reply_info(msg_manager, msg_reply)
+        if not RegGameWork.get_prop_data(game, prop_name=cls.name):
+            prop_data = {"name": cls.name}
+            RegGameWork.create_prop_event(msg_manager, prop_data)
+        data["bullet"] = not bullet
+        if bullet:
+            data["ammo_blank"] += 1
+            data["ammo_live"] -= 1
+        else:
+            data["ammo_blank"] -= 1
+            data["ammo_live"] += 1
+        modify["ammo_show"] = False
+        modify["bullet_show"] = False
         return True
 
     @classmethod
@@ -405,6 +402,11 @@ class 转盘(PropComp, BaseProp):
     @classmethod
     def apply(cls, msg_manager, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
+        msg_reply = msg_manager.msg_format(
+            "strMrPropRoulette_1",
+            {"garbled": cls.garbled()},
+        )
+        RegGameWork.reply_info(msg_manager, msg_reply)
         ammo = random.randint(1, 6)
         ammo_blank = ammo - random.randint(1, ammo)
         ammo_live = ammo - ammo_blank
@@ -414,11 +416,6 @@ class 转盘(PropComp, BaseProp):
             prop_data = RegGameWork.get_prop_data(game, prop_name=clear_prop)
             if prop_data:
                 RegGameWork.remove_prop_event(msg_manager, prop_data[0]["id"])
-        msg_reply = msg_manager.msg_format(
-            "strMrPropRoulette_1",
-            {"garbled": cls.garbled()},
-        )
-        RegGameWork.reply_info(msg_manager, msg_reply)
         reply["note"]["ammo"] = True
         return True
 
@@ -452,10 +449,6 @@ class 牛奶(PropComp, BaseProp):
     @classmethod
     def apply(cls, msg_manager, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
-        RegGameWork.draw_prop(msg_manager, target, 2, cls.pool)
-        for pl in order:
-            if pl != target:
-                RegGameWork.draw_prop(msg_manager, pl, 1, cls.pool)
         name = RegGameWork.get_name(game)
         milk = msg_manager.msg_format("strMrPropMilkType")
         if target == shooter:
@@ -476,6 +469,10 @@ class 牛奶(PropComp, BaseProp):
                 },
             )
         RegGameWork.reply_info(msg_manager, msg_reply)
+        RegGameWork.draw_prop(msg_manager, target, 2, cls.pool)
+        for pl in order:
+            if pl != target:
+                RegGameWork.draw_prop(msg_manager, pl, 1, cls.pool)
         return True
 
 
@@ -559,11 +556,6 @@ class 止疼药(PropComp, BaseProp):
     @classmethod
     def apply(cls, msg_manager, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
-        if RegGameWork.get_effect_stacks(game, "神经麻痹", target):
-            msg_reply = msg_manager.msg_format("strMrPropPain_3", {"tGamblerName": RegGameWork.get_name(game, target)})
-            RegGameWork.reply_info(msg_manager, msg_reply)
-            return False
-        EffectComp.give(msg_manager, "神经麻痹", target, 0)
         if target == shooter:
             msg_reply = msg_manager.msg_format("strMrPropPain_1", {"tGamblerName": RegGameWork.get_name(game, target)})
         else:
@@ -575,6 +567,11 @@ class 止疼药(PropComp, BaseProp):
                 },
             )
         RegGameWork.reply_info(msg_manager, msg_reply)
+        if RegGameWork.get_effect_stacks(game, "神经麻痹", target):
+            msg_reply = msg_manager.msg_format("strMrPropPain_3", {"tGamblerName": RegGameWork.get_name(game, target)})
+            RegGameWork.reply_info(msg_manager, msg_reply)
+            return False
+        EffectComp.give(msg_manager, "神经麻痹", target, 0)
         return True
 
 
