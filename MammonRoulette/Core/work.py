@@ -99,7 +99,7 @@ class RegGameWork:
                     }
                 )
             msg_reply = msg_manager.msg_format("strGameReplyInfo", t_value)
-            if note["ammo"] or note["round"]:
+            if not game["over"] and (note["ammo"] or note["round"]):
                 msg_reply += "\n" + msg_manager.msg_format("strGameReplyNote", t_value)
         else:
             msg_reply = reply["only"]
