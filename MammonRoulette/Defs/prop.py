@@ -211,6 +211,7 @@ class 红牛(PropComp, BaseProp):
     @classmethod
     def apply(cls, msg_manager, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
+        RegGameWork.damage(msg_manager, target, -1, shooter)
         name = RegGameWork.get_name(game)
         if target == shooter:
             msg_reply = msg_manager.msg_format(
@@ -234,7 +235,6 @@ class 红牛(PropComp, BaseProp):
                 },
             )
         RegGameWork.reply_info(msg_manager, msg_reply)
-        RegGameWork.damage(msg_manager, target, -1, shooter)
         return True
 
 

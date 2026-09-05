@@ -24,7 +24,7 @@ import importlib
 import datetime
 import re
 
-from PIL import Image, ImageTk  # type: ignore
+from PIL import Image, ImageTk
 
 from . import config
 from .msgCustom import (
