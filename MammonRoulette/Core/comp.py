@@ -173,17 +173,17 @@ class BotComp(Registerable):
                 continue  # 金币仅用于购买, 而AI只允许开枪与使用道具
             if prop == "手铐":
                 next_uid = order[(order.index(shooter) + 1) % len(order)]
-                if not MR.Core.work.RegGameWork.get_effect_stacks(game, "束缚", next_uid):
+                if not MR.Core.work.RegGameWork.get_effect_stacks(msg_manager, "束缚", next_uid):
                     actions.append(f"使用{prop}")
                 for idx, uid in enumerate(order, 1):
-                    if uid != shooter and not MR.Core.work.RegGameWork.get_effect_stacks(game, "束缚", uid):
+                    if uid != shooter and not MR.Core.work.RegGameWork.get_effect_stacks(msg_manager, "束缚", uid):
                         actions.append(f"使用{prop}{idx}")
                 continue
             if prop == "止疼药":
-                if not MR.Core.work.RegGameWork.get_effect_stacks(game, "神经麻痹", shooter):
+                if not MR.Core.work.RegGameWork.get_effect_stacks(msg_manager, "神经麻痹", shooter):
                     actions.append(f"使用{prop}")
                 for idx, uid in enumerate(order, 1):
-                    if uid != shooter and not MR.Core.work.RegGameWork.get_effect_stacks(game, "神经麻痹", uid):
+                    if uid != shooter and not MR.Core.work.RegGameWork.get_effect_stacks(msg_manager, "神经麻痹", uid):
                         actions.append(f"使用{prop}{idx}")
                 continue
             if prop == "锯子" and MR.Core.work.RegGameWork.get_prop_data(msg_manager, prop_name="锯子"):

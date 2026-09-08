@@ -55,7 +55,7 @@ class 手铐(PropComp, BaseProp):
         if target == shooter:
             target = order[(order.index(shooter) + 1) % len(order)]
         pl_target = players[target]
-        if not RegGameWork.get_effect_stacks(game, "束缚", target):
+        if not RegGameWork.get_effect_stacks(msg_manager, "束缚", target):
             pl_target["actions"] -= 1
             msg_reply = msg_manager.msg_format(
                 "strMrPropHandcuffs_1",
@@ -560,7 +560,7 @@ class 止疼药(PropComp, BaseProp):
                 },
             )
         RegGameWork.reply_info(msg_manager, msg_reply)
-        if RegGameWork.get_effect_stacks(game, "神经麻痹", target):
+        if RegGameWork.get_effect_stacks(msg_manager, "神经麻痹", target):
             msg_reply = msg_manager.msg_format("strMrPropPain_3", {"tGamblerName": RegGameWork.get_name(game, target)})
             RegGameWork.reply_info(msg_manager, msg_reply)
             return False
