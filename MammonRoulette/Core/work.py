@@ -41,7 +41,7 @@ class RegGameWork:
 
     @staticmethod
     def is_bot(game, user_id: str) -> bool:  # 是否为AI玩家
-        return game["data"]["players"][user_id]["ai_model"] != None
+        return game["data"]["players"][user_id]["bot_model"] != None
 
     @staticmethod
     def reply_info(msg_manager, info: str):
@@ -234,14 +234,14 @@ class RegGameWork:
     # endregion
     # region action
     @classmethod
-    def join(cls, msg_manager, user_id, ai_model=None):
+    def join(cls, msg_manager, user_id, bot_model=None):
         """添加一名玩家."""
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
-        if ai_model is None:
+        if bot_model is None:
             with DataBase(config.DB_PATH) as db:
                 name = db.select("gambler", "name", "user_id = ?", user_id)[0][0]
         else:
-            name = ai_model
+            name = bot_model
         order.append(user_id)
         data["players"][user_id] = {
             "name": name,
@@ -253,7 +253,7 @@ class RegGameWork:
             "surrender": False,
             "points_mult": 0,
             "effect_event": {},
-            "ai_model": ai_model,
+            "bot_model": bot_model,
         }
         MR.Core.comp.ModeComp.get(game["mode"]["name"]).join(msg_manager, user_id)
         return

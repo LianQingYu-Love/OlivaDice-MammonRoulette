@@ -30,7 +30,7 @@ game = {
                 "surrender": bool,  # 投降
                 "points_mult": int,  # 积分倍率
                 "effect_event": {},  # 效果事件
-                "ai_model": None,  # AI模型
+                "bot_model": None,  # AI模型
             },
         },
         "modify": {

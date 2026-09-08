@@ -101,7 +101,7 @@ class 神经麻痹(EffectComp, BaseEffect):
             tmp["dmg_type"] = cls.name
             tmp["check_over"] = False
             hp_before = players[target]["hp"]
-            for data in effect_data["data"]:
+            for data in reversed(effect_data["data"]):
                 RegGameWork.damage(msg_manager, target, data["dmg"], data["murderer"])
             if not RegGameWork.is_over(msg_manager):
                 msg_reply = msg_manager.msg_format(

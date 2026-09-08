@@ -70,6 +70,8 @@ class Event(object):
         PropComp.init_after()
         EffectComp.init_after()
         BotComp.load_all()
+        config.readConfig(Proc)
+        config.saveConfig(Proc)
         init_msgCustom(MammonRoulette, Proc)
 
     def save(plugin_event, Proc):  # type: ignore

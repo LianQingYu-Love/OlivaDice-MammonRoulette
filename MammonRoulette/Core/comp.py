@@ -235,11 +235,11 @@ class BotComp(Registerable):
             return
         while not game.get("over", False):
             game, data, reply, tmp, modify, players, order, shooter, bullet = MR.Core.work.RegGameWork.get_index(msg_manager)
-            ai_model = players[shooter]["ai_model"]
+            bot_model = players[shooter]["bot_model"]
             if not MR.Core.work.RegGameWork.is_bot(game, shooter):
                 modify["bot_flag"] = False
                 break
-            ai = cls.get(ai_model).instance()
+            ai = cls.get(bot_model).instance()
             action = ai.decide(msg_manager)
             cls.execute(msg_manager, action)
             ai.learning(msg_manager, action, shooter)
@@ -247,16 +247,16 @@ class BotComp(Registerable):
 
     @classmethod
     def load_all(cls):
-        for ai_cls in cls._register.values():
+        for bot_cls in cls._register.values():
             try:
-                ai_cls.instance().load()
+                bot_cls.instance().load()
             except Exception:
                 pass
 
     @classmethod
     def save_all(cls):
-        for ai_cls in cls._register.values():
+        for bot_cls in cls._register.values():
             try:
-                ai_cls.instance().save()
+                bot_cls.instance().save()
             except Exception:
                 pass

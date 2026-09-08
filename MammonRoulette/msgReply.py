@@ -109,7 +109,7 @@ def card(plugin_event, Proc, msg_manager, groups):
     return
 
 
-commands_helpdoc.append("恶魔(赏金,杀戮,自杀,留空)[排行,榜] //查询排行, 留空默认查询赏金榜单.")
+commands_helpdoc.append("恶魔(赏金,杀戮,自杀,投降,留空)[排行,榜] //查询排行, 留空默认查询赏金榜单.")
 
 
 @commands.route(COMMON_CMD, "^[恶惡]魔(赏金|杀戮|自杀|投降|)(?:排行|榜)(\\d*)$")
@@ -288,13 +288,13 @@ def join_bot(plugin_event, Proc, msg_manager, groups):
     game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
     seats = game["seats"]
     mode_name = game["mode"]["name"]
-    ai_name = groups[0]
+    bot_name = groups[0]
     # region 添加AI
     while True:
-        ai_id = f"ai_{random.randint(0, 999999)}"
-        if ai_id not in players:
+        bot_id = f"bot_{random.randint(0, 999999)}"
+        if bot_id not in players:
             break
-    RegGameWork.join(msg_manager, ai_id, ai_model=ai_name)
+    RegGameWork.join(msg_manager, bot_id, bot_model=bot_name)
     # endregion
     # region 检查人数
     if len(order) >= seats:
@@ -302,7 +302,7 @@ def join_bot(plugin_event, Proc, msg_manager, groups):
         situation(plugin_event, Proc, msg_manager, None)
     else:
         msg_reply = msg_manager.msg_format(
-            "strMrAiJoin", {"tAIName": ai_name, "tGameMode": mode_name, "tSeatsHas": len(order), "tSeatsMax": seats}
+            "strMrAiJoin", {"tAIName": bot_name, "tGameMode": mode_name, "tSeatsHas": len(order), "tSeatsMax": seats}
         )
         plugin_event.reply(msg_reply)
         return
