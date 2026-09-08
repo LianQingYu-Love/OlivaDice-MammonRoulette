@@ -277,10 +277,10 @@ def match_game(plugin_event, Proc, msg_manager, groups):
     # endregion
 
 
-commands_helpdoc.append("召唤(BOT名)//对局添加一名BOT.")
+# commands_helpdoc.append("召唤(BOT名)//对局添加一名BOT.")
 
 
-@commands.route("prep", f"^(?:召唤|添加|加入)({'|'.join(BotComp.list())})$")
+# @commands.route("prep", f"^(?:召唤|添加|加入)({'|'.join(BotComp.list())})$")
 def join_bot(plugin_event, Proc, msg_manager, groups):
     game = msg_manager.val["game"]
     if not game or game["start"]:
