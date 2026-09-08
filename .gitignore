@@ -2,6 +2,7 @@
 /plugin/
 debug.py
 /tests/
+MammonRoulette.opk
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
