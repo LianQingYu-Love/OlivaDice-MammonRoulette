@@ -132,7 +132,7 @@ class RegGameWork:
         return search
 
     @staticmethod
-    def get_effect_stacks(msg_manager, effect: str, target: str):
+    def get_effect_stacks(msg_manager, target: str, effect: str):
         return msg_manager.val["game"]["data"]["players"][target]["effect_event"].get(effect, 0)
 
     @staticmethod
@@ -141,7 +141,7 @@ class RegGameWork:
         msg_manager.val["game"]["data"]["prop_event"].append(prop_data)
 
     @staticmethod
-    def create_effect_event(msg_manager, effect: str, effect_data: dict, target: str):
+    def create_effect_event(msg_manager, target: str, effect: str, effect_data: dict):
         msg_manager.val["game"]["data"]["players"][target]["effect_event"][effect] = effect_data
 
     @staticmethod
@@ -175,6 +175,8 @@ class RegGameWork:
         for prop_data in reversed(prop_event):
             if MR.Core.comp.PropComp.trigger(msg_manager, prop_data["name"], moment, prop_data):
                 cls.remove_prop_event(msg_manager, prop_data["id"])
+        for prop_data in prop_event:
+            MR.Core.comp.PropComp.sustain(msg_manager, prop_data["name"], prop_data)
         for target in players:
             effect_event = players[target]["effect_event"]
             for effect in list(effect_event.keys()):
@@ -190,11 +192,11 @@ class RegGameWork:
         mode_props = game["mode"]["props"]
         pl_props = game["data"]["players"][user_id]["props"]
         if len(pl_props) >= mode_props["limit"]:
-            return False
+            return None
         elif prop in mode_props["ban"]:
             prop = random.choice(mode_props["pool"])
         pl_props.append(prop)
-        return True
+        return prop
 
     @staticmethod
     def remove_prop(game, user_id, prop):  # 删除道具
@@ -211,9 +213,10 @@ class RegGameWork:
         draw_props = []
         for _ in range(count):
             prop = random.choice(prop_pool)
-            if not cls.get_prop(game, user_id, prop):
+            actual_prop = cls.get_prop(game, user_id, prop)
+            if not actual_prop:
                 break
-            draw_props.append(prop)
+            draw_props.append(actual_prop)
         if draw_props:
             link = msg_manager.msg_format("strMrLink")
             cls.reply_info(

@@ -245,8 +245,7 @@ class 勇者(ModeComp, BaseMode):
     def start(cls, msg_manager):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         for pl in order:
-            RegGameWork.draw_prop(msg_manager, pl, 2)
-        RegGameWork.draw_prop(msg_manager, shooter, 1)
+            RegGameWork.draw_prop(msg_manager, pl, 2 if pl != shooter else 1)
 
     @classmethod
     def join(cls, msg_manager, user_id):
@@ -314,7 +313,6 @@ class 赌徒(ModeComp, BaseMode):
     @classmethod
     def start(cls, msg_manager):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
-        modify["ammo_hide"] = True
         for pl in order:
             RegGameWork.draw_prop(msg_manager, pl, 2)
 
@@ -331,8 +329,12 @@ class 赌徒(ModeComp, BaseMode):
             RegGameWork.draw_prop(msg_manager, target, 3)
         if random.randint(1, 3) == 1:
             data["bullet"] = not bullet
-            data["ammo_blank"] += -1 if bullet else 1
-            data["ammo_live"] += 1 if bullet else -1
+            if bullet:
+                data["ammo_blank"] += 1
+                data["ammo_live"] -= 1
+            else:
+                data["ammo_blank"] -= 1
+                data["ammo_live"] += 1
             msg_reply = msg_manager.msg_format("strMrModeGambler_1", {"poker": cls.poker()})
             RegGameWork.reply_info(msg_manager, msg_reply)
         if data["bullet"] and random.randint(1, 3) == 1:

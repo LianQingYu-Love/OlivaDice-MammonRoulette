@@ -31,11 +31,15 @@ class BaseProp:
         raise NotImplementedError
 
     @classmethod
-    def callback(cls, msg_manager, moment, prop_data) -> bool | None:
+    def callback(cls, msg_manager, moment, prop_data=None) -> bool | None:
         pass
 
     @classmethod
-    def unapply(cls, msg_manager, prop_data) -> bool | None:
+    def unapply(cls, msg_manager, prop_data=None) -> bool | None:
+        pass
+
+    @classmethod
+    def persist(cls, msg_manager, prop_data=None) -> bool | None:
         pass
 
 
@@ -55,7 +59,7 @@ class 手铐(PropComp, BaseProp):
         if target == shooter:
             target = order[(order.index(shooter) + 1) % len(order)]
         pl_target = players[target]
-        if not RegGameWork.get_effect_stacks(msg_manager, "束缚", target):
+        if not RegGameWork.get_effect_stacks(msg_manager, target, "束缚"):
             pl_target["actions"] -= 1
             msg_reply = msg_manager.msg_format(
                 "strMrPropHandcuffs_1",
@@ -109,7 +113,7 @@ class 邀请函(PropComp, BaseProp):
         ("strMrPropInvite_1", "邀请函道具 对自己使用", "{tGamblerName}將邀請函撕碎."),
         ("strMrPropInvite_2", "邀请函道具 对目标使用", "{tGamblerName}邀請{tTargetName}參加宴會."),
     ]
-    pool = ("手镯", "锯子", "红牛", "放大镜", "口红", "牛奶", "止疼药")
+    pool = ("手铐", "锯子", "红牛", "放大镜", "口红", "牛奶", "止疼药")
 
     @classmethod
     def apply(cls, msg_manager, target):
@@ -212,6 +216,7 @@ class 红牛(PropComp, BaseProp):
     @classmethod
     def apply(cls, msg_manager, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
+        tmp["dmg_type"] = cls.name
         RegGameWork.damage(msg_manager, target, -1, shooter)
         name = RegGameWork.get_name(game)
         if target == shooter:
@@ -258,8 +263,7 @@ class 放大镜(PropComp, BaseProp):
             msg_reply = msg_manager.msg_format("strMrPropMagnifier_1", t_value)
             RegGameWork.reply_info(msg_manager, msg_reply)
             prop_data = {"name": cls.name}
-            modify["ammo_show"] = True
-            modify["bullet_show"] = True
+            cls.persist(msg_manager, prop_data)
             RegGameWork.create_prop_event(msg_manager, prop_data)
             return True
         msg_reply = msg_manager.msg_format("strMrPropMagnifier_2")
@@ -268,13 +272,24 @@ class 放大镜(PropComp, BaseProp):
 
     @classmethod
     def callback(cls, msg_manager, moment, prop_data):
-        if moment != "shoot":
-            return False
+        if moment == "shoot":
+            return True
+        return False
+
+    @classmethod
+    def unapply(cls, msg_manager, prop_data):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
         bot_hash = msg_manager.bot_hash
         modf_cfg = dictDefsMode[bot_hash][game["mode"]["name"]]
         modify["ammo_show"] = modf_cfg["modify"]["ammo_show"]
         modify["bullet_show"] = modf_cfg["modify"]["bullet_show"]
+        return
+
+    @classmethod
+    def persist(cls, msg_manager, prop_data):
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
+        modify["ammo_show"] = True
+        modify["bullet_show"] = True
         return True
 
 
@@ -315,8 +330,9 @@ class 口红(PropComp, BaseProp):
             )
             RegGameWork.reply_info(msg_manager, msg_reply)
             RegGameWork.remove_prop(game, target, prop)
+        RegGameWork.remove_prop(game, shooter, cls.name)
         RegGameWork.get_prop(game, shooter, prop)
-        return True
+        return False
 
 
 class 扑克(PropComp, BaseProp):
@@ -347,8 +363,8 @@ class 扑克(PropComp, BaseProp):
             },
         )
         RegGameWork.reply_info(msg_manager, msg_reply)
+        prop_data = {"name": cls.name}
         if not RegGameWork.get_prop_data(msg_manager, prop_name=cls.name):
-            prop_data = {"name": cls.name}
             RegGameWork.create_prop_event(msg_manager, prop_data)
         data["bullet"] = not bullet
         if bullet:
@@ -357,8 +373,7 @@ class 扑克(PropComp, BaseProp):
         else:
             data["ammo_blank"] -= 1
             data["ammo_live"] += 1
-        modify["ammo_show"] = False
-        modify["bullet_show"] = False
+        cls.persist(msg_manager, prop_data)
         return True
 
     @classmethod
@@ -378,10 +393,17 @@ class 扑克(PropComp, BaseProp):
         RegGameWork.reply_info(msg_manager, msg_reply)
         return
 
+    @classmethod
+    def persist(cls, msg_manager, prop_data):
+        game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
+        modify["ammo_show"] = False
+        modify["bullet_show"] = False
+        return
+
 
 class 转盘(PropComp, BaseProp):
     name = "转盘"
-    brief = "以特殊比例重新装填弹仓."
+    brief = "以特殊比例重新装填弹仓, 并重置道具特效."
     reply = [
         ("strMrPropRoulette_1", "转盘道具 使用成功", "鏽迹斑斑的轉盤開始變換……現在是世界線[{garbled}]."),
     ]
@@ -426,7 +448,7 @@ class 牛奶(PropComp, BaseProp):
         ),
     ]
     pool = (
-        "手镯",
+        "手铐",
         "锯子",
         "邀请函",
         "花生",
@@ -481,6 +503,7 @@ class 金币(PropComp, BaseProp):
             "金币道具 使用成功",
             "{tGamblerName}向自動販賣機投入一枚{quality}的金幣, 結果沒有任何反應, {tGamblerName}將其砸爛，取出{tPropName}.",
         ),
+        ("strMrPropGold_3", "金币道具 禁售提示", "{tPropName}被禁售了."),
         ("strMrPropGoldQuality", "金币道具 随机描述", "嶄新|啞暗|磨損|變形|鏽蝕|斑駁|鏤空|黏膩|沾血"),
     ]
 
@@ -510,7 +533,7 @@ class 金币(PropComp, BaseProp):
             prop = groups[0]
             # 检查道具是否被禁售
             if prop in game["mode"]["props"]["ban"]:
-                RegGameWork.reply_info(msg_manager, f"{prop}被禁售了.")
+                RegGameWork.reply_info(msg_manager, msg_manager.msg_format("strMrPropGold_3", {"tPropName": prop}))
                 msg_reply = RegGameWork.format_reply(msg_manager)
                 plugin_event.reply(msg_reply)
                 return
@@ -560,7 +583,7 @@ class 止疼药(PropComp, BaseProp):
                 },
             )
         RegGameWork.reply_info(msg_manager, msg_reply)
-        if RegGameWork.get_effect_stacks(msg_manager, "神经麻痹", target):
+        if RegGameWork.get_effect_stacks(msg_manager, target, "神经麻痹"):
             msg_reply = msg_manager.msg_format("strMrPropPain_3", {"tGamblerName": RegGameWork.get_name(game, target)})
             RegGameWork.reply_info(msg_manager, msg_reply)
             return False

@@ -82,17 +82,21 @@ class PropComp(Registerable):
         return
 
     @classmethod
-    def trigger(cls, msg_manager, prop, moment, prop_data):
-        return cls.get(prop).callback(msg_manager, moment, prop_data)
-
-    @classmethod
     def use(cls, msg_manager, prop, user_id, target):
         if cls.get(prop).apply(msg_manager, target):
             MR.Core.work.RegGameWork.remove_prop(msg_manager.val["game"], user_id, prop)
 
     @classmethod
+    def trigger(cls, msg_manager, prop, moment, prop_data):
+        return cls.get(prop).callback(msg_manager, moment, prop_data)
+
+    @classmethod
     def uninstall(cls, msg_manager, prop, prop_data):
         return cls.get(prop).unapply(msg_manager, prop_data)
+
+    @classmethod
+    def sustain(cls, msg_manager, prop, prop_data):
+        return cls.get(prop).persist(msg_manager, prop_data)
 
 
 class EffectComp(Registerable):
@@ -115,12 +119,12 @@ class EffectComp(Registerable):
         return
 
     @classmethod
-    def trigger(cls, msg_manager, effect, moment, target, effect_data):
-        return cls.get(effect).callback(msg_manager, moment, target, effect_data)
-
-    @classmethod
     def give(cls, msg_manager, effect, target, stacks: int = 1):
         return cls.get(effect).apply(msg_manager, target, stacks)
+
+    @classmethod
+    def trigger(cls, msg_manager, effect, moment, target, effect_data):
+        return cls.get(effect).callback(msg_manager, moment, target, effect_data)
 
     @classmethod
     def uninstall(cls, msg_manager, effect):
@@ -173,17 +177,17 @@ class BotComp(Registerable):
                 continue  # 金币仅用于购买, 而AI只允许开枪与使用道具
             if prop == "手铐":
                 next_uid = order[(order.index(shooter) + 1) % len(order)]
-                if not MR.Core.work.RegGameWork.get_effect_stacks(msg_manager, "束缚", next_uid):
+                if not MR.Core.work.RegGameWork.get_effect_stacks(msg_manager, next_uid, "束缚"):
                     actions.append(f"使用{prop}")
                 for idx, uid in enumerate(order, 1):
-                    if uid != shooter and not MR.Core.work.RegGameWork.get_effect_stacks(msg_manager, "束缚", uid):
+                    if uid != shooter and not MR.Core.work.RegGameWork.get_effect_stacks(msg_manager, uid, "束缚"):
                         actions.append(f"使用{prop}{idx}")
                 continue
             if prop == "止疼药":
-                if not MR.Core.work.RegGameWork.get_effect_stacks(msg_manager, "神经麻痹", shooter):
+                if not MR.Core.work.RegGameWork.get_effect_stacks(msg_manager, shooter, "神经麻痹"):
                     actions.append(f"使用{prop}")
                 for idx, uid in enumerate(order, 1):
-                    if uid != shooter and not MR.Core.work.RegGameWork.get_effect_stacks(msg_manager, "神经麻痹", uid):
+                    if uid != shooter and not MR.Core.work.RegGameWork.get_effect_stacks(msg_manager, uid, "神经麻痹"):
                         actions.append(f"使用{prop}{idx}")
                 continue
             if prop == "锯子" and MR.Core.work.RegGameWork.get_prop_data(msg_manager, prop_name="锯子"):
