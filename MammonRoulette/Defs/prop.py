@@ -83,7 +83,7 @@ class 锯子(PropComp, BaseProp):
     @classmethod
     def apply(cls, msg_manager, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
-        if not RegGameWork.get_prop_data(game, prop_name=cls.name):
+        if not RegGameWork.get_prop_data(msg_manager, prop_name=cls.name):
             msg_reply = msg_manager.msg_format("strMrPropSaw_1")
             RegGameWork.reply_info(msg_manager, msg_reply)
             prop_data = {"name": cls.name}
@@ -124,6 +124,7 @@ class 邀请函(PropComp, BaseProp):
             )
         RegGameWork.reply_info(msg_manager, msg_reply)
         RegGameWork.draw_prop(msg_manager, target, 2, cls.pool)
+        tmp["consume_action"] = 1
         RegGameWork.end_round(msg_manager)
         return True
 
@@ -249,7 +250,7 @@ class 放大镜(PropComp, BaseProp):
     @classmethod
     def apply(cls, msg_manager, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
-        if not RegGameWork.get_prop_data(game, prop_name=cls.name):
+        if not RegGameWork.get_prop_data(msg_manager, prop_name=cls.name):
             t_value = {
                 "tGamblerName": RegGameWork.get_name(game),
                 "tNowBulletType": msg_manager.msg_format("strMrAmmoLive" if bullet else "strMrAmmoBlank"),
@@ -346,7 +347,7 @@ class 扑克(PropComp, BaseProp):
             },
         )
         RegGameWork.reply_info(msg_manager, msg_reply)
-        if not RegGameWork.get_prop_data(game, prop_name=cls.name):
+        if not RegGameWork.get_prop_data(msg_manager, prop_name=cls.name):
             prop_data = {"name": cls.name}
             RegGameWork.create_prop_event(msg_manager, prop_data)
         data["bullet"] = not bullet
@@ -405,7 +406,7 @@ class 转盘(PropComp, BaseProp):
         data["ammo_live"], data["ammo_blank"] = ammo_live, ammo_blank
         RegGameWork.bullet(msg_manager)
         for clear_prop in cls.clear_prop:
-            prop_data = RegGameWork.get_prop_data(game, prop_name=clear_prop)
+            prop_data = RegGameWork.get_prop_data(msg_manager, prop_name=clear_prop)
             if prop_data:
                 RegGameWork.remove_prop_event(msg_manager, prop_data[0]["id"])
         reply["note"]["ammo"] = True
@@ -486,7 +487,7 @@ class 金币(PropComp, BaseProp):
     @classmethod
     def init(cls):
         prop_list = (prop for prop in PropComp.list() if prop != cls.name)
-        dictHelpDoc["恶赌 命令"] += "\n购买(道具名) //使用金币兑换道具."
+        dictHelpDoc["恶赌 命令"] += "\n[购买,購買](道具名) //使用金币兑换道具."
 
         @commands.route("play", f"^(?:购买|購買) *({'|'.join(prop_list)})$")
         def purchase(plugin_event, Proc, msg_manager, groups):
@@ -611,7 +612,7 @@ class 烟花(PropComp, BaseProp):
         if moment != "dead":
             return False
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
-        prop_data = RegGameWork.get_prop_data(game, prop_name=cls.name)[0]
+        prop_data = RegGameWork.get_prop_data(msg_manager, prop_name=cls.name)[0]
         prop_data["data"]["reactivation"] += 1
         prop_data["data"]["draws"] += 1
         return False
@@ -619,7 +620,7 @@ class 烟花(PropComp, BaseProp):
     @classmethod
     def explosion(cls, msg_manager, order_before):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
-        prop_data = RegGameWork.get_prop_data(game, prop_name=cls.name)[0]
+        prop_data = RegGameWork.get_prop_data(msg_manager, prop_name=cls.name)[0]
         while prop_data["data"]["reactivation"] > 0:
             prop_data["data"]["reactivation"] -= 1
             for pl in order_before:

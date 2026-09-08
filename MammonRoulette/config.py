@@ -53,12 +53,15 @@ def initConfig(Proc):
         TMP_GAME_PATH = cfg.get("path", "tmp_game_path", default_tmp_game_path)
         DEBUG_FLAG = cfg.getboolean("flags", "debug_flag", default_debug_flag)
         AI_MODEL_DIR = cfg.get("dir", "ai_model_dir", default_ai_model_dir)
+    releaseDir(AI_MODEL_DIR)
     for hash_this in Proc.Proc_data["bot_info_dict"]:
         releaseDir(dataDirRoot + "/" + hash_this)
+    readConfig(Proc)
+    saveConfig(Proc)
 
 
 def readConfig(Proc):
-    global DB_PATH, TMP_GAME_PATH, DEBUG_FLAG
+    global DB_PATH, TMP_GAME_PATH, DEBUG_FLAG, AI_MODEL_DIR
     with IniConfig(configPath) as cfg:
         DB_PATH = cfg.get("path", "db_path", default_db_path)
         TMP_GAME_PATH = cfg.get("path", "tmp_game_path", default_tmp_game_path)

@@ -127,7 +127,7 @@ class EffectComp(Registerable):
         return cls.get(effect).unapply(msg_manager)
 
 
-class AIComp(Registerable):
+class BotComp(Registerable):
     _register = {}
 
     @classmethod
@@ -144,11 +144,7 @@ class AIComp(Registerable):
             }
             for uid in order
         }
-        t_ammo = {
-            "live": data["ammo_live"] if modify["ammo_show"] else "?",
-            "blank": data["ammo_blank"] if modify["ammo_show"] else "?",
-            "bullet": bullet if modify["bullet_show"] else "?",
-        }
+        t_ammo = {"live": data["ammo_live"], "blank": data["ammo_blank"], "bullet": data["bullet"]}
         return {
             "game": game,
             "modify": modify,
@@ -190,7 +186,7 @@ class AIComp(Registerable):
                     if uid != shooter and not MR.Core.work.RegGameWork.get_effect_stacks(game, "神经麻痹", uid):
                         actions.append(f"使用{prop}{idx}")
                 continue
-            if prop == "锯子" and MR.Core.work.RegGameWork.get_prop_data(game, prop_name="锯子"):
+            if prop == "锯子" and MR.Core.work.RegGameWork.get_prop_data(msg_manager, prop_name="锯子"):
                 continue
             if prop == "放大镜" and modify["bullet_show"]:
                 continue
@@ -236,7 +232,7 @@ class AIComp(Registerable):
         while not game.get("over", False):
             game, data, reply, tmp, modify, players, order, shooter, bullet = MR.Core.work.RegGameWork.get_index(msg_manager)
             ai_model = players[shooter]["ai_model"]
-            if not MR.Core.work.RegGameWork.is_ai(game, shooter):
+            if not MR.Core.work.RegGameWork.is_bot(game, shooter):
                 modify["ai_flag"] = False
                 break
             ai = cls.get(ai_model).instance()

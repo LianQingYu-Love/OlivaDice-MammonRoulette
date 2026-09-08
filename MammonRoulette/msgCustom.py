@@ -172,8 +172,14 @@ dictTValue = {
     "tWinnerName": "",  # 胜利者名称
 }
 
-dictHelpDoc = {}
-
+dictHelpDoc = {
+    "恶赌 戳一戳命令": (
+        "#戳一戳骰娘\n未加入对局: 加入正则匹配的对局;\n"
+        "对局匹配中: 退出正则匹配的对局;\n"
+        "对局进行时: 查看局势.\n"
+        "#戳一戳玩家: 向其开枪."
+    )
+}
 dictConsoleSwitch = {
     "MrMainEnabled": 1,
     "MrPokeEnabled": 1,

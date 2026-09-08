@@ -17,32 +17,10 @@ from AmorLib import DataBase
 from . import config
 from .main import commands, COMMON_CMD
 from .msgCustom import dictHelpDoc, dictDefsMode
-from .Core.comp import ModeComp, PropComp, AIComp
+from .Core.comp import ModeComp, PropComp, BotComp
 from .Core.work import RegGameWork
 
-dictHelpDoc["恶赌 命令"] = (
-    "#设置\n"
-    "(名称)签署[生死状,契约] //注册角色或修改名称.\n"
-    "恶魔名片(数值,留空) //查看自己或他人的资料.\n"
-    "恶魔(赏金,杀戮,自杀,留空)[排行,榜] //查询排行, 留空默认查询赏金榜单.\n"
-    "#房间操作\n"
-    "(模式名)[匹配,对局] //以默认人数匹配对局, 满人自动开启\n(模式名)匹配(数值)p //以自定义人数匹配对局.\n"
-    "[加入,进入] //加入正在匹配的对局\n"
-    "(添加,加入,召唤)ai[(类型,留空)] //向匹配对局添加一名AI\n"
-    "[退出,离开] //退出匹配\n"
-    "#对局操作\n"
-    "(吞或开)枪(目标) //对目标射击, 可用qq号或序号指定目标, 留空默认下一顺位.\n"
-    "[使用,留空](道具名) (目标) //对目标使用道具, 可用qq号或序号指定目标.\n"
-    "局势 //查询当前游戏局势信息.\n"
-    "投降 //以自杀的形式结束.\n"
-)
-dictHelpDoc["恶赌 戳一戳命令"] = (
-    "#戳一戳骰娘\n未加入对局: 加入正则匹配的对局;\n"
-    "对局匹配中: 退出正则匹配的对局;\n"
-    "对局进行时: 查看局势.\n"
-    "#戳一戳玩家: 向其开枪."
-)
-
+commands_helpdoc = []
 
 # --------
 poker = {
@@ -65,6 +43,9 @@ def get_target(game, target):
 
 
 # region 资料
+commands_helpdoc.append("(名称)签署[生死状,契约] //注册角色或修改名称.")
+
+
 @commands.route(COMMON_CMD, "^(.+)(?:签署|簽署)(?:生死状|契约|生死狀|契約)$")
 def signed(plugin_event, Proc, msg_manager, groups):
     name = groups[0]
@@ -90,6 +71,9 @@ def signed(plugin_event, Proc, msg_manager, groups):
     msg_reply = msg_manager.msg_format("strMrSignedResult", {"tGamblerName": name})
     plugin_event.reply(msg_reply)
     return
+
+
+commands_helpdoc.append("恶魔名片(数值,留空) //查看自己或他人的资料.")
 
 
 @commands.route(COMMON_CMD, "^[惡恶]魔名片(\\d*)$")
@@ -123,6 +107,9 @@ def card(plugin_event, Proc, msg_manager, groups):
     )
     plugin_event.reply(msg_reply)
     return
+
+
+commands_helpdoc.append("恶魔(赏金,杀戮,自杀,留空)[排行,榜] //查询排行, 留空默认查询赏金榜单.")
 
 
 @commands.route(COMMON_CMD, "^[恶惡]魔(赏金|杀戮|自杀|投降|)(?:排行|榜)(\\d*)$")
@@ -177,6 +164,9 @@ def leaderboard(plugin_event, Proc, msg_manager, groups):
 
 # endregion
 # region 房间操作
+commands_helpdoc.append("(模式名)[匹配,对局] //以默认人数匹配对局, 满人自动开启\n(模式名)匹配(数值)p //以自定义人数匹配对局.")
+
+
 @commands.route("ob", f"^({'|'.join(ModeComp.list())})(?:匹配|对局)(?:(\\d+)p)?$")
 def match_game(plugin_event, Proc, msg_manager, groups):
     user_id, game = msg_manager.user_id, msg_manager.val["game"]
@@ -287,8 +277,11 @@ def match_game(plugin_event, Proc, msg_manager, groups):
     # endregion
 
 
-@commands.route("prep", f"^(?:召唤)({'|'.join(AIComp.list())})$")
-def join_ai(plugin_event, Proc, msg_manager, groups):
+commands_helpdoc.append("召唤(BOT名)//对局添加一名BOT.")
+
+
+@commands.route("prep", f"^(?:召唤|添加|加入)({'|'.join(BotComp.list())})$")
+def join_bot(plugin_event, Proc, msg_manager, groups):
     game = msg_manager.val["game"]
     if not game or game["start"]:
         return
@@ -316,6 +309,9 @@ def join_ai(plugin_event, Proc, msg_manager, groups):
     # endregion
 
 
+commands_helpdoc.append("[加入,进入] //加入正在匹配的对局.")
+
+
 @commands.route("ob", "^(?:加入|进入)$")
 def join_game(plugin_event, Proc, msg_manager, groups):
     game = msg_manager.val["game"]
@@ -324,6 +320,9 @@ def join_game(plugin_event, Proc, msg_manager, groups):
     mode_name = game["mode"]["name"]
     match_game(plugin_event, Proc, msg_manager, (mode_name, ""))
     return
+
+
+commands_helpdoc.append("[退出,离开] //退出匹配.")
 
 
 @commands.route("prep", "^(?:退出|离开)$")
@@ -344,6 +343,9 @@ def exit_game(plugin_event, Proc, msg_manager, groups):
 
 # endregion
 # region 对局操作
+commands_helpdoc.append("[吞,开]枪(目标) //对目标射击, 可用qq号或序号指定目标, 留空默认下一顺位.")
+
+
 @commands.route("play", "^(吞|开|開)[槍|枪] *(\\d*)$")
 def shoot(plugin_event, Proc, msg_manager, groups):
     user_id = msg_manager.user_id
@@ -360,6 +362,9 @@ def shoot(plugin_event, Proc, msg_manager, groups):
     msg_reply = RegGameWork.format_reply(msg_manager)
     plugin_event.reply(msg_reply)
     return
+
+
+commands_helpdoc.append("[使用,留空](道具名)(目标) //对目标使用道具, 可用qq号或序号指定目标.")
 
 
 @commands.route("play", f"^(?:使用|) *({'|'.join(PropComp.list())}) *(\\d*)$")
@@ -389,6 +394,9 @@ def use_prop(plugin_event, Proc, msg_manager, groups):
     return
 
 
+commands_helpdoc.append("投降 //以自杀的形式结束.")
+
+
 @commands.route("play", "^投降$")
 def surrender(plugin_event, Proc, msg_manager, groups):
     user_id = msg_manager.user_id
@@ -401,6 +409,9 @@ def surrender(plugin_event, Proc, msg_manager, groups):
     msg_reply = RegGameWork.format_reply(msg_manager)
     plugin_event.reply(msg_reply)
     return
+
+
+commands_helpdoc.append("局势 //查询当前游戏局势信息.")
 
 
 @commands.route(COMMON_CMD, "^(?:局势|局勢)$")
@@ -492,3 +503,6 @@ def situation(plugin_event, Proc, msg_manager, groups):
 
 
 # endregion
+
+
+dictHelpDoc["恶赌 命令"] = "\n".join(commands_helpdoc)

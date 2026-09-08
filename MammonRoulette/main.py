@@ -18,7 +18,7 @@ import platform
 from AmorLib import DataBase, FsmRouter, MsgManager, init_msgCustom
 
 from . import config
-from .Core.comp import ModeComp, PropComp, EffectComp, AIComp
+from .Core.comp import ModeComp, PropComp, EffectComp, BotComp
 
 COMMON_CMD = ("priv", "ob", "prep", "play")
 game_data = {}
@@ -69,15 +69,13 @@ class Event(object):
         ModeComp.init_after()
         PropComp.init_after()
         EffectComp.init_after()
+        BotComp.load_all()
         init_msgCustom(MammonRoulette, Proc)
-        config.readConfig(Proc)
-        config.saveConfig(Proc)
-        AIComp.load_all()
 
     def save(plugin_event, Proc):  # type: ignore
         with open(config.TMP_GAME_PATH, "w", encoding="utf-8") as f:
             json.dump(game_data, f, ensure_ascii=False, indent=4)
-        AIComp.save_all()
+        BotComp.save_all()
 
     def menu(plugin_event, Proc):  # type: ignore
         if plugin_event.data.namespace == "MammonRoulette":  # type: ignore
@@ -102,6 +100,8 @@ class Event(object):
             elif plugin_event.data.event == "MammonRoulette_Menu_debug":  # type: ignore
                 config.DEBUG_FLAG = not config.DEBUG_FLAG
                 config.saveConfig(Proc)
+                with open(config.TMP_GAME_PATH, "w", encoding="utf-8") as f:
+                    json.dump(game_data if config.DEBUG_FLAG else {}, f, ensure_ascii=False, indent=4)
                 Proc.log(
                     2,
                     "[unity] - [恶魔轮盘] - <MammonRoulette_Menu_debug> - " + str(config.DEBUG_FLAG),

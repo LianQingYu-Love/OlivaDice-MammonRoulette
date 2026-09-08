@@ -344,10 +344,10 @@ def send_message(user_id, msg, group_id=None, is_private=False, sender_name=None
 # ======================== AI 辅助工具 ========================
 def ai_import():
     """触发AI定义懒注册, 返回 AIComp."""
-    from MammonRoulette.Defs import ai as _defs_ai  # noqa: F401
-    from MammonRoulette.Core.comp import AIComp
+    from MammonRoulette.Defs import bot as _defs_ai  # noqa: F401
+    from MammonRoulette.Core.comp import BotComp
 
-    return AIComp
+    return BotComp
 
 
 def get_stephen():
@@ -368,7 +368,7 @@ def make_msg_manager(user_id, gid):
 
 def make_ai_game(gid, ai_type="斯蒂芬", trace=False):
     """在指定群号开启一局AI自对弈, 返回对局 dict."""
-    from MammonRoulette.Core.comp import AIComp
+    from MammonRoulette.Core.comp import BotComp
     from MammonRoulette.Core.work import RegGameWork
 
     game = {
@@ -408,7 +408,7 @@ def make_ai_game(gid, ai_type="斯蒂芬", trace=False):
         step = [0]
         from MammonRoulette.Core import comp as comp_mod
 
-        orig_execute = comp_mod.AIComp.execute
+        orig_execute = comp_mod.BotComp.execute
 
         def trace_execute(cls, msg_manager, action):
             data = msg_manager.val["game"]["data"]
@@ -427,7 +427,7 @@ def make_ai_game(gid, ai_type="斯蒂芬", trace=False):
             )
             return orig_execute(msg_manager, action)
 
-        comp_mod.AIComp.execute = classmethod(trace_execute)
+        comp_mod.BotComp.execute = classmethod(trace_execute)
 
     try:
         RegGameWork.start(mm)  # start 会自动触发 AI 行动直至对局结束
@@ -435,7 +435,7 @@ def make_ai_game(gid, ai_type="斯蒂芬", trace=False):
         if orig_execute is not None:
             from MammonRoulette.Core import comp as comp_mod
 
-            comp_mod.AIComp.execute = orig_execute
+            comp_mod.BotComp.execute = orig_execute
     return game
 
 
@@ -547,7 +547,7 @@ def print_state(gid=None):
 def repl_namespace():
     """预置常用对象, 供 py 命令自由使用."""
     from MammonRoulette.Core import comp, work
-    from MammonRoulette.Core.comp import ModeComp, PropComp, EffectComp, AIComp
+    from MammonRoulette.Core.comp import ModeComp, PropComp, EffectComp, BotComp
     from MammonRoulette.Core.work import RegGameWork
 
     return {
@@ -558,7 +558,7 @@ def repl_namespace():
         "ModeComp": ModeComp,
         "PropComp": PropComp,
         "EffectComp": EffectComp,
-        "AIComp": AIComp,
+        "AIComp": BotComp,
         "RegGameWork": RegGameWork,
         "comp": comp,
         "work": work,

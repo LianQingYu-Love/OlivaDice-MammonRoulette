@@ -40,7 +40,7 @@ class RegGameWork:
         return game, data, reply, tmp, modify, players, order, shooter, bullet
 
     @staticmethod
-    def is_ai(game, user_id: str) -> bool:  # 是否为AI玩家
+    def is_bot(game, user_id: str) -> bool:  # 是否为AI玩家
         return game["data"]["players"][user_id]["ai_model"] != None
 
     @staticmethod
@@ -118,7 +118,8 @@ class RegGameWork:
     # endregion
     # region 事件
     @staticmethod
-    def get_prop_data(game, prop_id: int | None = None, prop_name: str | None = None):
+    def get_prop_data(msg_manager, prop_id: int | None = None, prop_name: str | None = None):
+        game = msg_manager.val["game"]
         search = []
         if prop_id:
             for prop_data in game["data"]["prop_event"]:
@@ -131,8 +132,8 @@ class RegGameWork:
         return search
 
     @staticmethod
-    def get_effect_stacks(game, effect: str, target: str):
-        return game["data"]["players"][target]["effect_event"].get(effect, 0)
+    def get_effect_stacks(msg_manager, effect: str, target: str):
+        return msg_manager.val["game"]["data"]["players"][target]["effect_event"].get(effect, 0)
 
     @staticmethod
     def create_prop_event(msg_manager, prop_data):
@@ -276,8 +277,8 @@ class RegGameWork:
                 "only": "",
             }
         )
-        modify["ai_flag"] = cls.is_ai(game, shooter)
-        MR.Core.comp.AIComp.action(msg_manager)
+        modify["ai_flag"] = cls.is_bot(game, shooter)
+        MR.Core.comp.BotComp.action(msg_manager)
         return
 
     @classmethod
@@ -472,8 +473,8 @@ class RegGameWork:
         if pl_shooter["actions"] < 1:
             cls.switch(msg_manager)
         shooter = data["shooter"]
-        modify["ai_flag"] = cls.is_ai(game, shooter)
-        MR.Core.comp.AIComp.action(msg_manager)
+        modify["ai_flag"] = cls.is_bot(game, shooter)
+        MR.Core.comp.BotComp.action(msg_manager)
         return
 
     @classmethod
@@ -498,7 +499,7 @@ class RegGameWork:
         game["over"] = True
         with DataBase(config.DB_PATH) as db:
             for pl in players.keys():
-                if cls.is_ai(game, pl):
+                if cls.is_bot(game, pl):
                     continue
                 pl_target = players[pl]
                 mult = pl_target["points_mult"] + pl_target["kills"]
