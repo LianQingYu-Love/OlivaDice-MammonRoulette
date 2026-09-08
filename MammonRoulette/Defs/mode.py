@@ -100,7 +100,7 @@ class 经典(ModeComp, BaseMode):
     @classmethod
     def start(cls, msg_manager):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
-        for pl in order[2:]:
+        for pl in order[1:]:
             RegGameWork.draw_prop(msg_manager, pl, 1)
         RegGameWork.draw_prop(msg_manager, shooter, 2)
 

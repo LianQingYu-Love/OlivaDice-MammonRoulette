@@ -235,7 +235,7 @@ def match_game(plugin_event, Proc, msg_manager, groups):
                         "dmg": mode_cfg["modify"]["dmg"],
                         "ammo_show": bool(mode_cfg["modify"]["ammo_show"]),
                         "bullet_show": bool(mode_cfg["modify"]["bullet_show"]),
-                        "ai_flag": False,
+                        "bot_flag": False,
                     },
                     "prop_event": [],
                 },
@@ -401,11 +401,12 @@ commands_helpdoc.append("投降 //以自杀的形式结束.")
 def surrender(plugin_event, Proc, msg_manager, groups):
     user_id = msg_manager.user_id
     game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
-    order.remove(user_id)
     players[user_id]["surrender"] = True
-    if len(order) <= 1:
-        RegGameWork.end_round(msg_manager)
-    msg_reply = msg_manager.msg_format("strMrGamblerSurrender", {"tGamblerName": RegGameWork.get_name(game, user_id)})
+    RegGameWork.dead(msg_manager, user_id, user_id)
+    if not game.get("over"):
+        shooter = data["shooter"]
+        modify["bot_flag"] = RegGameWork.is_bot(game, shooter)
+        BotComp.action(msg_manager)
     msg_reply = RegGameWork.format_reply(msg_manager)
     plugin_event.reply(msg_reply)
     return

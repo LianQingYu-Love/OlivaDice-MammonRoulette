@@ -132,8 +132,8 @@ class RegGameWork:
         return search
 
     @staticmethod
-    def get_effect_stacks(msg_manager, target: str, effect: str):
-        return msg_manager.val["game"]["data"]["players"][target]["effect_event"].get(effect, 0)
+    def get_effect_data(msg_manager, target: str, effect: str):
+        return msg_manager.val["game"]["data"]["players"][target]["effect_event"].get(effect)
 
     @staticmethod
     def create_prop_event(msg_manager, prop_data):
@@ -280,7 +280,7 @@ class RegGameWork:
                 "only": "",
             }
         )
-        modify["ai_flag"] = cls.is_bot(game, shooter)
+        modify["bot_flag"] = cls.is_bot(game, shooter)
         MR.Core.comp.BotComp.action(msg_manager)
         return
 
@@ -418,7 +418,9 @@ class RegGameWork:
             players[murderer],
         )
         name = pl_target["name"]
-        if target == murderer:
+        if players[target]["surrender"]:
+            RegGameWork.reply_info(msg_manager, msg_manager.msg_format("strMrGamblerSurrender", {"tGamblerName": name}))
+        elif target == murderer:
             pl_target["suicide"] = True
             cls.reply_info(
                 msg_manager,
@@ -476,7 +478,7 @@ class RegGameWork:
         if pl_shooter["actions"] < 1:
             cls.switch(msg_manager)
         shooter = data["shooter"]
-        modify["ai_flag"] = cls.is_bot(game, shooter)
+        modify["bot_flag"] = cls.is_bot(game, shooter)
         MR.Core.comp.BotComp.action(msg_manager)
         return
 
@@ -523,7 +525,7 @@ class RegGameWork:
                     },
                     "user_id = ?",
                     pl,
-                    increment=("points", "kills", "suicide", wl),
+                    increment=("points", "kills", "suicide", "surrender", wl),
                 )
         return
 

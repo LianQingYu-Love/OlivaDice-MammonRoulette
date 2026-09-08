@@ -177,17 +177,17 @@ class BotComp(Registerable):
                 continue  # 金币仅用于购买, 而AI只允许开枪与使用道具
             if prop == "手铐":
                 next_uid = order[(order.index(shooter) + 1) % len(order)]
-                if not MR.Core.work.RegGameWork.get_effect_stacks(msg_manager, next_uid, "束缚"):
+                if not MR.Core.work.RegGameWork.get_effect_data(msg_manager, next_uid, "束缚"):
                     actions.append(f"使用{prop}")
                 for idx, uid in enumerate(order, 1):
-                    if uid != shooter and not MR.Core.work.RegGameWork.get_effect_stacks(msg_manager, uid, "束缚"):
+                    if uid != shooter and not MR.Core.work.RegGameWork.get_effect_data(msg_manager, uid, "束缚"):
                         actions.append(f"使用{prop}{idx}")
                 continue
             if prop == "止疼药":
-                if not MR.Core.work.RegGameWork.get_effect_stacks(msg_manager, shooter, "神经麻痹"):
+                if not MR.Core.work.RegGameWork.get_effect_data(msg_manager, shooter, "神经麻痹"):
                     actions.append(f"使用{prop}")
                 for idx, uid in enumerate(order, 1):
-                    if uid != shooter and not MR.Core.work.RegGameWork.get_effect_stacks(msg_manager, uid, "神经麻痹"):
+                    if uid != shooter and not MR.Core.work.RegGameWork.get_effect_data(msg_manager, uid, "神经麻痹"):
                         actions.append(f"使用{prop}{idx}")
                 continue
             if prop == "锯子" and MR.Core.work.RegGameWork.get_prop_data(msg_manager, prop_name="锯子"):
@@ -231,13 +231,13 @@ class BotComp(Registerable):
     def action(cls, msg_manager):
         """AI行动"""
         game = msg_manager.val["game"]
-        if not game["data"]["modify"]["ai_flag"]:
+        if not game["data"]["modify"]["bot_flag"]:
             return
         while not game.get("over", False):
             game, data, reply, tmp, modify, players, order, shooter, bullet = MR.Core.work.RegGameWork.get_index(msg_manager)
             ai_model = players[shooter]["ai_model"]
             if not MR.Core.work.RegGameWork.is_bot(game, shooter):
-                modify["ai_flag"] = False
+                modify["bot_flag"] = False
                 break
             ai = cls.get(ai_model).instance()
             action = ai.decide(msg_manager)

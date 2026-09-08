@@ -45,7 +45,7 @@ class BaseProp:
 
 class 手铐(PropComp, BaseProp):
     name = "手铐"
-    brief = "不能将枪手选为目标. 束缚目标行动 1 回合, 且在目标恢复行动前无法将其再次选为目标."
+    brief = "不能将枪手选为目标. 束缚目标行动 1 回合, 且在目标恢复行动前无法将其再次选为手铐目标."
     reply = [
         ("strMrPropHandcuffs_1", "手铐道具 使用成功", "{tGamblerName}被銬住了{limb}."),
         ("strMrPropHandcuffs_2", "手铐道具 使用失败", "{tGamblerName}已經被銬住了."),
@@ -59,7 +59,7 @@ class 手铐(PropComp, BaseProp):
         if target == shooter:
             target = order[(order.index(shooter) + 1) % len(order)]
         pl_target = players[target]
-        if not RegGameWork.get_effect_stacks(msg_manager, target, "束缚"):
+        if not RegGameWork.get_effect_data(msg_manager, target, "束缚"):
             pl_target["actions"] -= 1
             msg_reply = msg_manager.msg_format(
                 "strMrPropHandcuffs_1",
@@ -572,6 +572,10 @@ class 止疼药(PropComp, BaseProp):
     @classmethod
     def apply(cls, msg_manager, target):
         game, data, reply, tmp, modify, players, order, shooter, bullet = RegGameWork.get_index(msg_manager)
+        if "神经麻痹" in players[target]["effect_event"]:
+            msg_reply = msg_manager.msg_format("strMrPropPain_3", {"tGamblerName": RegGameWork.get_name(game, target)})
+            RegGameWork.reply_info(msg_manager, msg_reply)
+            return False
         if target == shooter:
             msg_reply = msg_manager.msg_format("strMrPropPain_1", {"tGamblerName": RegGameWork.get_name(game, target)})
         else:
@@ -583,10 +587,6 @@ class 止疼药(PropComp, BaseProp):
                 },
             )
         RegGameWork.reply_info(msg_manager, msg_reply)
-        if RegGameWork.get_effect_stacks(msg_manager, target, "神经麻痹"):
-            msg_reply = msg_manager.msg_format("strMrPropPain_3", {"tGamblerName": RegGameWork.get_name(game, target)})
-            RegGameWork.reply_info(msg_manager, msg_reply)
-            return False
         EffectComp.give(msg_manager, "神经麻痹", target, 0)
         return True
 
