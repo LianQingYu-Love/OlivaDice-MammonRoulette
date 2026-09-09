@@ -44,9 +44,21 @@ class RegGameWork:
         return game["data"]["players"][user_id]["bot_model"] != None
 
     @staticmethod
-    def reply_info(msg_manager, info: str):
+    def reply_info(msg_manager, info: str = "", info_id: int | None = None):
         reply = msg_manager.val["game"]["reply"]
-        reply["info"].append(info)
+        if info_id:
+            info_flag = False
+            for item in reply["info"]:
+                if item["id"] == info_id:
+                    item["data"] = info
+                    info_flag = True
+                    break
+            if not info_flag:
+                reply["info"].append({"id": info_id, "data": info})
+        else:
+            info_id = max((item["id"] for item in reply["info"]), default=0) + 1
+            reply["info"].append({"id": info_id, "data": info})
+        return info_id
 
     @staticmethod
     def format_reply(msg_manager) -> str:  # 格式化回复消息
@@ -54,7 +66,7 @@ class RegGameWork:
         if not reply["only"]:
             info, note = reply["info"], reply["note"]
             t_value = {}
-            t_value.update({"tInfo": "\n".join(info)})
+            t_value.update({"tInfo": "\n".join([item["data"] for item in info])})
             if note["ammo"]:
                 # 子弹
                 t_value.update({"tNowBulletType": msg_manager.msg_format("strMrAmmoLive" if bullet else "strMrAmmoBlank")})
@@ -333,6 +345,7 @@ class RegGameWork:
             tmp["consume_action"],
         )
         pl_target = players[target]
+        reply_id = cls.reply_info(msg_manager)
         if data["bullet"]:
             if consume_action is None:
                 consume_action = 1
@@ -351,6 +364,7 @@ class RegGameWork:
                             "tHpNow": hp_now,
                         },
                     ),
+                    reply_id,
                 )
         else:
             data["ammo_blank"] -= 1
@@ -367,6 +381,7 @@ class RegGameWork:
                         "tHpNow": pl_target["hp"],
                     },
                 ),
+                reply_id,
             )
         cls.bullet(msg_manager)
         cls.end_round(msg_manager)

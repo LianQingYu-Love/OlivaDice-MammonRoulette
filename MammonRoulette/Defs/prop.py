@@ -562,7 +562,7 @@ class 金币(PropComp, BaseProp):
 
 class 止疼药(PropComp, BaseProp):
     name = "止疼药"
-    brief = "使目标在其回合结束前受到的枪击伤害转变为等值的神经麻痹. 对自身使用时, 效果延长到下回合结束."
+    brief = "使目标在其回合结束前受到的伤害转变为等值的神经麻痹. 对自身使用时, 效果延长到下回合结束."
     reply = [
         ("strMrPropPain_1", "止疼药道具 对自己使用", "{tGamblerName}服用止疼药."),
         ("strMrPropPain_2", "止疼药道具 对目标使用", "{tGamblerName}喂{tTargetName}服用止疼药."),
